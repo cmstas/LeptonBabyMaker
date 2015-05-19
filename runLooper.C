@@ -1,28 +1,45 @@
+#ifndef __CINT__
+#include "TChain.h"
+#include "TROOT.h"
+#include "TStyle.h"
+#include "TSystem.h"
+
+#include "fakeratelooper.C"
+
+#include <iostream>
+#endif
+
 enum sample_t { QCD_Test, QCD_Mu_Enriched, QCD_EM_Enriched, QCD_non_Enriched, QCD_HT, TTBAR, DY, WJets };
 
 char* getTitle(sample_t sample); 
 TChain* getChain(sample_t sample); 
 
 void runLooper(){
-
+  cout<<__LINE__<<endl;
   //User-controlled options here (only)
   sample_t sample = QCD_Test;
   //int nEvents = 100;
   int nEvents = -1;
+  cout<<__LINE__<<endl;
 
-  gROOT->ProcessLine(".L CORE/CMS3_CORE.so");
-  gROOT->ProcessLine(".L fakeratelooper.C++"); 
+  gSystem->Load("CORE/CMS3_CORE.so");
+  gSystem->Load("fakeratelooper.so"); 
+  cout<<__LINE__<<endl;
 
   babyMaker *mylooper = new babyMaker();
+  cout<<__LINE__<<endl;
 
   TChain *chain = (TChain*)getChain(sample);
-  char* title = (char*)getTitle(sample);
+  char* title = getTitle(sample);
+  cout<<__LINE__<<endl;
+
   mylooper->looper(chain, title, nEvents); 
+  cout<<__LINE__<<endl;
 
   return;
 }
 
-getTitle(sample_t sample){
+char* getTitle(sample_t sample){
   if (sample == QCD_Test) return "qcd_test";
   if (sample == QCD_Mu_Enriched) return "QCD_Mu_Enriched";
   if (sample == QCD_EM_Enriched) return "QCD_EM_Enriched";
@@ -33,7 +50,7 @@ getTitle(sample_t sample){
   if (sample == WJets) return "WJets";
 }
 
-getChain(sample_t sample){
+TChain*getChain(sample_t sample){
   TChain *result = new TChain("Events");  
   
   //QCD_test (test with just one file)

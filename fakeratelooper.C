@@ -515,6 +515,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
       //Fill Easy Variables
       evt_pfmet      = cms3.evt_pfmet();
       evt_pfmetPhi   = cms3.evt_pfmetPhi();
+      /*
 	  evt_trackmet   = myMetStruct.met;
 	  evt_trackmetPhi= myMetStruct.metphi;
       evt_pfsumet    = cms3.evt_pfsumet();
@@ -825,7 +826,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
 	  	  //cout<<"\nEnd electron loop"<<endl;
 	  	} //close electron loop
 	  
-	  
+      */	  
     }//close event loop
     
     file->Close();
