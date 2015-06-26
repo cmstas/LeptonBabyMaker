@@ -9,7 +9,7 @@
 #include <iostream>
 #endif
 
-enum sample_t { QCD_Test, QCD_Mu_Enriched, QCD_EM_Enriched, QCD_non_Enriched, QCD_HT, TTBAR, DY, WJets };
+enum sample_t { QCD_Test, QCD_Mu_Enriched, QCD_EM_Enriched, QCD_non_Enriched, QCD_HT, TTBAR, DY, WJets, DoubleEle2012 };
 
 char* getTitle(sample_t sample); 
 TChain* getChain(sample_t sample); 
@@ -17,7 +17,7 @@ TChain* getChain(sample_t sample);
 void runLooper(){
   cout<<__LINE__<<endl;
   //User-controlled options here (only)
-  sample_t sample = QCD_Test;
+  sample_t sample = DoubleEle2012;
   //int nEvents = 100;
   int nEvents = -1;
   cout<<__LINE__<<endl;
@@ -121,6 +121,12 @@ TChain*getChain(sample_t sample){
   if (sample == WJets){
     result->Add("/hadoop/cms/store/group/snt/phys14/WJetsToLNu_13TeV-madgraph-pythia8-tauola_Phys14DR-PU20bx25_PHYS14_25_V1-v1/V07-02-08/merged_ntuple_*.root");
   }
+
+  // DoubleEle2012
+  if (sample == DoubleEle2012){
+    result->Add("/hadoop/cms/store/user/gzevi/DoubleElectron/crab_DoubleElectron_CMSSW_7_4_0_pre9_ROOT6-GR_R_74_V8_1Apr_RelVal_zEl2012D-v1/cmssw_74x/merged/merged_ntuple_1.root");
+  }
+
 
   return result;
 }
