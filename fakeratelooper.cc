@@ -8,14 +8,14 @@ unsigned int evt_cut = 74994186;
 
 //Main functions
 void babyMaker::MakeBabyNtuple(const char* output_name){
-  cout<<__LINE__<<endl;
+  
   //Create Baby
-//  TDirectory *rootdir = gDirectory->GetDirectory("Rint:");cout<<__LINE__<<endl;
-//  rootdir->cd();cout<<__LINE__<<endl;
-  BabyFile = new TFile(Form("%s/%s", path.c_str(), output_name), "RECREATE");cout<<__LINE__<<endl;
-  BabyFile->cd();cout<<__LINE__<<endl;
-  BabyTree = new TTree("t", "Lepton Baby Ntuple");cout<<__LINE__<<endl;
-cout<<__LINE__<<endl;
+//  TDirectory *rootdir = gDirectory->GetDirectory("Rint:");
+//  rootdir->cd();
+  BabyFile = new TFile(Form("%s/%s", path.c_str(), output_name), "RECREATE");
+  BabyFile->cd();
+  BabyTree = new TTree("t", "Lepton Baby Ntuple");
+
   //Define Branches
   BabyTree->Branch("evt_pfmet", &evt_pfmet);
   BabyTree->Branch("evt_pfmetPhi", &evt_pfmetPhi);
@@ -45,7 +45,7 @@ cout<<__LINE__<<endl;
   BabyTree->Branch("sample", &sample);
   BabyTree->Branch("nFOs_SS", &nFOs_SS);
   BabyTree->Branch("nvtx", &nvtx);
-cout<<__LINE__<<endl;
+
   //--------------------MINE----------------------------
   //---both--//
   BabyTree->Branch("p4", &p4);
@@ -80,7 +80,7 @@ cout<<__LINE__<<endl;
   BabyTree->Branch("ptratio", &ptratio);
   BabyTree->Branch("tag_charge", &tag_charge);
   BabyTree->Branch("dilep_mass", &dilep_mass);
-cout<<__LINE__<<endl;
+
   //---els---//
   BabyTree->Branch("sigmaIEtaIEta_full5x5", &sigmaIEtaIEta_full5x5);
   BabyTree->Branch("etaSC"                , &etaSC);
@@ -95,7 +95,7 @@ cout<<__LINE__<<endl;
   BabyTree->Branch("sccharge"             , &sccharge);
   BabyTree->Branch("ckf_charge"           , &ckf_charge);
   BabyTree->Branch("threeChargeAgree"     , &threeChargeAgree_branch);
-cout<<__LINE__<<endl;
+
   //---mus---//
   BabyTree->Branch("pid_PFMuon"             , &pid_PFMuon);
   BabyTree->Branch("gfit_chi2"              , &gfit_chi2);
@@ -103,7 +103,7 @@ cout<<__LINE__<<endl;
   BabyTree->Branch("gfit_validSTAHits"      , &gfit_validSTAHits);
   BabyTree->Branch("numberOfMatchedStations", &numberOfMatchedStations);
   BabyTree->Branch("validPixelHits"         , &validPixelHits);
-  BabyTree->Branch("nlayers"                , &nlayers);cout<<__LINE__<<endl;
+  BabyTree->Branch("nlayers"                , &nlayers);
 }
 
 void babyMaker::InitBabyNtuple(){
@@ -326,14 +326,14 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
   //Print warning!
   cout << "Careful!! Path is " << path << endl;
 
-  createAndInitMVA("CORE");cout<<__LINE__<<endl;
-  createAndInitMVA("CORE");cout<<__LINE__<<endl;
+  createAndInitMVA("CORE");
+  createAndInitMVA("CORE");
 
   //Make Baby Ntuple  
-  MakeBabyNtuple( Form("%s.root", output_name) );cout<<__LINE__<<endl;
+  MakeBabyNtuple( Form("%s.root", output_name) );
   
   //Initialize Baby Ntuple
-  InitBabyNtuple();cout<<__LINE__<<endl;
+  InitBabyNtuple();
 
   //Set up loop over chain
   unsigned int nEventsDone = 0;
@@ -342,16 +342,16 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
   TObjArray *listOfFiles = chain->GetListOfFiles();
   TIter fileIter(listOfFiles);
   TFile *currentFile = 0;
- cout<<__LINE__<<endl;
+ 
   // File Loop
   while ( (currentFile = (TFile*)fileIter.Next()) ) { 
-cout<<__LINE__<<endl;
+
     // Get File Content
     if(nEventsDone >= nEventsToDo) continue;
     TFile *file = new TFile( currentFile->GetTitle() );
     TTree *tree = (TTree*)file->Get("Events");
     cms3.Init(tree);
-  cout<<__LINE__<<endl;
+  
     // Loop over Events in current file
     unsigned int nEventsTree = tree->GetEntriesFast();
     for(unsigned int evt = 0; evt < nEventsTree; evt++){
@@ -362,17 +362,17 @@ cout<<__LINE__<<endl;
       if(nEventsDone >= nEventsToDo) continue;   
       cms3.GetEntry(evt);
       nEventsDone++;
-cout<<__LINE__<<endl;
+
       //Initialize variables
       InitBabyNtuple();
-     cout<<__LINE__<<endl;
+     
       // Progress
       CMS3::progress(nEventsDone, nEventsToDo);
-cout<<__LINE__<<endl;
+
       //Debug mode
       if (verbose && tas::evt_event() != evt_cut) continue;
       if (verbose) cout << "file name is " << file->GetName() << endl;
-cout<<__LINE__<<endl;
+
       // //Preliminary stuff
 	  if (tas::mus_dxyPV().size() != tas::mus_dzPV().size()) continue;  
 
@@ -466,7 +466,8 @@ cout<<__LINE__<<endl;
 	  	  jets.push_back(jet);
 	  	  //ht += jet.pt();  //want to only use jets w/ pt>40, not 25
 	  	  if(jet.pt() > 40.) ht += jet.pt();  //not implemented for V00-00-05
-		  float disc = tas::pfjets_combinedInclusiveSecondaryVertexV2BJetTag().at(i);  //BRANCH DOESNT EXIST in old samples.
+		  //float disc = tas::pfjets_pfCombinedInclusiveSecondaryVertexV2BJetTag().at(i);  //BRANCH DOESNT EXIST in old samples.
+		  float disc = -1.;
 		  jets_disc.push_back(disc);
 	
 		}

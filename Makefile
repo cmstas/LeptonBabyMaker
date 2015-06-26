@@ -54,15 +54,15 @@ COREOBJECTS=$(CORESOURCES:.cc=.o)
 CORELIB=libCMS3CORE.so
 
 #SOURCES = $(wildcard $(DIR)/*.cc)
-SOURCES = fakeratelooper.cc run_looper_cpp.cc	
+SOURCES = fakeratelooper.cc runLooper.cc	
 OBJECTS = $(SOURCES:.cc=.o)
 LIB = liblooper.so
 
 DICT = LinkDef_out.o
 
-LIBS = $(LIB)
+LIBS = $(LIB) 
 
-EXE = run_looper_cpp.exe
+EXE = runLooper
 
 #
 # how to make it
@@ -83,9 +83,12 @@ LinkDef_out.cxx: LinkDef.h
 	rootcint -f LinkDef_out.cc -c -p $(DICTINCLUDE)  LinkDef.h; \
 	cat LinkDef_out.cc > LinkDef_out.cxx; rm LinkDef_out.cc
 
-%.exe:  $(LIBS)
+# the option "-Wl,-rpath,./" adds ./ to the runtime search path for libraries
+#%.exe:  $(LIBS)
+$(EXE):  $(LIBS)
 	$(QUIET) echo "Building $@"; \
-	$(CC) -o $@ $(LIBS) $(ROOTLIBS) ${@:.exe=.cc} 
+	$(CC) -o $@ $(LIBS) $(ROOTLIBS) -Wl,-rpath,./ 
+#	$(CC) -o $@ $(LIBS) $(ROOTLIBS) ${@:.exe=.cc} -Wl,-rpath,./ 
 
 %.o: 	%.cc %.h
 	$(QUIET) echo "Compiling $<"; \
