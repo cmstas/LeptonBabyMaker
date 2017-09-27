@@ -49,18 +49,16 @@ bool doesFileExist(TString fname, bool useXrootd) {
 int main(int argc, char **argv)
   try{
     TString sample = "";
-    bool useXrootd = true;
-    if (system("hostname | grep ucsd") == 0) {
-        std::cout << "Based on your hostname, you are on UCSD, so turning xrootd accessing off!" << std::endl;
-        useXrootd = false;
-    }
     babyMaker *mylooper = new babyMaker();
     TChain *result = new TChain("Events");
-    char *input = "sample.dat";
+    char *input = "philip_sample.dat";
 
     if (argc < 2) {
-      sample = "default";
-      cout<<"Using default file. "<<endl;
+//      sample = "default";
+//      cout<<"Using default file. "<<endl;
+      cout<<"ERROR - Check your arguments:"<<endl;
+      cout<<"Usage: ./main.exe SAMPLE NEVENTS [FILENUMBER=default runs over all files in the sample]"<<endl;
+      return 0;
     }
     else {
       sample = (TString) argv[1];
@@ -77,7 +75,7 @@ int main(int argc, char **argv)
       nevents = n.Atoi();
       cout<<"Running over "<<nevents<<" events"<<endl;
     }
-    
+
     int file=0;
     if (argc < 4) {
       cout<<"File number not specified. Running over all files "<<endl;
@@ -96,6 +94,12 @@ int main(int argc, char **argv)
     } else {
       dirpath = argv[4];
       cout<<"Output directory is" << dirpath <<endl;
+    }
+
+    bool useXrootd = true;
+    if (system("hostname | grep ucsd") == 0) {
+        std::cout << "Based on your hostname, you are on UCSD, so turning xrootd accessing off!" << std::endl;
+        useXrootd = false;
     }
     
     vector<TString> samplelist = load(sample.Data(), input);//new
