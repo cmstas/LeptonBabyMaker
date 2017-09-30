@@ -19,261 +19,261 @@ bool isDataFromFileName = false; // set automatically later on
 
 //Main functions
 //___________________________________________________________________________________________________________________________________________
-void babyMaker::MakeBabyNtuple(const char* output_name)
+void babyMaker::MakeBabyNtuple( const char* output_name )
 {
 
-  //Create Baby
-  BabyFile = new TFile(Form("%s/%s", path.c_str(), output_name), "RECREATE");
-  BabyFile->cd();
-  BabyTree = new TTree("t", "Lepton Baby Ntuple");
-
-  //General
-  BabyTree->Branch( "evt_pfmet", &evt_pfmet );
-  BabyTree->Branch( "evt_pfmetPhi", &evt_pfmetPhi );
-  BabyTree->Branch( "evt_trackmet", &evt_trackmet );
-  BabyTree->Branch( "evt_trackmetPhi", &evt_trackmetPhi );
-  BabyTree->Branch( "evt_corrMET", &evt_corrMET );
-  BabyTree->Branch( "evt_corrMETPhi", &evt_corrMETPhi );
-  BabyTree->Branch( "evt_pfsumet", &evt_pfsumet );
-  BabyTree->Branch( "evt_pfmetSig", &evt_pfmetSig );
-  BabyTree->Branch( "evt_event", &evt_event );
-  BabyTree->Branch( "evt_lumiBlock", &evt_lumiBlock );
-  BabyTree->Branch( "evt_run", &evt_run );
-  BabyTree->Branch( "filt_csc", &filt_csc );
-  BabyTree->Branch( "filt_hbhe", &filt_hbhe );
-  BabyTree->Branch( "passes_met_filters", &passes_met_filters );
-  BabyTree->Branch( "filt_hcallaser", &filt_hcallaser );
-  BabyTree->Branch( "filt_ecaltp", &filt_ecaltp );
-  BabyTree->Branch( "filt_trkfail", &filt_trkfail );
-  BabyTree->Branch( "filt_eebadsc", &filt_eebadsc );
-  BabyTree->Branch( "evt_isRealData", &evt_isRealData );
-  BabyTree->Branch( "scale1fb", &scale1fb );
-  BabyTree->Branch( "evt_xsec_incl", &evt_xsec_incl );
-  BabyTree->Branch( "evt_kfactor", &evt_kfactor );
-  BabyTree->Branch( "gen_met", &gen_met );
-  BabyTree->Branch( "gen_metPhi", &gen_metPhi );
-  BabyTree->Branch( "njets", &njets );
-  BabyTree->Branch( "ht", &ht );
-  BabyTree->Branch( "ht_SS", &ht_SS );
-  BabyTree->Branch( "jets", &jets );
-  BabyTree->Branch( "jets_disc", &jets_disc );
-  BabyTree->Branch( "jets_area", &jets_area );
-  BabyTree->Branch( "jets_undoJEC", &jets_undoJEC );
-  BabyTree->Branch( "sample", &sample );
-  BabyTree->Branch( "nFOs_SS", &nFOs_SS );
-  BabyTree->Branch( "nvtx", &nvtx );
-  BabyTree->Branch( "rho", &rho );
-  BabyTree->Branch( "rho_neut_centr", &rho_neut_centr );
-  BabyTree->Branch( "rho_calo", &rho_calo );
-  BabyTree->Branch( "rho_calo_centr", &rho_calo_centr );
-
-  //All leptons
-  BabyTree->Branch( "p4", &p4 );
-  BabyTree->Branch( "tag_p4", &tag_p4 );
-  BabyTree->Branch( "dilep_p4", &dilep_p4 );
-  BabyTree->Branch( "mc_p4", &mc_p4 );
-  BabyTree->Branch( "mc_motherp4", &mc_motherp4 );
-  BabyTree->Branch( "mc_motherid", &mc_motherid );
-  BabyTree->Branch( "id", &id );
-  BabyTree->Branch( "isPF", &isPF );
-  BabyTree->Branch( "idx", &idx );
-  BabyTree->Branch( "dxyPV", &dxyPV );
-  BabyTree->Branch( "dZ", &dZ );
-  BabyTree->Branch( "dxyPV_err", &dxyPV_err );
-  BabyTree->Branch( "motherID", &motherID );
-  BabyTree->Branch( "mc_id", &mc_id );
-  BabyTree->Branch( "RelIso03", &RelIso03 );
-  BabyTree->Branch( "RelIso03EA", &RelIso03EA );
-  BabyTree->Branch( "tag_RelIso03EA", &tag_RelIso03EA );
-  BabyTree->Branch( "RelIso03DB", &RelIso03DB );
-  BabyTree->Branch( "pfChargedHadronIso", &pfChargedHadronIso );
-  BabyTree->Branch( "pfPhotonIso", &pfPhotonIso );
-  BabyTree->Branch( "pfNeutralHadronIso", &pfNeutralHadronIso );
-  BabyTree->Branch( "tkIso", &tkIso );
-  BabyTree->Branch( "sumPUPt", &sumPUPt );
-  BabyTree->Branch( "passes_SS_tight_v3", &passes_SS_tight_v3 );
-  BabyTree->Branch( "passes_SS_tight_noiso_v3", &passes_SS_tight_noiso_v3 );
-  BabyTree->Branch( "passes_SS_fo_v3", &passes_SS_fo_v3 );
-  BabyTree->Branch( "passes_SS_fo_noiso_v3", &passes_SS_fo_noiso_v3 );
-  BabyTree->Branch( "passes_SS_fo_looseMVA_v3", &passes_SS_fo_looseMVA_v3 );
-  BabyTree->Branch( "passes_SS_fo_looseMVA_noiso_v3", &passes_SS_fo_looseMVA_noiso_v3 );
-  BabyTree->Branch( "passes_SS_veto_v3", &passes_SS_veto_v3 );
-  BabyTree->Branch( "passes_SS_veto_noiso_v3", &passes_SS_veto_noiso_v3 );
-  BabyTree->Branch( "passes_SS_tight_v4", &passes_SS_tight_v4 );
-  BabyTree->Branch( "passes_SS_tight_noiso_v4", &passes_SS_tight_noiso_v4 );
-  BabyTree->Branch( "passes_SS_fo_v4", &passes_SS_fo_v4 );
-  BabyTree->Branch( "passes_SS_fo_noiso_v4", &passes_SS_fo_noiso_v4 );
-  BabyTree->Branch( "passes_SS_fo_looseMVA_v4", &passes_SS_fo_looseMVA_v4 );
-  BabyTree->Branch( "passes_SS_fo_looseMVA_noiso_v4", &passes_SS_fo_looseMVA_noiso_v4 );
-  BabyTree->Branch( "passes_SS_veto_v4", &passes_SS_veto_v4 );
-  BabyTree->Branch( "passes_SS_veto_noiso_v4", &passes_SS_veto_noiso_v4 );
-  BabyTree->Branch( "passes_SS_tight_v5", &passes_SS_tight_v5 );
-  BabyTree->Branch( "passes_SS_tight_noiso_v5", &passes_SS_tight_noiso_v5 );
-  BabyTree->Branch( "passes_SS_fo_v5", &passes_SS_fo_v5 );
-  BabyTree->Branch( "passes_SS_fo_noiso_v5", &passes_SS_fo_noiso_v5 );
-  BabyTree->Branch( "passes_SS_fo_looseMVA_v5", &passes_SS_fo_looseMVA_v5 );
-  BabyTree->Branch( "passes_SS_fo_looseMVA_noiso_v5", &passes_SS_fo_looseMVA_noiso_v5 );
-  BabyTree->Branch( "passes_SS_veto_v5", &passes_SS_veto_v5 );
-  BabyTree->Branch( "passes_SS_veto_noiso_v5", &passes_SS_veto_noiso_v5 );
-  BabyTree->Branch( "passes_WW_medium_v2", &passes_WW_medium_v2 );
-  BabyTree->Branch( "passes_WW_medium_noiso_v2", &passes_WW_medium_noiso_v2 );
-  BabyTree->Branch( "passes_WW_fo_v2", &passes_WW_fo_v2 );
-  BabyTree->Branch( "passes_WW_fo_noiso_v2", &passes_WW_fo_noiso_v2 );
-  BabyTree->Branch( "passes_WW_veto_v2", &passes_WW_veto_v2 );
-  BabyTree->Branch( "passes_WW_veto_noiso_v2", &passes_WW_veto_noiso_v2 );
-  BabyTree->Branch( "passes_HAD_veto_v3", &passes_HAD_veto_v3 );
-  BabyTree->Branch( "passes_HAD_veto_noiso_v3", &passes_HAD_veto_noiso_v3 );
-  BabyTree->Branch( "passes_HAD_loose_v3", &passes_HAD_loose_v3 );
-  BabyTree->Branch( "passes_HAD_loose_noiso_v3", &passes_HAD_loose_noiso_v3 );
-  BabyTree->Branch( "passes_POG_vetoID", &passes_POG_vetoID );
-  BabyTree->Branch( "passes_POG_looseID", &passes_POG_looseID );
-  BabyTree->Branch( "passes_POG_mediumID", &passes_POG_mediumID );
-  BabyTree->Branch( "passes_POG_tightID", &passes_POG_tightID );
-  BabyTree->Branch( "ip3d", &ip3d );
-  BabyTree->Branch( "ip3derr", &ip3derr );
-  BabyTree->Branch( "type", &type );
-  BabyTree->Branch( "mt", &mt );
-  BabyTree->Branch( "ptrelv0", &ptrelv0 );
-  BabyTree->Branch( "ptrelv1", &ptrelv1 );
-  BabyTree->Branch( "miniiso", &miniiso );
-  BabyTree->Branch( "miniisoDB", &miniisoDB );
-  BabyTree->Branch( "reliso04", &reliso04 );
-  BabyTree->Branch( "annulus04", &annulus04 );
-  BabyTree->Branch( "AbsTrkIso", &AbsTrkIso );
-  BabyTree->Branch( "TrkAn04", &TrkAn04 );
-  BabyTree->Branch( "iso03sumPt", &iso03sumPt );
-  BabyTree->Branch( "iso03emEt", &iso03emEt );
-  BabyTree->Branch( "iso03hadEt", &iso03hadEt );
-  BabyTree->Branch( "jet_close_lep_idx", &jet_close_lep_idx );
-  BabyTree->Branch( "jet_close_lep", &jet_close_lep );
-  BabyTree->Branch( "jet_close_lep_undoJEC", &jet_close_lep_undoJEC );
-  BabyTree->Branch( "jet_close_lep_area", &jet_close_lep_area );
-  BabyTree->Branch( "jet_close_L1", &jet_close_L1 );
-  BabyTree->Branch( "jet_close_L1nc", &jet_close_L1nc );
-  BabyTree->Branch( "jet_close_L1ncmc", &jet_close_L1ncmc );
-  BabyTree->Branch( "jet_close_L1L2L3", &jet_close_L1L2L3 );
-  BabyTree->Branch( "jet_close_L2L3", &jet_close_L2L3 );
-  BabyTree->Branch( "ptratio", &ptratio );
-  BabyTree->Branch( "tag_charge", &tag_charge );
-  BabyTree->Branch( "tag_mc_motherid", &tag_mc_motherid );
-  BabyTree->Branch( "tag_eSeed", &tag_eSeed );
-  BabyTree->Branch( "tag_eSCRaw", &tag_eSCRaw );
-  BabyTree->Branch( "tag_eSC", &tag_eSC );
-  BabyTree->Branch( "tag_ecalEnergy", &tag_ecalEnergy );
-  BabyTree->Branch( "exp_innerlayers", &exp_innerlayers );
-  BabyTree->Branch( "exp_outerlayers", &exp_outerlayers );
-
-  //Tag triggers
-  BabyTree->Branch( "tag_HLT_Ele27_eta2p1_WPTight_Gsf", &tag_HLT_Ele27_eta2p1_WPTight_Gsf );
-  BabyTree->Branch( "tag_HLT_Ele32_eta2p1_WPTight_Gsf", &tag_HLT_Ele32_eta2p1_WPTight_Gsf );
-
-  BabyTree->Branch( "tag_HLT_IsoMu24", &tag_HLT_IsoMu24 );
-  BabyTree->Branch( "tag_HLT_IsoTkMu24", &tag_HLT_IsoTkMu24 );
-
-  BabyTree->Branch( "dilep_mass", &dilep_mass );
-  BabyTree->Branch( "isRandom", &isRandom );
-
-  //Electrons
-  BabyTree->Branch( "sigmaIEtaIEta_full5x5", &sigmaIEtaIEta_full5x5 );
-  BabyTree->Branch( "sigmaIEtaIEta", &sigmaIEtaIEta );
-  BabyTree->Branch( "etaSC", &etaSC );
-  BabyTree->Branch( "dEtaIn", &dEtaIn );
-  BabyTree->Branch( "dPhiIn", &dPhiIn );
-  BabyTree->Branch( "hOverE", &hOverE );
-  BabyTree->Branch( "eSeed", &eSeed );
-  BabyTree->Branch( "scSeedEta", &scSeedEta );
-  BabyTree->Branch( "ecalEnergy", &ecalEnergy );
-  BabyTree->Branch( "eOverPIn", &eOverPIn );
-  BabyTree->Branch( "conv_vtx_flag", &conv_vtx_flag );
-  BabyTree->Branch( "charge", &charge );
-  BabyTree->Branch( "sccharge", &sccharge );
-  BabyTree->Branch( "ckf_charge", &ckf_charge );
-  BabyTree->Branch( "threeChargeAgree", &threeChargeAgree_branch );
-  BabyTree->Branch( "mva", &mva );
-  BabyTree->Branch( "mva_25ns", &mva_25ns );
-  BabyTree->Branch( "tag_mva_25ns", &tag_mva_25ns );
-  BabyTree->Branch( "ecalIso", &ecalIso );
-  BabyTree->Branch( "hcalIso", &hcalIso );
-  BabyTree->Branch( "ecalPFClusterIso", &ecalPFClusterIso );
-  BabyTree->Branch( "hcalPFClusterIso", &hcalPFClusterIso );
-  BabyTree->Branch( "ckf_laywithmeas", &ckf_laywithmeas );
-  BabyTree->Branch( "sigmaIPhiIPhi_full5x5", &sigmaIPhiIPhi_full5x5 );
-  BabyTree->Branch( "e1x5_full5x5", &e1x5_full5x5 );
-  BabyTree->Branch( "e5x5_full5x5", &e5x5_full5x5 );
-  BabyTree->Branch( "r9_full5x5", &r9_full5x5 );
-  BabyTree->Branch( "tag_r9_full5x5", &tag_r9_full5x5 );
-  BabyTree->Branch( "etaSCwidth", &etaSCwidth );
-  BabyTree->Branch( "phiSCwidth", &phiSCwidth );
-  BabyTree->Branch( "eSCRaw", &eSCRaw );
-  BabyTree->Branch( "eSC", &eSC );
-  BabyTree->Branch( "eSCPresh", &eSCPresh );
-  BabyTree->Branch( "ckf_chi2", &ckf_chi2 );
-  BabyTree->Branch( "ckf_ndof", &ckf_ndof );
-  BabyTree->Branch( "chi2", &chi2 );
-  BabyTree->Branch( "ndof", &ndof );
-  BabyTree->Branch( "fbrem", &fbrem );
-  BabyTree->Branch( "eOverPOut", &eOverPOut );
-  BabyTree->Branch( "dEtaOut", &dEtaOut );
-  BabyTree->Branch( "dPhiOut", &dPhiOut );
-  BabyTree->Branch( "gsf_validHits", &gsf_validHits );
-  BabyTree->Branch( "conv_vtx_prob", &conv_vtx_prob );
-
-  //Muons
-  BabyTree->Branch( "pid_PFMuon", &pid_PFMuon );
-  BabyTree->Branch( "gfit_chi2", &gfit_chi2 );
-  BabyTree->Branch( "gfit_validSTAHits", &gfit_validSTAHits );
-  BabyTree->Branch( "numberOfMatchedStations", &numberOfMatchedStations );
-  BabyTree->Branch( "validPixelHits", &validPixelHits );
-  BabyTree->Branch( "nlayers", &nlayers );
-  BabyTree->Branch( "chi2LocalPosition", &chi2LocalPosition );
-  BabyTree->Branch( "trkKink", &trkKink );
-  BabyTree->Branch( "validHits", &validHits );
-  BabyTree->Branch( "lostHits", &lostHits );
-  BabyTree->Branch( "segmCompatibility", &segmCompatibility );
-
-  //Single Muon Triggers
-  BabyTree->Branch( "HLT_Mu8", &HLT_Mu8 );
-  BabyTree->Branch( "HLT_Mu17", &HLT_Mu17 );
-  BabyTree->Branch( "HLT_Mu8_TrkIsoVVL", &HLT_Mu8_TrkIsoVVL );
-  BabyTree->Branch( "HLT_Mu17_TrkIsoVVL", &HLT_Mu17_TrkIsoVVL );
-  BabyTree->Branch( "HLT_IsoMu24", &HLT_IsoMu24 );
-  BabyTree->Branch( "HLT_IsoTkMu24", &HLT_IsoTkMu24 );
-  BabyTree->Branch( "HLT_Mu50", &HLT_Mu50 );
-  BabyTree->Branch( "HLT_Mu55", &HLT_Mu55 );
-  BabyTree->Branch( "HLT_TkMu50", &HLT_TkMu50 );
-
-  BabyTree->Branch( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg );
-  BabyTree->Branch( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg );
-  BabyTree->Branch( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg );
-  BabyTree->Branch( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg );
-
-
-  //Single Electron Triggers
-  BabyTree->Branch( "HLT_Ele8_CaloIdM_TrackIdM_PFJet30", &HLT_Ele8_CaloIdM_TrackIdM_PFJet30 );
-  BabyTree->Branch( "HLT_Ele12_CaloIdM_TrackIdM_PFJet30", &HLT_Ele12_CaloIdM_TrackIdM_PFJet30 );
-  BabyTree->Branch( "HLT_Ele17_CaloIdM_TrackIdM_PFJet30", &HLT_Ele17_CaloIdM_TrackIdM_PFJet30 );
-  BabyTree->Branch( "HLT_Ele23_CaloIdM_TrackIdM_PFJet30", &HLT_Ele23_CaloIdM_TrackIdM_PFJet30 );
-  BabyTree->Branch( "HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30 );
-  BabyTree->Branch( "HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30 );
-  BabyTree->Branch( "HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30 );
-  BabyTree->Branch( "HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30 );
-
-  BabyTree->Branch( "HLT_Ele27_eta2p1_WPTight_Gsf", &HLT_Ele27_eta2p1_WPTight_Gsf );
-  BabyTree->Branch( "HLT_Ele32_eta2p1_WPTight_Gsf", &HLT_Ele32_eta2p1_WPTight_Gsf );
-  BabyTree->Branch( "HLT_Ele105_CaloIdVT_GsfTrkIdT", &HLT_Ele105_CaloIdVT_GsfTrkIdT );
-  BabyTree->Branch( "HLT_Ele115_CaloIdVT_GsfTrkIdT", &HLT_Ele115_CaloIdVT_GsfTrkIdT );
-
-  //Double Electron Triggers
-  BabyTree->Branch( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg );
-  BabyTree->Branch( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg );
-  BabyTree->Branch( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1 );
-  BabyTree->Branch( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL );
-  BabyTree->Branch( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg );
-  BabyTree->Branch( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg );
-  BabyTree->Branch( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1 );
-  BabyTree->Branch( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL );
-
-
+    //Create Baby
+    BabyFile = new TFile( Form( "%s/%s", path.c_str(), output_name ), "RECREATE" );
+    BabyFile->cd();
+    BabyTree = new TTree( "t", "Lepton Baby Ntuple" );
+    
+    //General
+    BabyTree->Branch( "evt_pfmet", &evt_pfmet );
+    BabyTree->Branch( "evt_pfmetPhi", &evt_pfmetPhi );
+    BabyTree->Branch( "evt_trackmet", &evt_trackmet );
+    BabyTree->Branch( "evt_trackmetPhi", &evt_trackmetPhi );
+    BabyTree->Branch( "evt_corrMET", &evt_corrMET );
+    BabyTree->Branch( "evt_corrMETPhi", &evt_corrMETPhi );
+    BabyTree->Branch( "evt_pfsumet", &evt_pfsumet );
+    BabyTree->Branch( "evt_pfmetSig", &evt_pfmetSig );
+    BabyTree->Branch( "evt_event", &evt_event );
+    BabyTree->Branch( "evt_lumiBlock", &evt_lumiBlock );
+    BabyTree->Branch( "evt_run", &evt_run );
+    BabyTree->Branch( "filt_csc", &filt_csc );
+    BabyTree->Branch( "filt_hbhe", &filt_hbhe );
+    BabyTree->Branch( "passes_met_filters", &passes_met_filters );
+    BabyTree->Branch( "filt_hcallaser", &filt_hcallaser );
+    BabyTree->Branch( "filt_ecaltp", &filt_ecaltp );
+    BabyTree->Branch( "filt_trkfail", &filt_trkfail );
+    BabyTree->Branch( "filt_eebadsc", &filt_eebadsc );
+    BabyTree->Branch( "evt_isRealData", &evt_isRealData );
+    BabyTree->Branch( "scale1fb", &scale1fb );
+    BabyTree->Branch( "evt_xsec_incl", &evt_xsec_incl );
+    BabyTree->Branch( "evt_kfactor", &evt_kfactor );
+    BabyTree->Branch( "gen_met", &gen_met );
+    BabyTree->Branch( "gen_metPhi", &gen_metPhi );
+    BabyTree->Branch( "njets", &njets );
+    BabyTree->Branch( "ht", &ht );
+    BabyTree->Branch( "ht_SS", &ht_SS );
+    BabyTree->Branch( "jets", &jets );
+    BabyTree->Branch( "jets_disc", &jets_disc );
+    BabyTree->Branch( "jets_area", &jets_area );
+    BabyTree->Branch( "jets_undoJEC", &jets_undoJEC );
+    BabyTree->Branch( "sample", &sample );
+    BabyTree->Branch( "nFOs_SS", &nFOs_SS );
+    BabyTree->Branch( "nvtx", &nvtx );
+    BabyTree->Branch( "rho", &rho );
+    BabyTree->Branch( "rho_neut_centr", &rho_neut_centr );
+    BabyTree->Branch( "rho_calo", &rho_calo );
+    BabyTree->Branch( "rho_calo_centr", &rho_calo_centr );
+    
+    //All leptons
+    BabyTree->Branch( "p4", &p4 );
+    BabyTree->Branch( "tag_p4", &tag_p4 );
+    BabyTree->Branch( "dilep_p4", &dilep_p4 );
+    BabyTree->Branch( "mc_p4", &mc_p4 );
+    BabyTree->Branch( "mc_motherp4", &mc_motherp4 );
+    BabyTree->Branch( "mc_motherid", &mc_motherid );
+    BabyTree->Branch( "id", &id );
+    BabyTree->Branch( "isPF", &isPF );
+    BabyTree->Branch( "idx", &idx );
+    BabyTree->Branch( "dxyPV", &dxyPV );
+    BabyTree->Branch( "dZ", &dZ );
+    BabyTree->Branch( "dxyPV_err", &dxyPV_err );
+    BabyTree->Branch( "motherID", &motherID );
+    BabyTree->Branch( "mc_id", &mc_id );
+    BabyTree->Branch( "RelIso03", &RelIso03 );
+    BabyTree->Branch( "RelIso03EA", &RelIso03EA );
+    BabyTree->Branch( "tag_RelIso03EA", &tag_RelIso03EA );
+    BabyTree->Branch( "RelIso03DB", &RelIso03DB );
+    BabyTree->Branch( "pfChargedHadronIso", &pfChargedHadronIso );
+    BabyTree->Branch( "pfPhotonIso", &pfPhotonIso );
+    BabyTree->Branch( "pfNeutralHadronIso", &pfNeutralHadronIso );
+    BabyTree->Branch( "tkIso", &tkIso );
+    BabyTree->Branch( "sumPUPt", &sumPUPt );
+    BabyTree->Branch( "passes_SS_tight_v3", &passes_SS_tight_v3 );
+    BabyTree->Branch( "passes_SS_tight_noiso_v3", &passes_SS_tight_noiso_v3 );
+    BabyTree->Branch( "passes_SS_fo_v3", &passes_SS_fo_v3 );
+    BabyTree->Branch( "passes_SS_fo_noiso_v3", &passes_SS_fo_noiso_v3 );
+    BabyTree->Branch( "passes_SS_fo_looseMVA_v3", &passes_SS_fo_looseMVA_v3 );
+    BabyTree->Branch( "passes_SS_fo_looseMVA_noiso_v3", &passes_SS_fo_looseMVA_noiso_v3 );
+    BabyTree->Branch( "passes_SS_veto_v3", &passes_SS_veto_v3 );
+    BabyTree->Branch( "passes_SS_veto_noiso_v3", &passes_SS_veto_noiso_v3 );
+    BabyTree->Branch( "passes_SS_tight_v4", &passes_SS_tight_v4 );
+    BabyTree->Branch( "passes_SS_tight_noiso_v4", &passes_SS_tight_noiso_v4 );
+    BabyTree->Branch( "passes_SS_fo_v4", &passes_SS_fo_v4 );
+    BabyTree->Branch( "passes_SS_fo_noiso_v4", &passes_SS_fo_noiso_v4 );
+    BabyTree->Branch( "passes_SS_fo_looseMVA_v4", &passes_SS_fo_looseMVA_v4 );
+    BabyTree->Branch( "passes_SS_fo_looseMVA_noiso_v4", &passes_SS_fo_looseMVA_noiso_v4 );
+    BabyTree->Branch( "passes_SS_veto_v4", &passes_SS_veto_v4 );
+    BabyTree->Branch( "passes_SS_veto_noiso_v4", &passes_SS_veto_noiso_v4 );
+    BabyTree->Branch( "passes_SS_tight_v5", &passes_SS_tight_v5 );
+    BabyTree->Branch( "passes_SS_tight_noiso_v5", &passes_SS_tight_noiso_v5 );
+    BabyTree->Branch( "passes_SS_fo_v5", &passes_SS_fo_v5 );
+    BabyTree->Branch( "passes_SS_fo_noiso_v5", &passes_SS_fo_noiso_v5 );
+    BabyTree->Branch( "passes_SS_fo_looseMVA_v5", &passes_SS_fo_looseMVA_v5 );
+    BabyTree->Branch( "passes_SS_fo_looseMVA_noiso_v5", &passes_SS_fo_looseMVA_noiso_v5 );
+    BabyTree->Branch( "passes_SS_veto_v5", &passes_SS_veto_v5 );
+    BabyTree->Branch( "passes_SS_veto_noiso_v5", &passes_SS_veto_noiso_v5 );
+    BabyTree->Branch( "passes_WW_medium_v2", &passes_WW_medium_v2 );
+    BabyTree->Branch( "passes_WW_medium_noiso_v2", &passes_WW_medium_noiso_v2 );
+    BabyTree->Branch( "passes_WW_fo_v2", &passes_WW_fo_v2 );
+    BabyTree->Branch( "passes_WW_fo_noiso_v2", &passes_WW_fo_noiso_v2 );
+    BabyTree->Branch( "passes_WW_veto_v2", &passes_WW_veto_v2 );
+    BabyTree->Branch( "passes_WW_veto_noiso_v2", &passes_WW_veto_noiso_v2 );
+    BabyTree->Branch( "passes_HAD_veto_v3", &passes_HAD_veto_v3 );
+    BabyTree->Branch( "passes_HAD_veto_noiso_v3", &passes_HAD_veto_noiso_v3 );
+    BabyTree->Branch( "passes_HAD_loose_v3", &passes_HAD_loose_v3 );
+    BabyTree->Branch( "passes_HAD_loose_noiso_v3", &passes_HAD_loose_noiso_v3 );
+    BabyTree->Branch( "passes_POG_vetoID", &passes_POG_vetoID );
+    BabyTree->Branch( "passes_POG_looseID", &passes_POG_looseID );
+    BabyTree->Branch( "passes_POG_mediumID", &passes_POG_mediumID );
+    BabyTree->Branch( "passes_POG_tightID", &passes_POG_tightID );
+    BabyTree->Branch( "ip3d", &ip3d );
+    BabyTree->Branch( "ip3derr", &ip3derr );
+    BabyTree->Branch( "type", &type );
+    BabyTree->Branch( "mt", &mt );
+    BabyTree->Branch( "ptrelv0", &ptrelv0 );
+    BabyTree->Branch( "ptrelv1", &ptrelv1 );
+    BabyTree->Branch( "miniiso", &miniiso );
+    BabyTree->Branch( "miniisoDB", &miniisoDB );
+    BabyTree->Branch( "reliso04", &reliso04 );
+    BabyTree->Branch( "annulus04", &annulus04 );
+    BabyTree->Branch( "AbsTrkIso", &AbsTrkIso );
+    BabyTree->Branch( "TrkAn04", &TrkAn04 );
+    BabyTree->Branch( "iso03sumPt", &iso03sumPt );
+    BabyTree->Branch( "iso03emEt", &iso03emEt );
+    BabyTree->Branch( "iso03hadEt", &iso03hadEt );
+    BabyTree->Branch( "jet_close_lep_idx", &jet_close_lep_idx );
+    BabyTree->Branch( "jet_close_lep", &jet_close_lep );
+    BabyTree->Branch( "jet_close_lep_undoJEC", &jet_close_lep_undoJEC );
+    BabyTree->Branch( "jet_close_lep_area", &jet_close_lep_area );
+    BabyTree->Branch( "jet_close_L1", &jet_close_L1 );
+    BabyTree->Branch( "jet_close_L1nc", &jet_close_L1nc );
+    BabyTree->Branch( "jet_close_L1ncmc", &jet_close_L1ncmc );
+    BabyTree->Branch( "jet_close_L1L2L3", &jet_close_L1L2L3 );
+    BabyTree->Branch( "jet_close_L2L3", &jet_close_L2L3 );
+    BabyTree->Branch( "ptratio", &ptratio );
+    BabyTree->Branch( "tag_charge", &tag_charge );
+    BabyTree->Branch( "tag_mc_motherid", &tag_mc_motherid );
+    BabyTree->Branch( "tag_eSeed", &tag_eSeed );
+    BabyTree->Branch( "tag_eSCRaw", &tag_eSCRaw );
+    BabyTree->Branch( "tag_eSC", &tag_eSC );
+    BabyTree->Branch( "tag_ecalEnergy", &tag_ecalEnergy );
+    BabyTree->Branch( "exp_innerlayers", &exp_innerlayers );
+    BabyTree->Branch( "exp_outerlayers", &exp_outerlayers );
+    
+    //Tag triggers
+    BabyTree->Branch( "tag_HLT_Ele27_eta2p1_WPTight_Gsf", &tag_HLT_Ele27_eta2p1_WPTight_Gsf );
+    BabyTree->Branch( "tag_HLT_Ele32_eta2p1_WPTight_Gsf", &tag_HLT_Ele32_eta2p1_WPTight_Gsf );
+    
+    BabyTree->Branch( "tag_HLT_IsoMu24", &tag_HLT_IsoMu24 );
+    BabyTree->Branch( "tag_HLT_IsoTkMu24", &tag_HLT_IsoTkMu24 );
+    
+    BabyTree->Branch( "dilep_mass", &dilep_mass );
+    BabyTree->Branch( "isRandom", &isRandom );
+    
+    //Electrons
+    BabyTree->Branch( "sigmaIEtaIEta_full5x5", &sigmaIEtaIEta_full5x5 );
+    BabyTree->Branch( "sigmaIEtaIEta", &sigmaIEtaIEta );
+    BabyTree->Branch( "etaSC", &etaSC );
+    BabyTree->Branch( "dEtaIn", &dEtaIn );
+    BabyTree->Branch( "dPhiIn", &dPhiIn );
+    BabyTree->Branch( "hOverE", &hOverE );
+    BabyTree->Branch( "eSeed", &eSeed );
+    BabyTree->Branch( "scSeedEta", &scSeedEta );
+    BabyTree->Branch( "ecalEnergy", &ecalEnergy );
+    BabyTree->Branch( "eOverPIn", &eOverPIn );
+    BabyTree->Branch( "conv_vtx_flag", &conv_vtx_flag );
+    BabyTree->Branch( "charge", &charge );
+    BabyTree->Branch( "sccharge", &sccharge );
+    BabyTree->Branch( "ckf_charge", &ckf_charge );
+    BabyTree->Branch( "threeChargeAgree", &threeChargeAgree_branch );
+    BabyTree->Branch( "mva", &mva );
+    BabyTree->Branch( "mva_25ns", &mva_25ns );
+    BabyTree->Branch( "tag_mva_25ns", &tag_mva_25ns );
+    BabyTree->Branch( "ecalIso", &ecalIso );
+    BabyTree->Branch( "hcalIso", &hcalIso );
+    BabyTree->Branch( "ecalPFClusterIso", &ecalPFClusterIso );
+    BabyTree->Branch( "hcalPFClusterIso", &hcalPFClusterIso );
+    BabyTree->Branch( "ckf_laywithmeas", &ckf_laywithmeas );
+    BabyTree->Branch( "sigmaIPhiIPhi_full5x5", &sigmaIPhiIPhi_full5x5 );
+    BabyTree->Branch( "e1x5_full5x5", &e1x5_full5x5 );
+    BabyTree->Branch( "e5x5_full5x5", &e5x5_full5x5 );
+    BabyTree->Branch( "r9_full5x5", &r9_full5x5 );
+    BabyTree->Branch( "tag_r9_full5x5", &tag_r9_full5x5 );
+    BabyTree->Branch( "etaSCwidth", &etaSCwidth );
+    BabyTree->Branch( "phiSCwidth", &phiSCwidth );
+    BabyTree->Branch( "eSCRaw", &eSCRaw );
+    BabyTree->Branch( "eSC", &eSC );
+    BabyTree->Branch( "eSCPresh", &eSCPresh );
+    BabyTree->Branch( "ckf_chi2", &ckf_chi2 );
+    BabyTree->Branch( "ckf_ndof", &ckf_ndof );
+    BabyTree->Branch( "chi2", &chi2 );
+    BabyTree->Branch( "ndof", &ndof );
+    BabyTree->Branch( "fbrem", &fbrem );
+    BabyTree->Branch( "eOverPOut", &eOverPOut );
+    BabyTree->Branch( "dEtaOut", &dEtaOut );
+    BabyTree->Branch( "dPhiOut", &dPhiOut );
+    BabyTree->Branch( "gsf_validHits", &gsf_validHits );
+    BabyTree->Branch( "conv_vtx_prob", &conv_vtx_prob );
+    
+    //Muons
+    BabyTree->Branch( "pid_PFMuon", &pid_PFMuon );
+    BabyTree->Branch( "gfit_chi2", &gfit_chi2 );
+    BabyTree->Branch( "gfit_validSTAHits", &gfit_validSTAHits );
+    BabyTree->Branch( "numberOfMatchedStations", &numberOfMatchedStations );
+    BabyTree->Branch( "validPixelHits", &validPixelHits );
+    BabyTree->Branch( "nlayers", &nlayers );
+    BabyTree->Branch( "chi2LocalPosition", &chi2LocalPosition );
+    BabyTree->Branch( "trkKink", &trkKink );
+    BabyTree->Branch( "validHits", &validHits );
+    BabyTree->Branch( "lostHits", &lostHits );
+    BabyTree->Branch( "segmCompatibility", &segmCompatibility );
+    
+    //Single Muon Triggers
+    BabyTree->Branch( "HLT_Mu8", &HLT_Mu8 );
+    BabyTree->Branch( "HLT_Mu17", &HLT_Mu17 );
+    BabyTree->Branch( "HLT_Mu8_TrkIsoVVL", &HLT_Mu8_TrkIsoVVL );
+    BabyTree->Branch( "HLT_Mu17_TrkIsoVVL", &HLT_Mu17_TrkIsoVVL );
+    BabyTree->Branch( "HLT_IsoMu24", &HLT_IsoMu24 );
+    BabyTree->Branch( "HLT_IsoTkMu24", &HLT_IsoTkMu24 );
+    BabyTree->Branch( "HLT_Mu50", &HLT_Mu50 );
+    BabyTree->Branch( "HLT_Mu55", &HLT_Mu55 );
+    BabyTree->Branch( "HLT_TkMu50", &HLT_TkMu50 );
+    
+    BabyTree->Branch( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg );
+    BabyTree->Branch( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg );
+    BabyTree->Branch( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg );
+    BabyTree->Branch( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg );
+    
+    
+    //Single Electron Triggers
+    BabyTree->Branch( "HLT_Ele8_CaloIdM_TrackIdM_PFJet30", &HLT_Ele8_CaloIdM_TrackIdM_PFJet30 );
+    BabyTree->Branch( "HLT_Ele12_CaloIdM_TrackIdM_PFJet30", &HLT_Ele12_CaloIdM_TrackIdM_PFJet30 );
+    BabyTree->Branch( "HLT_Ele17_CaloIdM_TrackIdM_PFJet30", &HLT_Ele17_CaloIdM_TrackIdM_PFJet30 );
+    BabyTree->Branch( "HLT_Ele23_CaloIdM_TrackIdM_PFJet30", &HLT_Ele23_CaloIdM_TrackIdM_PFJet30 );
+    BabyTree->Branch( "HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30 );
+    BabyTree->Branch( "HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30 );
+    BabyTree->Branch( "HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30 );
+    BabyTree->Branch( "HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30 );
+    
+    BabyTree->Branch( "HLT_Ele27_eta2p1_WPTight_Gsf", &HLT_Ele27_eta2p1_WPTight_Gsf );
+    BabyTree->Branch( "HLT_Ele32_eta2p1_WPTight_Gsf", &HLT_Ele32_eta2p1_WPTight_Gsf );
+    BabyTree->Branch( "HLT_Ele105_CaloIdVT_GsfTrkIdT", &HLT_Ele105_CaloIdVT_GsfTrkIdT );
+    BabyTree->Branch( "HLT_Ele115_CaloIdVT_GsfTrkIdT", &HLT_Ele115_CaloIdVT_GsfTrkIdT );
+    
+    //Double Electron Triggers
+    BabyTree->Branch( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg );
+    BabyTree->Branch( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg );
+    BabyTree->Branch( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1 );
+    BabyTree->Branch( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL );
+    BabyTree->Branch( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg );
+    BabyTree->Branch( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg );
+    BabyTree->Branch( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1 );
+    BabyTree->Branch( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL );
+    
+    
 // BabyTree->Branch("gfit_ndof"              , &gfit_ndof); // NOTE take out for now because of the int float conflict that Vince fixed
 //  BabyTree->Branch("HLT_Mu10_CentralPFJet30_BTagCSV0p5PF" , &HLT_Mu10_CentralPFJet30_BTagCSV0p5PF);
 //  BabyTree->Branch("HLT_Mu10_CentralPFJet30_BTagCSV0p54PF", &HLT_Mu10_CentralPFJet30_BTagCSV0p54PF);
@@ -281,7 +281,7 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
 //ToDo     BabyTree->Branch("HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300"            , &HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300);
 //ToDo     BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL"        , &HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL);
 //ToDo     BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL"         , &HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL);
-//ToDo   
+//ToDo
 //ToDo     //Double Muon Triggers
 //ToDo     BabyTree->Branch("HLT_DoubleMu8_Mass8_PFHT300"                            , &HLT_DoubleMu8_Mass8_PFHT300);
 //ToDo     BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL"                       , &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL);
@@ -294,6 +294,7 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
 
 }
 
+//___________________________________________________________________________________________________________________________________________
 void babyMaker::InitBabyNtuple(){
 
   //General
@@ -324,16 +325,16 @@ void babyMaker::InitBabyNtuple(){
   njets = -1;
   ht = -1;
   ht_SS = -1;
-  jets.clear();
-  jets_disc.clear();
-  jets_area.clear();
-  jets_undoJEC.clear();
   sample = "";
   nFOs_SS = -1;
   nvtx = -1;
   rho = -1;
   rho_calo = -1;
   rho_calo_centr = -1;
+  jets.clear();
+  jets_disc.clear();
+  jets_area.clear();
+  jets_undoJEC.clear();
 
   InitLeptonBranches();
 
