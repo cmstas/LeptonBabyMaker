@@ -23,24 +23,22 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
 {
     //Print warning!
     cout << "Careful!! Path is " << path << endl;
+
+    // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+    // Make baby root file. This is our main output.
+    // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+    MakeBabyNtuple(Form("%s.root", output_name));
+    InitBabyNtuple();
+
+    // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
+    // Set up all the tools needed for looping over CMS3/4.
+    // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
+    //Add good run list
+    set_goodrun_file("goodRunList/goldenJson_2016rereco_36p46ifb.txt");
     //Create and init MVA
     createAndInitMVA("./CORE", true, false, 80); // Moriond
     readMVA* v25nsMVAreader = new readMVA();
     v25nsMVAreader->InitMVA("CORE", true);
-    //Add good run list
-    // set_goodrun_file("goodRunList/final2015_golden_25ns2p11fb.txt");
-    //set_goodrun_file("goodRunList/DCSONLY_json_160516_snt.txt");
-    // set_goodrun_file("goodRunList/Cert_271036-273450_13TeV_PromptReco_Collisions16_JSON_NoL1T_snt.txt");
-    // set_goodrun_file("goodRunList/Cert_271036-273730_13TeV_PromptReco_Collisions16_JSON_snt.txt");
-    // set_goodrun_file("goodRunList/Cert_271036-274443_13TeV_PromptReco_Collisions16_JSON_snt.txt");
-    // set_goodrun_file("goodRunList/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON_NoL1T_snt.txt");
-    // set_goodrun_file("goodRunList/Cert_271036-276097_13TeV_PromptReco_Collisions16_JSON_NoL1T_v2_snt.txt");
-    // set_goodrun_file("goodRunList/Cert_271036-276811_13TeV_PromptReco_Collisions16_JSON_snt.txt");
-    set_goodrun_file("goodRunList/goldenJson_2016rereco_36p46ifb.txt");
-    //Make Baby Ntuple
-    MakeBabyNtuple(Form("%s.root", output_name));
-    //Initialize Baby Ntuple
-    InitBabyNtuple();
     //JEC files -- 50 ns MC
     std::vector<std::string> jetcorr_filenames_50ns_MC_pfL1;
     std::vector<std::string> jetcorr_filenames_50ns_MC_pfL1L2L3;
@@ -116,16 +114,22 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
     std::vector <string> jetcorr_filenames_pfL1;
     std::vector <string> jetcorr_filenames_pfL1L2L3;
     std::vector <string> jetcorr_filenames_pfL2L3;
-    //Set up loop over chain
+
+    // ~-~-~-~-~-~-~-
+    // The main loop.
+    // ~-~-~-~-~-~-~-
     unsigned int nEventsDone = 0;
     unsigned int nEventsToDo = chain->GetEntries();
     if (nEvents >= 0) { nEventsToDo = nEvents; }
     TObjArray *listOfFiles = chain->GetListOfFiles();
     TIter fileIter(listOfFiles);
     TFile *currentFile = 0;
-    // File Loop
     while ((currentFile = (TFile*)fileIter.Next()))
     {
+
+        // ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
+        // Based on the current file name, set various configurations.
+        // ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
         bool isPromptReco = TString(currentFile->GetTitle()).Contains("PromptReco");
         isDataFromFileName = TString(currentFile->GetTitle()).Contains("Run2015") || TString(currentFile->GetTitle()).Contains("Run2016");
         if (isPromptReco) { isDataFromFileName = true; }
@@ -133,9 +137,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
         else if (TString(currentFile->GetTitle()).Contains("DoubleEG")) { isDataFromFileName = true; }
         int bx = 25;
         if (TString(currentFile->GetTitle()).Contains("Run2015B") || TString(currentFile->GetTitle()).Contains("50ns")) { bx = 50; }
-        // ----------------------------------
-        // retrieve JEC from files, if using
-        // ----------------------------------
+        // Retrieve JEC from files, if using
         //// files for RunIISpring15 MC
         if (bx == 50 && isDataFromFileName)
         {
@@ -173,43 +175,47 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
             jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_MC_pfL1;
             jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_MC_pfL1L2L3;
         }
-        //cout << "applying JEC from the following files:" << endl;
-        //for (unsigned int ifile = 0; ifile < jetcorr_filenames_pfL1L2L3.size(); ++ifile) {
-        //cout << " " << jetcorr_filenames_pfL1L2L3.at(ifile) << endl;
-        //}
-        // Get File Content
+
+        // Check whether to start looping over this 'currentFile'.
         if (nEventsDone >= nEventsToDo) { continue; }
+
+        // Get file content and initialize to CMS3 class.
         TFile *file = TFile::Open(currentFile->GetTitle());
-        TTree *tree = (TTree*)file->Get("Events");
+        TTree *tree = (TTree*) file->Get("Events");
         cms3.Init(tree);
-        // Loop over Events in current file
+
+        // Loop over Events in current file.
         unsigned int nEventsTree = tree->GetEntriesFast();
         for (unsigned int evt = 0; evt < nEventsTree; evt++)
         {
-            //if (verbose) cout << "Event "<<evt<<endl;
-            // Get Event Content
+            // Check whether to stop looping over this TTree in 'currentFile'
             if (nEventsDone >= nEventsToDo) { continue; }
+
+            // Get event content into CMS3 class instancej.
             cms3.GetEntry(evt);
+
+            // Increase counter.
             nEventsDone++;
-            //if (verbose) cout << "Check prompt reco (Data)"<<endl;
+
             if (tas::evt_isRealData() && isPromptReco && tas::evt_run() <= 251562) { continue; }
-            //If data, check good run list
-            //if (verbose) cout << "Check good run (Data)"<<endl;
+
+            // If data, check good run list.
             if (applyJson && tas::evt_isRealData() && !goodrun(tas::evt_run(), tas::evt_lumiBlock())) { continue; }
-            //Initialize variables
-            //if (verbose) cout << "InitBabyNtuple"<<endl;
+
+            // Initialize output baby ntuple variables.
             InitBabyNtuple();
-            // Progress
+
+            // Print progress.
             CMS3::progress(nEventsDone, nEventsToDo);
-            //Debug mode
-            if (verbose && tas::evt_event() != evt_cut && evt_cut != 0) { continue; }
-            if (verbose) { cout << "file name is " << file->GetName() << endl; }
-            //Preliminary stuff
+
+            // The following should never occur, if it does something is wrong about the CMS3/4 processing.
             if (tas::mus_dxyPV().size() != tas::mus_dzPV().size()) { continue; }
-            //MET variables
+
+            // Calculate MET variables.
             metStruct trackMetStruct = trackerMET(0.2);
             pair<float, float> corrMETPair = getT1CHSMET_fromMINIAOD(jet_corrector_pfL1L2L3);
-            //Fill Easy Variables
+
+            // Fill easy Variables
             evt_pfmet = cms3.evt_pfmet();
             evt_pfmetPhi = cms3.evt_pfmetPhi();
             evt_trackmet = trackMetStruct.met;
@@ -223,6 +229,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
             evt_run = tas::evt_run();
             evt_isRealData = tas::evt_isRealData();
             sample = Form("%s", file->GetName());
+
+            // If not data, i.e. MC, save extra information.
             if (!evt_isRealData)
             {
                 evt_xsec_incl = tas::evt_xsec_incl();
@@ -230,18 +238,22 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 gen_met = tas::gen_met();
                 gen_metPhi = tas::gen_metPhi();
             }
-            // Vertex selection:
+
+            // Count number of good vertices.
             nvtx = 0;
             for (unsigned int ivtx = 0; ivtx < tas::evt_nvtxs(); ivtx++)
             {
                 if (!isGoodVertex(ivtx)) { continue; }
                 nvtx++;
             }
+
+            // PU density variables
             rho = tas::evt_fixgridfastjet_all_rho();
             rho_neut_centr = tas::evt_fixgridfastjet_centralneutral_rho();
             rho_calo = tas::evt_fixgridfastjet_allcalo_rho();
             rho_calo_centr = tas::evt_fixgridfastjet_centralcalo_rho();
-            //Fill data vs. mc variables
+
+            // Event filters.
             passes_met_filters = evt_isRealData ? passesMETfilter() : 1;
             filt_hbhe = evt_isRealData ? hbheNoiseFilter() : 1;
             filt_csc = evt_isRealData ? tas::evt_cscTightHaloId() : 1;
@@ -249,15 +261,23 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
             filt_ecaltp = evt_isRealData ? tas::filt_ecalTP() : 1;
             filt_trkfail = evt_isRealData ? tas::filt_trackingFailure() : 1;
             filt_eebadsc = evt_isRealData ? tas::filt_eeBadSc() : 1;
+
+            // Weight of MC events scaled to 1 fb-1.
             scale1fb = evt_isRealData ? 1 : tas::evt_scale1fb();
-            //Determine and save jet variables
+
+            // Determine and save jet variables
             ht = 0;
             ht_SS = 0;
+            // Loop over the pf jet collection
             for (unsigned int i = 0; i < tas::pfjets_p4().size(); i++)
             {
+                // Get the raw p4 by undoing the JEC.
                 LorentzVector raw_jet = tas::pfjets_p4().at(i) * tas::pfjets_undoJEC().at(i);
-                //Require loose jet ID
+
+                // Require at least loose jet ID.
                 if (!isLoosePFJet_50nsV1(i)) { continue; }
+
+                // Recompute the JEC from the JEC tool configured at the beginning of the run.
                 float jet_L1L2L3 = 1.;
                 if (jetcorr_filenames_pfL1L2L3.size() > 0)
                 {
@@ -268,151 +288,128 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                     jet_corrector_pfL1L2L3->setRho(rho);
                     jet_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
                 }
+
+                // Compute the corrected jet p4.
                 LorentzVector jet = raw_jet * jet_L1L2L3;
-                // cout << "jet pT=" << jet.pt() << " pTraw=" << raw_jet.pt() << " eta=" << raw_jet.eta() << " phi=" << raw_jet.phi() << " area=" << tas::pfjets_area().at(i) << " rho=" << rho << " L1=" << jet_L1 << " L2L3=" << jet_L2L3 << " L1L2L3=" << jet_L1L2L3 << endl;
-                //Kinematic jet cuts
+
+                // Kinematic jet cuts
                 if (jet.pt() < 25) { continue; }
-                //Verbose
-                if (verbose) { cout << "Possible jet with pT: " << jet.pt() << endl; }
-                //Save jets that make it this far
+
+                // Save jets that make it this far.
                 jets.push_back(jet);
-                //HT is sum of jets with pT > 40
+
+                // Compute jet related variables.
+                // HT is computed here.
                 if (jet.pt() > 40) { ht += jet.pt(); }
+                // HT in same-sign requires that the pf jets are cleaned against electrons and muons.
                 if (jet.pt() > 40 && fabs(jet.eta()) < 2.4)
                 {
-                    bool jetClean = true;
+                    bool isCleanJet = true;
+                    // Loop over muons and kill the jet if overlaps with the jet at hand.
                     for (size_t j = 0; j < tas::mus_p4().size(); j++)
                     {
                         if (muonID(j, SS_fo_v5) && tas::mus_p4().at(j).pt() > 5. && (ROOT::Math::VectorUtil::DeltaR(jet, tas::mus_p4().at(j)) < 0.4))
                         {
-                            jetClean = false;
+                            isCleanJet = false;
                             if (verbose) { cout << "jet cleaned by muon p4: " << tas::mus_p4().at(j) << " pt=" << tas::mus_p4().at(j).pt() << endl; }
                         }
                     }
+                    // Loop over electrons and kill the jet if overlaps with the jet at hand.
                     for (size_t j = 0; j < tas::els_p4().size(); j++)
                     {
                         if (electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt() > 7. && (ROOT::Math::VectorUtil::DeltaR(jet, tas::els_p4().at(j)) < 0.4))
                         {
-                            jetClean = false;
+                            isCleanJet = false;
                             if (verbose) { cout << "jet cleaned by electron p4: " << tas::els_p4().at(j) << " pt=" << tas::els_p4().at(j).pt() << endl; }
                         }
                     }
-                    if (jetClean) { ht_SS += jet.pt(); }
+                    if (isCleanJet) { ht_SS += jet.pt(); }
                 }
-                //Save b-tags
+                // Save b-tags.
                 float disc = tas::pfjets_pfCombinedInclusiveSecondaryVertexV2BJetTag().at(i);
                 jets_disc.push_back(disc);
                 jets_area.push_back(tas::pfjets_area().at(i));
                 jets_undoJEC.push_back(tas::pfjets_undoJEC().at(i));
             }
+
+            // Set the jet multiplicity.
             njets = jets.size();
-            //Verbose for jets
-            if (verbose)
-            {
-                cout << "njets: " << njets << endl;
-                for (unsigned int i = 0; i < jets.size(); i++) { cout << i << " " << jets[i].pt() << " " << jets[i].eta() << endl; }
-            }
-            //Calculate number of fakeable objects
-            if (verbose) { cout << "Calculate number of fakeable objects" << endl; }
+
+            //Calculate number of fakeable objects for same sign analysis
             nFOs_SS = 0;
             for (size_t j = 0; j < tas::mus_p4().size(); j++)
             {
                 if (muonID(j, SS_fo_v5) && tas::mus_p4().at(j).pt() > 10) { nFOs_SS++; }
             }
+
             for (size_t j = 0; j < tas::els_p4().size(); j++)
             {
                 if (electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt() > 10) { nFOs_SS++; }
             }
-            //These variables are persistent through the event, used for PFlepton saving
+
+            // ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+            // These variables are persistent through the event, used for PFlepton saving
+            // ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
             bool foundMuTag = false;
             bool foundElTag = false;
-            // Variables to keep track of PFElectrons and PFMuons
-            if (verbose) { cout << "Variables to keep track of PFElectrons and PFMuons" << endl; }
-            // We would like to save PFleptons if they don't overlap with something we've already saved.
-            // If they do overlap, we want to save the fact that they overlap
-            // Load the pflepton p4s in memory, we'll have to check them on each lepton
             vector<LorentzVector> savedMuP4s;
-            savedMuP4s.clear();
             vector<LorentzVector> savedElP4s;
-            savedElP4s.clear();
-            vector<int> pfelidx;
-            pfelidx.clear();
-            vector<int> pfmuidx;
-            pfmuidx.clear();
-            vector<bool> pfelIsReco;
-            pfelIsReco.clear();
-            vector<bool> pfmuIsReco;
-            pfmuIsReco.clear();
             vector<LorentzVector> pfelP4;
-            pfelP4.clear();
             vector<LorentzVector> pfmuP4;
-            pfmuP4.clear();
+            vector<bool> pfelIsReco;
+            vector<bool> pfmuIsReco;
+            vector<int> pfelidx;
+            vector<int> pfmuidx;
             vector<float> pfelAbsTrkIso;
-            pfelAbsTrkIso.clear();
             vector<float> pfmuAbsTrkIso;
-            pfmuAbsTrkIso.clear();
             vector<float> pfelTrkAn04;
-            pfelTrkAn04.clear();
             vector<float> pfmuTrkAn04;
-            pfmuTrkAn04.clear();
-            for (unsigned int i = 0; i < tas::pfcands_p4().size(); i++)
-            {
-                if (fabs(tas::pfcands_particleId().at(i)) != 11 && fabs(tas::pfcands_particleId().at(i)) != 13) { continue; }
-                if (tas::pfcands_p4().at(i).pt() < 5) { continue; }
-                if (fabs(tas::pfcands_dz().at(i)) > 0.1) { continue; }
-                if (fabs(tas::pfcands_p4().at(i).eta()) > 2.5) { continue; }
-                if (fabs(tas::pfcands_particleId().at(i)) == 11)
-                {
-                    pfelidx.push_back(i);
-                    pfelP4.push_back(tas::pfcands_p4().at(i));
-                    pfelIsReco.push_back(false);
-                    pfelAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
-                    pfelTrkAn04.push_back(PFCandRelIsoAn04(i));
-                }
-                else if (fabs(tas::pfcands_particleId().at(i)) == 13)
-                {
-                    pfmuidx.push_back(i);
-                    pfmuP4.push_back(tas::pfcands_p4().at(i));
-                    pfmuIsReco.push_back(false);
-                    pfmuAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
-                    pfmuTrkAn04.push_back(PFCandRelIsoAn04(i));
-                }
-                continue;
-            }
+
             usedMu = false;
             usedEl = false;
             TRandom r;
             rndm = r.Rndm();
-            //Muon Loop -- we loop over the probes
-            if (verbose) { cout << "Muon Loop -- we loop over the probes" << endl; }
+
+            // Loop over muon candidates, which are our probes.
             for (unsigned int i = 0; i < tas::mus_p4().size(); i++)
             {
-                // Require pT > 10 GeV
+
+                // Require pT > 10 GeV.
                 float maxPt = 10.;
                 if (recoLeptonsDownTo5GeV) { maxPt = 5.; }
                 if (recoLeptonsDownTo20GeV) { maxPt = 20.; }
                 if (tas::mus_p4().at(i).pt() <= maxPt) { continue; }
+
                 InitLeptonBranches();
-                //Check for a tag
+
+                // Check for a tag.
                 bool foundTag = checkMuonTag(i, false);
+
+                // Require the following on the probe.
                 if (foundTag) { foundMuTag = true; }
                 if (muonID(i, SS_veto_noiso_v5) == 0 && muonID(i, HAD_loose_v3) == 0 && foundTag == false) { continue; }
                 if (onlySaveTagProbePairs && foundTag == false) { continue; }
-                //ID & Index for muons
-                id = -13.0 * tas::mus_charge().at(i);
-                idx = i;
-                //p4 for muon
+
+                // Get the p4 for the muon.
                 p4 = tas::mus_p4().at(i);
-                savedMuP4s.push_back(p4);
-                //Dilepton stuff
+
+                // Dilepton variables in case a tag to this probe is found.
                 if (foundTag)
                 {
                     dilep_p4 = p4 + tag_p4;
                     dilep_mass = dilep_p4.M();
                 }
                 if (onlySaveTagProbePairs && (dilep_mass < 60 || dilep_mass > 120)) { continue; }
+
+                // At this point we save the lepton
                 if (verbose) { cout << "Saving this muon." << endl; }
-                //MC stuff
+                savedMuP4s.push_back(p4);
+
+                // Set ID & Index for muons.
+                id = -13.0 * tas::mus_charge().at(i);
+                idx = i;
+
+                // Save truth information if it is a MC sample.
                 if (!evt_isRealData)
                 {
                     motherID = lepMotherID(Lep(id, idx));
@@ -421,12 +418,14 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                     mc_motherid = tas::mus_mc_motherid().at(i);
                     mc_id = tas::mus_mc_id().at(i);
                 }
+
                 //Impact parameter
                 dxyPV = abs(id) == 11 ? tas::els_dxyPV().at(i) : tas::mus_dxyPV().at(i);
                 dxyPV_err = abs(id) == 11 ? tas::els_d0Err().at(i) : tas::mus_d0Err().at(i);
                 dZ = abs(id) == 11 ? tas::els_dzPV().at(i) : tas::mus_dzPV().at(i);
                 ip3d = tas::mus_ip3d().at(i);
                 ip3derr = tas::mus_ip3derr().at(i);
+
                 //Isolation et al
                 RelIso03 = (tas::mus_isoR03_pf_ChargedHadronPt().at(i) + tas::mus_isoR03_pf_NeutralHadronEt().at(i) + tas::mus_isoR03_pf_PhotonEt().at(i)) / tas::mus_p4().at(i).pt();
                 RelIso03EA = muRelIso03EA(i);
@@ -571,25 +570,32 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 //Fill baby once per probe
                 BabyTree->Fill();
             } //close muon loop
+
             //Electron Loop
             if (verbose) { cout << "Electron Loop" << endl; }
             for (unsigned int i = 0; i < tas::els_p4().size(); i++)
             {
+
                 // Require pT > 10 GeV
                 float maxPt = 10.;
                 if (recoLeptonsDownTo5GeV) { maxPt = 5.; }
                 if (recoLeptonsDownTo20GeV) { maxPt = 20.; }
                 if (tas::els_p4().at(i).pt() <= maxPt) { continue; }
+
                 InitLeptonBranches();
+
                 //Check for a tag
                 bool foundTag = checkElectronTag(i, v25nsMVAreader);
+
+                // Require the following on the probe.
                 if (foundTag) { foundElTag = true; }
                 //Save the electron if we have a tag OR if it passes loose ID
                 if (electronID(i, SS_veto_noiso_v4) == 0 && electronID(i, HAD_veto_v3) == 0 && foundTag == false) { continue; }
                 if (onlySaveTagProbePairs && foundTag == false) { continue; }
-                //p4
+
+                // Get the p4 for the electron.
                 p4 = tas::els_p4().at(i);
-                savedElP4s.push_back(p4);
+
                 //Dilepton stuff
                 if (foundTag)
                 {
@@ -597,22 +603,29 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                     dilep_mass = dilep_p4.M();
                 }
                 if (onlySaveTagProbePairs && (dilep_mass < 60 || dilep_mass > 120)) { continue; }
+
+                // At this point we save the lepton
                 if (verbose) { cout << "Saving this electron: pt/eta/phi " << p4.pt() << "/" << p4.eta() << "/" << p4.phi() << endl; }
-                //ID & idx stuff
+                savedElP4s.push_back(p4);
+
+                // Set ID & idx for electron
                 id = -11.0 * tas::els_charge().at(i);
                 idx = i;
-                //MC Stuff
+
+                // Save truth information if it is a MC sample.
                 if (!evt_isRealData)
                 {
                     mc_p4 = tas::els_mc_p4().at(i);
                     mc_id = tas::els_mc_id().at(i);
                 }
+
                 //Impact Parameter
                 dxyPV = abs(id) == 11 ? tas::els_dxyPV().at(i) : tas::mus_dxyPV().at(i);
                 dxyPV_err = abs(id) == 11 ? tas::els_d0Err().at(i) : tas::mus_d0Err().at(i);
                 dZ = abs(id) == 11 ? tas::els_dzPV().at(i) : tas::mus_dzPV().at(i);
                 ip3d = tas::els_ip3d().at(i);
                 ip3derr = tas::els_ip3derr().at(i);
+
                 //Isolation et al
                 RelIso03 = (tas::els_pfChargedHadronIso().at(i) + tas::els_pfNeutralHadronIso().at(i) + tas::els_pfPhotonIso().at(i)) / tas::els_p4().at(i).pt();
                 RelIso03EA = eleRelIso03EA(i);
@@ -809,11 +822,42 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 BabyTree->Fill();
                 if (verbose) { cout << "Finished electron" << endl; }
             }
+
             ////////// Addition of PF LEPTONS that were not included before //////////////////
             // check if anything needs to be done:
             // - compare size of pfelp4 with probeelp4, and same for muons
             // - check whether there is a muon/electron tag
             // if something to be done, then we need to save the pflepton as well as tag properties and triggers...
+
+            // Variables to keep track of PFElectrons and PFMuons.
+            // We would like to save PFleptons if they don't overlap with something we've already saved.
+            // If they do overlap, we want to save the fact that they overlap.
+            // Load the pflepton p4s in memory, we'll have to check them on each lepton.
+            for (unsigned int i = 0; i < tas::pfcands_p4().size(); i++)
+            {
+                if (fabs(tas::pfcands_particleId().at(i)) != 11 && fabs(tas::pfcands_particleId().at(i)) != 13) { continue; }
+                if (tas::pfcands_p4().at(i).pt() < 5) { continue; }
+                if (fabs(tas::pfcands_dz().at(i)) > 0.1) { continue; }
+                if (fabs(tas::pfcands_p4().at(i).eta()) > 2.5) { continue; }
+                if (fabs(tas::pfcands_particleId().at(i)) == 11)
+                {
+                    pfelidx.push_back(i);
+                    pfelP4.push_back(tas::pfcands_p4().at(i));
+                    pfelIsReco.push_back(false);
+                    pfelAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
+                    pfelTrkAn04.push_back(PFCandRelIsoAn04(i));
+                }
+                else if (fabs(tas::pfcands_particleId().at(i)) == 13)
+                {
+                    pfmuidx.push_back(i);
+                    pfmuP4.push_back(tas::pfcands_p4().at(i));
+                    pfmuIsReco.push_back(false);
+                    pfmuAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
+                    pfmuTrkAn04.push_back(PFCandRelIsoAn04(i));
+                }
+                continue;
+            }
+
             if (verbose) { cout << "Addition of PF LEPTONS that were not included before" << endl; }
             bool addPFel = false;
             bool addPFmu = false;
@@ -846,6 +890,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                     BabyTree->Fill();
                 }
             } // addPFel
+
             if (addPFmu && addPFCandidates)
             {
                 for (unsigned int i = 0; i < pfmuP4.size(); i++)
@@ -872,11 +917,12 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                     BabyTree->Fill();
                 }
             } // addPFmu
-        }//close event loop
+
+        } //close event loop
         file->Close();
         delete file;
         cout << "\nFile done" << endl;
-    }//close file loop
+    } //close file loop
     cout << "\nWriting file" << endl;
     BabyFile->cd();
     BabyTree->Write();
