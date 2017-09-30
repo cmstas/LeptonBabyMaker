@@ -490,36 +490,34 @@ void babyMaker::InitLeptonBranches()
     hcalIso = -1;
     ecalPFClusterIso = -1;
     hcalPFClusterIso = -1;
-    ckf_laywithmeas       = -1;
+    ckf_laywithmeas = -1;
     sigmaIPhiIPhi_full5x5 = -1;
-    e1x5_full5x5          = -1;
-    e5x5_full5x5          = -1;
-    r9_full5x5            = -1;
-    tag_r9_full5x5        = -1;
-    etaSCwidth            = -1;
-    phiSCwidth            = -1;
-    eSCRaw                = -1;
-    eSC                   = -1;
-    ecalEnergy            = -1;
-    eSCPresh              = -1;
-    ckf_chi2              = -1;
-    ckf_ndof              = -1;
-    chi2                  = -1;
-    ndof                  = -1;
-    fbrem                 = -1;
-    eOverPOut             = -1;
-    dEtaOut               = -1;
-    dPhiOut               = -1;
-    gsf_validHits         = -1;
-    conv_vtx_prob         = -1;
+    e1x5_full5x5 = -1;
+    e5x5_full5x5 = -1;
+    r9_full5x5 = -1;
+    tag_r9_full5x5 = -1;
+    etaSCwidth = -1;
+    phiSCwidth = -1;
+    eSCRaw = -1;
+    eSC = -1;
+    ecalEnergy = -1;
+    eSCPresh = -1;
+    ckf_chi2 = -1;
+    ckf_ndof = -1;
+    chi2 = -1;
+    ndof = -1;
+    fbrem = -1;
+    eOverPOut = -1;
+    dEtaOut = -1;
+    dPhiOut = -1;
+    gsf_validHits = -1;
+    conv_vtx_prob = -1;
 
     //Single Muon Trigger
     HLT_Mu8_TrkIsoVVL = 0;
     HLT_Mu17_TrkIsoVVL = 0;
     HLT_Mu8 = 0;
     HLT_Mu17 = 0;
-    //  HLT_Mu10_CentralPFJet30_BTagCSV0p5PF = 0;
-    //  HLT_Mu10_CentralPFJet30_BTagCSV0p54PF = 0;
     HLT_IsoMu24 = 0;
     HLT_IsoTkMu24 = 0;
     HLT_Mu50 = 0;
@@ -540,8 +538,6 @@ void babyMaker::InitLeptonBranches()
     HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
     HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
     HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
-//  HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF = 0;
-//  HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p54PF = 0;
     HLT_Ele27_eta2p1_WPTight_Gsf = 0;
     HLT_Ele32_eta2p1_WPTight_Gsf = 0;
     HLT_Ele105_CaloIdVT_GsfTrkIdT = 0;
@@ -571,6 +567,10 @@ void babyMaker::InitLeptonBranches()
     HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ = 0;
     HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ = 0;
 
+//  HLT_Mu10_CentralPFJet30_BTagCSV0p5PF = 0;
+//  HLT_Mu10_CentralPFJet30_BTagCSV0p54PF = 0;
+//  HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF = 0;
+//  HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p54PF = 0;
 }
 
 bool babyMaker::checkMuonTag(unsigned int i, bool oldTag){
