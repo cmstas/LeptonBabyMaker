@@ -683,962 +683,890 @@ void babyMaker::fillMuonTriggerBranches(LorentzVector &p4, int idx, bool oldTag)
     HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg().at(idx);
 }
 
-
-int babyMaker::pfLepMotherID(int pfidx) {
-
-  for (unsigned int j = 0; j < tas::genps_id().size(); j++) {
-    if ( tas::genps_id().at(j) != tas::pfcands_particleId().at(pfidx) ) continue;
-    if ( tas::genps_p4().at(j).pt() < 2 ) continue;
-    if ( !tas::genps_isPromptFinalState().at(j) ) continue;
-    if (ROOT::Math::VectorUtil::DeltaR(tas::pfcands_p4().at(pfidx), tas::genps_p4().at(j)) > 0.1) continue;
-    // Found good match
-    return 1;
-  }
-  return 0;
+//___________________________________________________________________________________________________________________________________________
+int babyMaker::pfLepMotherID(int pfidx)
+{
+    for (unsigned int j = 0; j < tas::genps_id().size(); j++)
+    {
+        if (tas::genps_id().at(j) != tas::pfcands_particleId().at(pfidx)) { continue; }
+        if (tas::genps_p4().at(j).pt() < 2) { continue; }
+        if (!tas::genps_isPromptFinalState().at(j)) { continue; }
+        if (ROOT::Math::VectorUtil::DeltaR(tas::pfcands_p4().at(pfidx), tas::genps_p4().at(j)) > 0.1) { continue; }
+        // Found good match
+        return 1;
+    }
+    return 0;
 }
-
-
 
 //Main function
-int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
-
-  //Print warning!
-  cout << "Careful!! Path is " << path << endl;
-
-  //Create and init MVA
-  createAndInitMVA("./CORE", true, false, 80); // Moriond
-
-  readMVA* v25nsMVAreader = new readMVA();
-  v25nsMVAreader->InitMVA("CORE",true);
-
-  //Add good run list
-  //  set_goodrun_file("goodRunList/final2015_golden_25ns2p11fb.txt");
-  //set_goodrun_file("goodRunList/DCSONLY_json_160516_snt.txt");
-  //  set_goodrun_file("goodRunList/Cert_271036-273450_13TeV_PromptReco_Collisions16_JSON_NoL1T_snt.txt");
-  //  set_goodrun_file("goodRunList/Cert_271036-273730_13TeV_PromptReco_Collisions16_JSON_snt.txt");
-  //  set_goodrun_file("goodRunList/Cert_271036-274443_13TeV_PromptReco_Collisions16_JSON_snt.txt");
-  //  set_goodrun_file("goodRunList/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON_NoL1T_snt.txt");
-  //  set_goodrun_file("goodRunList/Cert_271036-276097_13TeV_PromptReco_Collisions16_JSON_NoL1T_v2_snt.txt");
-  //  set_goodrun_file("goodRunList/Cert_271036-276811_13TeV_PromptReco_Collisions16_JSON_snt.txt");
-  set_goodrun_file("goodRunList/goldenJson_2016rereco_36p46ifb.txt");
-
-  //Make Baby Ntuple
-  MakeBabyNtuple( Form("%s.root", output_name) );
-
-  //Initialize Baby Ntuple
-  InitBabyNtuple();
-
-  //JEC files -- 50 ns MC
-  std::vector<std::string> jetcorr_filenames_50ns_MC_pfL1;
-  std::vector<std::string> jetcorr_filenames_50ns_MC_pfL1L2L3;
-  std::vector<std::string> jetcorr_filenames_50ns_MC_pfL2L3;
-  jetcorr_filenames_50ns_MC_pfL1.push_back      ("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L1FastJet_AK4PFchs.txt");
-  jetcorr_filenames_50ns_MC_pfL1L2L3.push_back  ("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L1FastJet_AK4PFchs.txt");
-  jetcorr_filenames_50ns_MC_pfL1L2L3.push_back  ("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2Relative_AK4PFchs.txt");
-  jetcorr_filenames_50ns_MC_pfL1L2L3.push_back  ("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L3Absolute_AK4PFchs.txt");
-  jetcorr_filenames_50ns_MC_pfL2L3.push_back    ("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2Relative_AK4PFchs.txt");
-  jetcorr_filenames_50ns_MC_pfL2L3.push_back    ("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L3Absolute_AK4PFchs.txt");
-  jetcorr_filenames_50ns_MC_pfL2L3.push_back    ("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2L3Residual_AK4PFchs.txt");
-
-  //JEC files -- 50 ns DATA
-  std::vector<std::string> jetcorr_filenames_50ns_DATA_pfL1;
-  std::vector<std::string> jetcorr_filenames_50ns_DATA_pfL1L2L3;
-  jetcorr_filenames_50ns_DATA_pfL1.push_back    ("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L1FastJet_AK4PFchs.txt");
-  jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L1FastJet_AK4PFchs.txt");
-  jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L2Relative_AK4PFchs.txt");
-  jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L3Absolute_AK4PFchs.txt");
-  jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L2L3Residual_AK4PFchs.txt");
-
-  //JEC files -- 25 ns MC
-  std::vector<std::string> jetcorr_filenames_25ns_MC_pfL1;
-  std::vector<std::string> jetcorr_filenames_25ns_MC_pfL1L2L3;
-  std::vector<std::string> jetcorr_filenames_25ns_MC_pfL2L3;
-  jetcorr_filenames_25ns_MC_pfL1.push_back      ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L1FastJet_AK4PFchs.txt");
-  jetcorr_filenames_25ns_MC_pfL1L2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L1FastJet_AK4PFchs.txt");
-  jetcorr_filenames_25ns_MC_pfL1L2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2Relative_AK4PFchs.txt");
-  jetcorr_filenames_25ns_MC_pfL1L2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L3Absolute_AK4PFchs.txt");
-  jetcorr_filenames_25ns_MC_pfL2L3.push_back    ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2Relative_AK4PFchs.txt");
-  jetcorr_filenames_25ns_MC_pfL2L3.push_back    ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L3Absolute_AK4PFchs.txt");
-  jetcorr_filenames_25ns_MC_pfL2L3.push_back    ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2L3Residual_AK4PFchs.txt");
-
-  //JEC files -- 25 ns DATA
-  std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL1;
-  std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL1L2L3;
-  std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL2L3;
-  jetcorr_filenames_25ns_DATA_pfL1.push_back    ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L1FastJet_AK4PFchs.txt");
-  jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L1FastJet_AK4PFchs.txt");
-  jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2Relative_AK4PFchs.txt");
-  jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L3Absolute_AK4PFchs.txt");
-  jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2L3Residual_AK4PFchs.txt");
-  jetcorr_filenames_25ns_DATA_pfL2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2Relative_AK4PFchs.txt");
-  jetcorr_filenames_25ns_DATA_pfL2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L3Absolute_AK4PFchs.txt");
-  jetcorr_filenames_25ns_DATA_pfL2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2L3Residual_AK4PFchs.txt");
-
-  //Make JEC for each of these
-  FactorizedJetCorrector *jet_corrector_50ns_MC_pfL1;
-  FactorizedJetCorrector *jet_corrector_50ns_MC_pfL1L2L3;
-  FactorizedJetCorrector *jet_corrector_50ns_MC_pfL2L3;
-  FactorizedJetCorrector *jet_corrector_50ns_DATA_pfL1;
-  FactorizedJetCorrector *jet_corrector_50ns_DATA_pfL1L2L3;
-  FactorizedJetCorrector *jet_corrector_25ns_MC_pfL1;
-  FactorizedJetCorrector *jet_corrector_25ns_MC_pfL1L2L3;
-  FactorizedJetCorrector *jet_corrector_25ns_MC_pfL2L3;
-  FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL1;
-  FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL1L2L3;
-  FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL2L3;
-
-  //Fill the JEC
-  jet_corrector_50ns_MC_pfL1 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL1);
-  jet_corrector_50ns_MC_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL1L2L3);
-  jet_corrector_50ns_MC_pfL2L3 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL2L3);
-  jet_corrector_50ns_DATA_pfL1 = makeJetCorrector(jetcorr_filenames_50ns_DATA_pfL1);
-  jet_corrector_50ns_DATA_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_50ns_DATA_pfL1L2L3);
-  jet_corrector_25ns_MC_pfL1 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL1);
-  jet_corrector_25ns_MC_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL1L2L3);
-  jet_corrector_25ns_MC_pfL2L3 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL2L3);
-  jet_corrector_25ns_DATA_pfL1 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL1);
-  jet_corrector_25ns_DATA_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL1L2L3);
-  jet_corrector_25ns_DATA_pfL2L3 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL2L3);
-
-  //JECs
-  FactorizedJetCorrector *jet_corrector_pfL1 = 0;
-  FactorizedJetCorrector *jet_corrector_pfL1MC = 0;
-  FactorizedJetCorrector *jet_corrector_pfL1L2L3 = 0;
-  FactorizedJetCorrector *jet_corrector_pfL2L3 = 0;
-
-  //Record filenames
-  std::vector <string> jetcorr_filenames_pfL1;
-  std::vector <string> jetcorr_filenames_pfL1L2L3;
-  std::vector <string> jetcorr_filenames_pfL2L3;
-
-  //Set up loop over chain
-  unsigned int nEventsDone = 0;
-  unsigned int nEventsToDo = chain->GetEntries();
-  if(nEvents >= 0) nEventsToDo = nEvents;
-  TObjArray *listOfFiles = chain->GetListOfFiles();
-  TIter fileIter(listOfFiles);
-  TFile *currentFile = 0;
-
-  // File Loop
-  while ( (currentFile = (TFile*)fileIter.Next()) ) {
-
-    bool isPromptReco = TString(currentFile->GetTitle()).Contains("PromptReco");
-    isDataFromFileName = TString(currentFile->GetTitle()).Contains("Run2015") || TString(currentFile->GetTitle()).Contains("Run2016");
-    if (isPromptReco) isDataFromFileName = true;
-    else if (TString(currentFile->GetTitle()).Contains("DoubleMuon")) isDataFromFileName = true;
-    else if (TString(currentFile->GetTitle()).Contains("DoubleEG")) isDataFromFileName = true;
-
-    int bx = 25;
-    if (TString(currentFile->GetTitle()).Contains("Run2015B") || TString(currentFile->GetTitle()).Contains("50ns")) bx = 50;
-
-    // ----------------------------------
-    // retrieve JEC from files, if using
-    // ----------------------------------
-
-    //// files for RunIISpring15 MC
-    if (bx == 50 && isDataFromFileName){
-      jet_corrector_pfL1 = jet_corrector_50ns_DATA_pfL1;
-      jet_corrector_pfL1MC = jet_corrector_50ns_MC_pfL1;
-      jet_corrector_pfL1L2L3 = jet_corrector_50ns_DATA_pfL1L2L3;
-      jet_corrector_pfL2L3 = jet_corrector_25ns_MC_pfL2L3; //just a kludge, we will never use this
-      jetcorr_filenames_pfL1 = jetcorr_filenames_50ns_DATA_pfL1;
-      jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_50ns_DATA_pfL1L2L3;
-    }
-    else if (bx == 50 && !isDataFromFileName){
-      jet_corrector_pfL1 = jet_corrector_50ns_MC_pfL1;
-      jet_corrector_pfL1MC = jet_corrector_50ns_MC_pfL1;
-      jet_corrector_pfL2L3 = jet_corrector_50ns_MC_pfL2L3;
-      jet_corrector_pfL1L2L3 = jet_corrector_50ns_MC_pfL1L2L3;
-      jetcorr_filenames_pfL1 = jetcorr_filenames_50ns_MC_pfL1;
-      jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_50ns_MC_pfL1L2L3;
-    }
-    else if (bx == 25 && isDataFromFileName){
-      jet_corrector_pfL1 = jet_corrector_25ns_DATA_pfL1;
-      jet_corrector_pfL1MC = jet_corrector_25ns_MC_pfL1;
-      jet_corrector_pfL1L2L3 = jet_corrector_25ns_DATA_pfL1L2L3;
-      jet_corrector_pfL2L3 = jet_corrector_25ns_DATA_pfL2L3;
-      jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_DATA_pfL1;
-      jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_DATA_pfL1L2L3;
-    }
-    else if (bx == 25 && !isDataFromFileName){
-      jet_corrector_pfL1 = jet_corrector_25ns_MC_pfL1;
-      jet_corrector_pfL1MC = jet_corrector_25ns_MC_pfL1;
-      jet_corrector_pfL1L2L3 = jet_corrector_25ns_MC_pfL1L2L3;
-      jet_corrector_pfL2L3 = jet_corrector_25ns_MC_pfL2L3;
-      jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_MC_pfL1;
-      jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_MC_pfL1L2L3;
-    }
-    //cout << "applying JEC from the following files:" << endl;
-    //for (unsigned int ifile = 0; ifile < jetcorr_filenames_pfL1L2L3.size(); ++ifile) {
-    //cout << "   " << jetcorr_filenames_pfL1L2L3.at(ifile) << endl;
-    //}
-
-    // Get File Content
-    if(nEventsDone >= nEventsToDo) continue;
-    TFile *file = TFile::Open( currentFile->GetTitle() );
-    TTree *tree = (TTree*)file->Get("Events");
-    cms3.Init(tree);
-
-    // Loop over Events in current file
-    unsigned int nEventsTree = tree->GetEntriesFast();
-    for(unsigned int evt = 0; evt < nEventsTree; evt++){
-
-      //if (verbose) cout << "Event "<<evt<<endl;
-      // Get Event Content
-      if(nEventsDone >= nEventsToDo) continue;
-      cms3.GetEntry(evt);
-      nEventsDone++;
-
-      //if (verbose) cout << "Check prompt reco (Data)"<<endl;
-      if (tas::evt_isRealData() && isPromptReco && tas::evt_run() <= 251562) continue;
-
-      //If data, check good run list
-      //if (verbose) cout << "Check good run (Data)"<<endl;
-      if (applyJson && tas::evt_isRealData() && !goodrun(tas::evt_run(), tas::evt_lumiBlock())) continue;
-
-      //Initialize variables
-      //if (verbose) cout << "InitBabyNtuple"<<endl;
-      InitBabyNtuple();
-
-      // Progress
-      CMS3::progress(nEventsDone, nEventsToDo);
-
-      //Debug mode
-      if (verbose && tas::evt_event() != evt_cut && evt_cut != 0) continue;
-      if (verbose) cout << "file name is " << file->GetName() << endl;
-
-      //Preliminary stuff
-      if (tas::mus_dxyPV().size() != tas::mus_dzPV().size()) continue;
-
-      //MET variables
-      metStruct trackMetStruct =  trackerMET(0.2);
-      pair<float,float> corrMETPair = getT1CHSMET_fromMINIAOD(jet_corrector_pfL1L2L3);
-
-      //Fill Easy Variables
-      evt_pfmet      = cms3.evt_pfmet();
-      evt_pfmetPhi   = cms3.evt_pfmetPhi();
-      evt_trackmet   = trackMetStruct.met;
-      evt_trackmetPhi= trackMetStruct.metphi;
-      evt_corrMET    = corrMETPair.first;
-      evt_corrMETPhi = corrMETPair.second;
-      evt_pfsumet    = cms3.evt_pfsumet();
-      evt_pfmetSig   = cms3.evt_pfmetSig();
-      evt_event      = tas::evt_event();
-      evt_lumiBlock  = tas::evt_lumiBlock();
-      evt_run        = tas::evt_run();
-      evt_isRealData = tas::evt_isRealData();
-      sample         = Form("%s", file->GetName());
-      if (!evt_isRealData){
-        evt_xsec_incl = tas::evt_xsec_incl();
-        evt_kfactor   = tas::evt_kfactor();
-        gen_met       = tas::gen_met();
-        gen_metPhi    = tas::gen_metPhi();
-      }
-
-      // Vertex selection:
-      nvtx = 0;
-      for(unsigned int ivtx=0; ivtx < tas::evt_nvtxs(); ivtx++){
-        if (!isGoodVertex(ivtx)) continue;
-        nvtx++;
-      }
-
-      rho = tas::evt_fixgridfastjet_all_rho();
-      rho_neut_centr = tas::evt_fixgridfastjet_centralneutral_rho();
-      rho_calo = tas::evt_fixgridfastjet_allcalo_rho();
-      rho_calo_centr = tas::evt_fixgridfastjet_centralcalo_rho();
-
-      //Fill data vs. mc variables
-      passes_met_filters = evt_isRealData ? passesMETfilter()           : 1;
-      filt_hbhe          = evt_isRealData ? hbheNoiseFilter()           : 1;
-      filt_csc           = evt_isRealData ? tas::evt_cscTightHaloId()   : 1;
-      filt_hcallaser     = evt_isRealData ? tas::filt_hcalLaser()       : 1;
-      filt_ecaltp        = evt_isRealData ? tas::filt_ecalTP()          : 1;
-      filt_trkfail       = evt_isRealData ? tas::filt_trackingFailure() : 1;
-      filt_eebadsc       = evt_isRealData ? tas::filt_eeBadSc()         : 1;
-      scale1fb           = evt_isRealData ? 1                           : tas::evt_scale1fb();
-
-      //Determine and save jet variables
-      ht = 0;
-      ht_SS = 0;
-      for (unsigned int i = 0; i < tas::pfjets_p4().size(); i++){
-
-	LorentzVector raw_jet = tas::pfjets_p4().at(i)*tas::pfjets_undoJEC().at(i);
-
-        //Require loose jet ID
-        if (!isLoosePFJet_50nsV1(i)) continue;
-
-	float jet_L1L2L3 = 1.;
-	if (jetcorr_filenames_pfL1L2L3.size()>0) {
-	  //L1L2L3
-	  jet_corrector_pfL1L2L3->setJetEta(raw_jet.eta());
-	  jet_corrector_pfL1L2L3->setJetPt(raw_jet.pt());
-	  jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(i));
-	  jet_corrector_pfL1L2L3->setRho(rho);
-	  jet_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
-	}
-
-        LorentzVector jet = raw_jet*jet_L1L2L3;
-
-	// cout << "jet pT=" << jet.pt() << " pTraw=" << raw_jet.pt() << " eta=" << raw_jet.eta() << " phi=" << raw_jet.phi() << " area=" << tas::pfjets_area().at(i) << " rho=" << rho << " L1=" << jet_L1 << " L2L3=" << jet_L2L3 << " L1L2L3=" << jet_L1L2L3 << endl;
-
-        //Kinematic jet cuts
-        if (jet.pt() < 25) continue;
-
-        //Verbose
-        if (verbose) cout << "Possible jet with pT: " << jet.pt() << endl;
-
-        //Save jets that make it this far
-        jets.push_back(jet);
-
-        //HT is sum of jets with pT > 40
-        if(jet.pt() > 40) ht += jet.pt();
-
-        if(jet.pt() > 40 && fabs(jet.eta())<2.4) {
-	  bool jetClean = true;
-	  for(size_t j = 0; j < tas::mus_p4().size(); j++){
-	    if(muonID(j, SS_fo_v5) && tas::mus_p4().at(j).pt()>5.  && (ROOT::Math::VectorUtil::DeltaR(jet, tas::mus_p4().at(j)) < 0.4) ) {
-	      jetClean = false;
-	      if (verbose) cout << "jet cleaned by muon p4: " << tas::mus_p4().at(j) << " pt=" << tas::mus_p4().at(j).pt() << endl;
-	    }
-	  }
-	  for(size_t j = 0; j < tas::els_p4().size(); j++){
-	    if(electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt()>7. && (ROOT::Math::VectorUtil::DeltaR(jet,tas::els_p4().at(j)) < 0.4) ) {
-	      jetClean = false;
-	      if (verbose) cout << "jet cleaned by electron p4: " << tas::els_p4().at(j) << " pt=" << tas::els_p4().at(j).pt() << endl;
-	    }
-	  }
-	  if (jetClean) ht_SS += jet.pt();
-	}
-
-        //Save b-tags
-        float disc = tas::pfjets_pfCombinedInclusiveSecondaryVertexV2BJetTag().at(i);
-        jets_disc.push_back(disc);
-
-        jets_area.push_back(tas::pfjets_area().at(i));
-        jets_undoJEC.push_back(tas::pfjets_undoJEC().at(i));
-
-      }
-      njets = jets.size();
-
-      //Verbose for jets
-      if (verbose){
-        cout << "njets: " << njets << endl;
-        for (unsigned int i = 0; i < jets.size(); i++) cout << i << " " << jets[i].pt() << " " << jets[i].eta() << endl;
-      }
-
-      //Calculate number of fakeable objects
-      if (verbose) cout << "Calculate number of fakeable objects" <<endl;
-      nFOs_SS = 0;
-      for(size_t j = 0; j < tas::mus_p4().size(); j++){
-        if(muonID(j, SS_fo_v5) && tas::mus_p4().at(j).pt() > 10) nFOs_SS++;
-      }
-      for(size_t j = 0; j < tas::els_p4().size(); j++){
-        if( electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt() > 10) nFOs_SS++;
-      }
-
-      //These variables are persistent through the event, used for PFlepton saving
-      bool foundMuTag = false;
-      bool foundElTag = false;
-
-      // Variables to keep track of PFElectrons and PFMuons
-      if (verbose) cout << "Variables to keep track of PFElectrons and PFMuons" <<endl;
-      // We would like to save PFleptons if they don't overlap with something we've already saved.
-      // If they do overlap, we want to save the fact that they overlap
-      // Load the pflepton p4s in memory, we'll have to check them on each lepton
-      vector<LorentzVector> savedMuP4s; savedMuP4s.clear();
-      vector<LorentzVector> savedElP4s; savedElP4s.clear();
-      vector<int> pfelidx; pfelidx.clear();
-      vector<int> pfmuidx; pfmuidx.clear();
-      vector<bool> pfelIsReco; pfelIsReco.clear();
-      vector<bool> pfmuIsReco; pfmuIsReco.clear();
-      vector<LorentzVector> pfelP4; pfelP4.clear();
-      vector<LorentzVector> pfmuP4; pfmuP4.clear();
-      vector<float> pfelAbsTrkIso; pfelAbsTrkIso.clear();
-      vector<float> pfmuAbsTrkIso; pfmuAbsTrkIso.clear();
-      vector<float> pfelTrkAn04; pfelTrkAn04.clear();
-      vector<float> pfmuTrkAn04; pfmuTrkAn04.clear();
-// Isotracks not working in 74X (only charge+) //      for(unsigned int i=0; i<tas::isotracks_p4().size(); i++){
-// Isotracks not working in 74X (only charge+) //        if (fabs(tas::isotracks_particleId().at(i)) != 11 && fabs(tas::isotracks_particleId().at(i)) != 13 ) continue;
-// Isotracks not working in 74X (only charge+) //        if (fabs(tas::isotracks_particleId().at(i)) == 11){
-// Isotracks not working in 74X (only charge+) //          pfelidx.push_back(i);
-// Isotracks not working in 74X (only charge+) //          pfelP4.push_back(tas::isotracks_p4().at(i));
-// Isotracks not working in 74X (only charge+) //          pfelIsReco.push_back(false);
-// Isotracks not working in 74X (only charge+) //        }
-// Isotracks not working in 74X (only charge+) //        else if (fabs(tas::isotracks_particleId().at(i)) == 13){
-// Isotracks not working in 74X (only charge+) //          pfmuidx.push_back(i);
-// Isotracks not working in 74X (only charge+) //          pfmuP4.push_back(tas::isotracks_p4().at(i));
-// Isotracks not working in 74X (only charge+) //          pfmuIsReco.push_back(false);
-// Isotracks not working in 74X (only charge+) //        }
-// Isotracks not working in 74X (only charge+) //        continue;
-// Isotracks not working in 74X (only charge+) //      }
-      for(unsigned int i=0; i<tas::pfcands_p4().size(); i++){
-        if (fabs(tas::pfcands_particleId().at(i)) != 11 && fabs(tas::pfcands_particleId().at(i)) != 13 ) continue;
-	if (tas::pfcands_p4().at(i).pt() < 5) continue;
-	if(fabs(tas::pfcands_dz().at(i)) > 0.1) continue;
-	if (fabs(tas::pfcands_p4().at(i).eta()) > 2.5) continue;
-        if (fabs(tas::pfcands_particleId().at(i)) == 11){
-          pfelidx.push_back(i);
-          pfelP4.push_back(tas::pfcands_p4().at(i));
-          pfelIsReco.push_back(false);
-	  pfelAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
-	  pfelTrkAn04.push_back(PFCandRelIsoAn04(i));
+//___________________________________________________________________________________________________________________________________________
+int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
+{
+    //Print warning!
+    cout << "Careful!! Path is " << path << endl;
+    //Create and init MVA
+    createAndInitMVA("./CORE", true, false, 80); // Moriond
+    readMVA* v25nsMVAreader = new readMVA();
+    v25nsMVAreader->InitMVA("CORE", true);
+    //Add good run list
+    // set_goodrun_file("goodRunList/final2015_golden_25ns2p11fb.txt");
+    //set_goodrun_file("goodRunList/DCSONLY_json_160516_snt.txt");
+    // set_goodrun_file("goodRunList/Cert_271036-273450_13TeV_PromptReco_Collisions16_JSON_NoL1T_snt.txt");
+    // set_goodrun_file("goodRunList/Cert_271036-273730_13TeV_PromptReco_Collisions16_JSON_snt.txt");
+    // set_goodrun_file("goodRunList/Cert_271036-274443_13TeV_PromptReco_Collisions16_JSON_snt.txt");
+    // set_goodrun_file("goodRunList/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON_NoL1T_snt.txt");
+    // set_goodrun_file("goodRunList/Cert_271036-276097_13TeV_PromptReco_Collisions16_JSON_NoL1T_v2_snt.txt");
+    // set_goodrun_file("goodRunList/Cert_271036-276811_13TeV_PromptReco_Collisions16_JSON_snt.txt");
+    set_goodrun_file("goodRunList/goldenJson_2016rereco_36p46ifb.txt");
+    //Make Baby Ntuple
+    MakeBabyNtuple(Form("%s.root", output_name));
+    //Initialize Baby Ntuple
+    InitBabyNtuple();
+    //JEC files -- 50 ns MC
+    std::vector<std::string> jetcorr_filenames_50ns_MC_pfL1;
+    std::vector<std::string> jetcorr_filenames_50ns_MC_pfL1L2L3;
+    std::vector<std::string> jetcorr_filenames_50ns_MC_pfL2L3;
+    jetcorr_filenames_50ns_MC_pfL1.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L1FastJet_AK4PFchs.txt");
+    jetcorr_filenames_50ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L1FastJet_AK4PFchs.txt");
+    jetcorr_filenames_50ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2Relative_AK4PFchs.txt");
+    jetcorr_filenames_50ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L3Absolute_AK4PFchs.txt");
+    jetcorr_filenames_50ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2Relative_AK4PFchs.txt");
+    jetcorr_filenames_50ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L3Absolute_AK4PFchs.txt");
+    jetcorr_filenames_50ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2L3Residual_AK4PFchs.txt");
+    //JEC files -- 50 ns DATA
+    std::vector<std::string> jetcorr_filenames_50ns_DATA_pfL1;
+    std::vector<std::string> jetcorr_filenames_50ns_DATA_pfL1L2L3;
+    jetcorr_filenames_50ns_DATA_pfL1.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L1FastJet_AK4PFchs.txt");
+    jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L1FastJet_AK4PFchs.txt");
+    jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L2Relative_AK4PFchs.txt");
+    jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L3Absolute_AK4PFchs.txt");
+    jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L2L3Residual_AK4PFchs.txt");
+    //JEC files -- 25 ns MC
+    std::vector<std::string> jetcorr_filenames_25ns_MC_pfL1;
+    std::vector<std::string> jetcorr_filenames_25ns_MC_pfL1L2L3;
+    std::vector<std::string> jetcorr_filenames_25ns_MC_pfL2L3;
+    jetcorr_filenames_25ns_MC_pfL1.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L1FastJet_AK4PFchs.txt");
+    jetcorr_filenames_25ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L1FastJet_AK4PFchs.txt");
+    jetcorr_filenames_25ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2Relative_AK4PFchs.txt");
+    jetcorr_filenames_25ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L3Absolute_AK4PFchs.txt");
+    jetcorr_filenames_25ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2Relative_AK4PFchs.txt");
+    jetcorr_filenames_25ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L3Absolute_AK4PFchs.txt");
+    jetcorr_filenames_25ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2L3Residual_AK4PFchs.txt");
+    //JEC files -- 25 ns DATA
+    std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL1;
+    std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL1L2L3;
+    std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL2L3;
+    jetcorr_filenames_25ns_DATA_pfL1.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L1FastJet_AK4PFchs.txt");
+    jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L1FastJet_AK4PFchs.txt");
+    jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2Relative_AK4PFchs.txt");
+    jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L3Absolute_AK4PFchs.txt");
+    jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2L3Residual_AK4PFchs.txt");
+    jetcorr_filenames_25ns_DATA_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2Relative_AK4PFchs.txt");
+    jetcorr_filenames_25ns_DATA_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L3Absolute_AK4PFchs.txt");
+    jetcorr_filenames_25ns_DATA_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2L3Residual_AK4PFchs.txt");
+    //Make JEC for each of these
+    FactorizedJetCorrector *jet_corrector_50ns_MC_pfL1;
+    FactorizedJetCorrector *jet_corrector_50ns_MC_pfL1L2L3;
+    FactorizedJetCorrector *jet_corrector_50ns_MC_pfL2L3;
+    FactorizedJetCorrector *jet_corrector_50ns_DATA_pfL1;
+    FactorizedJetCorrector *jet_corrector_50ns_DATA_pfL1L2L3;
+    FactorizedJetCorrector *jet_corrector_25ns_MC_pfL1;
+    FactorizedJetCorrector *jet_corrector_25ns_MC_pfL1L2L3;
+    FactorizedJetCorrector *jet_corrector_25ns_MC_pfL2L3;
+    FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL1;
+    FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL1L2L3;
+    FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL2L3;
+    //Fill the JEC
+    jet_corrector_50ns_MC_pfL1 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL1);
+    jet_corrector_50ns_MC_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL1L2L3);
+    jet_corrector_50ns_MC_pfL2L3 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL2L3);
+    jet_corrector_50ns_DATA_pfL1 = makeJetCorrector(jetcorr_filenames_50ns_DATA_pfL1);
+    jet_corrector_50ns_DATA_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_50ns_DATA_pfL1L2L3);
+    jet_corrector_25ns_MC_pfL1 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL1);
+    jet_corrector_25ns_MC_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL1L2L3);
+    jet_corrector_25ns_MC_pfL2L3 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL2L3);
+    jet_corrector_25ns_DATA_pfL1 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL1);
+    jet_corrector_25ns_DATA_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL1L2L3);
+    jet_corrector_25ns_DATA_pfL2L3 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL2L3);
+    //JECs
+    FactorizedJetCorrector *jet_corrector_pfL1 = 0;
+    FactorizedJetCorrector *jet_corrector_pfL1MC = 0;
+    FactorizedJetCorrector *jet_corrector_pfL1L2L3 = 0;
+    FactorizedJetCorrector *jet_corrector_pfL2L3 = 0;
+    //Record filenames
+    std::vector <string> jetcorr_filenames_pfL1;
+    std::vector <string> jetcorr_filenames_pfL1L2L3;
+    std::vector <string> jetcorr_filenames_pfL2L3;
+    //Set up loop over chain
+    unsigned int nEventsDone = 0;
+    unsigned int nEventsToDo = chain->GetEntries();
+    if (nEvents >= 0) { nEventsToDo = nEvents; }
+    TObjArray *listOfFiles = chain->GetListOfFiles();
+    TIter fileIter(listOfFiles);
+    TFile *currentFile = 0;
+    // File Loop
+    while ((currentFile = (TFile*)fileIter.Next()))
+    {
+        bool isPromptReco = TString(currentFile->GetTitle()).Contains("PromptReco");
+        isDataFromFileName = TString(currentFile->GetTitle()).Contains("Run2015") || TString(currentFile->GetTitle()).Contains("Run2016");
+        if (isPromptReco) { isDataFromFileName = true; }
+        else if (TString(currentFile->GetTitle()).Contains("DoubleMuon")) { isDataFromFileName = true; }
+        else if (TString(currentFile->GetTitle()).Contains("DoubleEG")) { isDataFromFileName = true; }
+        int bx = 25;
+        if (TString(currentFile->GetTitle()).Contains("Run2015B") || TString(currentFile->GetTitle()).Contains("50ns")) { bx = 50; }
+        // ----------------------------------
+        // retrieve JEC from files, if using
+        // ----------------------------------
+        //// files for RunIISpring15 MC
+        if (bx == 50 && isDataFromFileName)
+        {
+            jet_corrector_pfL1 = jet_corrector_50ns_DATA_pfL1;
+            jet_corrector_pfL1MC = jet_corrector_50ns_MC_pfL1;
+            jet_corrector_pfL1L2L3 = jet_corrector_50ns_DATA_pfL1L2L3;
+            jet_corrector_pfL2L3 = jet_corrector_25ns_MC_pfL2L3; //just a kludge, we will never use this
+            jetcorr_filenames_pfL1 = jetcorr_filenames_50ns_DATA_pfL1;
+            jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_50ns_DATA_pfL1L2L3;
         }
-        else if (fabs(tas::pfcands_particleId().at(i)) == 13){
-          pfmuidx.push_back(i);
-          pfmuP4.push_back(tas::pfcands_p4().at(i));
-          pfmuIsReco.push_back(false);
-	  pfmuAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
-	  pfmuTrkAn04.push_back(PFCandRelIsoAn04(i));
+        else if (bx == 50 && !isDataFromFileName)
+        {
+            jet_corrector_pfL1 = jet_corrector_50ns_MC_pfL1;
+            jet_corrector_pfL1MC = jet_corrector_50ns_MC_pfL1;
+            jet_corrector_pfL2L3 = jet_corrector_50ns_MC_pfL2L3;
+            jet_corrector_pfL1L2L3 = jet_corrector_50ns_MC_pfL1L2L3;
+            jetcorr_filenames_pfL1 = jetcorr_filenames_50ns_MC_pfL1;
+            jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_50ns_MC_pfL1L2L3;
         }
-        continue;
-      }
-      usedMu = false;
-      usedEl = false;
-      TRandom r;
-      rndm = r.Rndm();
-      //Muon Loop -- we loop over the probes
-      if (verbose) cout << "Muon Loop -- we loop over the probes" <<endl;
-      for(unsigned int i=0; i<tas::mus_p4().size(); i++){
-
-	// Require pT > 10 GeV
-	float maxPt = 10.;
-	if (recoLeptonsDownTo5GeV) maxPt = 5.;
-	if (recoLeptonsDownTo20GeV) maxPt = 20.;
-	if (tas::mus_p4().at(i).pt()<=maxPt) continue;
-
-        InitLeptonBranches();
-
-        //Check for a tag
-        bool foundTag = checkMuonTag(i, false);
-        if (foundTag) foundMuTag = true;
-
-        if(muonID(i, SS_veto_noiso_v5)==0 && muonID(i, HAD_loose_v3)==0 && foundTag==false) continue;
-	if (onlySaveTagProbePairs && foundTag==false ) continue;
-
-        //ID & Index for muons
-        id = -13.0*tas::mus_charge().at(i);
-        idx = i;
-
-        //p4 for muon
-        p4 = tas::mus_p4().at(i);
-        savedMuP4s.push_back(p4);
-
-        //Dilepton stuff
-        if (foundTag) {
-          dilep_p4 = p4 + tag_p4;
-          dilep_mass = dilep_p4.M();
+        else if (bx == 25 && isDataFromFileName)
+        {
+            jet_corrector_pfL1 = jet_corrector_25ns_DATA_pfL1;
+            jet_corrector_pfL1MC = jet_corrector_25ns_MC_pfL1;
+            jet_corrector_pfL1L2L3 = jet_corrector_25ns_DATA_pfL1L2L3;
+            jet_corrector_pfL2L3 = jet_corrector_25ns_DATA_pfL2L3;
+            jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_DATA_pfL1;
+            jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_DATA_pfL1L2L3;
         }
-
-	if (onlySaveTagProbePairs && (dilep_mass < 60 || dilep_mass > 120) ) continue;
-
-	if (verbose) cout << "Saving this muon." << endl;
-
-
-        //MC stuff
-        if (!evt_isRealData){
-          motherID = lepMotherID(Lep(id, idx));
-          mc_motherp4 = tas::mus_mc_motherp4().at(i);
-          mc_p4 = tas::mus_mc_p4().at(i);
-          mc_motherid = tas::mus_mc_motherid().at(i);
-          mc_id = tas::mus_mc_id().at(i);
+        else if (bx == 25 && !isDataFromFileName)
+        {
+            jet_corrector_pfL1 = jet_corrector_25ns_MC_pfL1;
+            jet_corrector_pfL1MC = jet_corrector_25ns_MC_pfL1;
+            jet_corrector_pfL1L2L3 = jet_corrector_25ns_MC_pfL1L2L3;
+            jet_corrector_pfL2L3 = jet_corrector_25ns_MC_pfL2L3;
+            jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_MC_pfL1;
+            jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_MC_pfL1L2L3;
         }
-
-        //Impact parameter
-        dxyPV = abs(id) == 11 ? tas::els_dxyPV().at(i) : tas::mus_dxyPV().at(i);
-        dxyPV_err = abs(id) == 11 ? tas::els_d0Err().at(i) : tas::mus_d0Err().at(i);
-        dZ = abs(id) == 11 ? tas::els_dzPV().at(i) : tas::mus_dzPV().at(i);
-        ip3d = tas::mus_ip3d().at(i);
-        ip3derr = tas::mus_ip3derr().at(i);
-
-        //Isolation et al
-        RelIso03 = (tas::mus_isoR03_pf_ChargedHadronPt().at(i)+tas::mus_isoR03_pf_NeutralHadronEt().at(i)+tas::mus_isoR03_pf_PhotonEt().at(i))/tas::mus_p4().at(i).pt();
-        RelIso03EA = muRelIso03EA(i);
-        RelIso03DB = muRelIso03DB(i);
-        pfChargedHadronIso = tas::mus_isoR03_pf_ChargedHadronPt().at(i);
-        pfPhotonIso = tas::mus_isoR03_pf_PhotonEt().at(i);
-        pfNeutralHadronIso = tas::mus_isoR03_pf_NeutralHadronEt().at(i);
-        tkIso = tas::mus_iso03_sumPt().at(i);
-        sumPUPt = tas::mus_isoR03_pf_PUPt().at(i);
-        iso03sumPt = tas::mus_iso03_sumPt().at(i);
-        iso03emEt  = tas::mus_iso03_emEt().at(i);
-        iso03hadEt = tas::mus_iso03_hadEt().at(i);
-        ptrelv0 = getPtRel(id, idx, false, ssWhichCorr);
-        ptrelv1 = getPtRel(id, idx, true, ssWhichCorr);
-        miniiso = muMiniRelIsoCMS3_EA(idx,ssEAversion);
-        miniisoDB = muMiniRelIsoCMS3_DB(idx);
-	int closeJetIdx = closestJetIdx(p4,0.4,3.0);
-	if (closeJetIdx>=0) {
-	  jet_close_lep_idx = closeJetIdx;
-	  jet_close_lep = tas::pfjets_p4().at(closeJetIdx);
-	  jet_close_lep_undoJEC = tas::pfjets_undoJEC().at(closeJetIdx);
-	  jet_close_lep_area = tas::pfjets_area().at(closeJetIdx);
-	  if (jetcorr_filenames_pfL1L2L3.size()>0) {
-	    //L1
-	    jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
-	    jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-	    jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
-	    jet_corrector_pfL1->setRho(rho);
-	    jet_close_L1 = jet_corrector_pfL1->getCorrection();
-	    //L1, redo it with a different rho
-	    jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
-	    jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-	    jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
-	    jet_corrector_pfL1->setRho(rho_neut_centr);
-	    jet_close_L1nc = jet_corrector_pfL1->getCorrection();
-	    //L1, redo it with a different rho and MC correction file
-	    jet_corrector_pfL1MC->setJetEta(jet_close_lep.eta());
-	    jet_corrector_pfL1MC->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-	    jet_corrector_pfL1MC->setJetA(tas::pfjets_area().at(closeJetIdx));
-	    jet_corrector_pfL1MC->setRho(rho_neut_centr);
-	    jet_close_L1ncmc = jet_corrector_pfL1MC->getCorrection();
-	    //L1L2L3
-	    jet_corrector_pfL1L2L3->setJetEta(jet_close_lep.eta());
-	    jet_corrector_pfL1L2L3->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-	    jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
-	    jet_corrector_pfL1L2L3->setRho(rho);
-	    jet_close_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
-	    //L2L3
-	    LorentzVector raw_jet = jet_close_lep*tas::pfjets_undoJEC().at(closeJetIdx);
-	    jet_corrector_pfL2L3->setJetEta(raw_jet.eta());
-	    jet_corrector_pfL2L3->setJetPt(raw_jet.pt());
-	    jet_corrector_pfL2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
-	    jet_corrector_pfL2L3->setRho(rho);
-	    jet_close_L2L3 = jet_corrector_pfL2L3->getCorrection();
-	  }
-	}
-        ptratio = jet_close_lep.pt() > 0 ? p4.pt()/jet_close_lep.pt() : 1;
-
-        //MT
-        mt = MT(p4.pt(), p4.phi(), evt_pfmet, evt_pfmetPhi);
-
-        //Other muon Id
-        pid_PFMuon = tas::mus_pid_PFMuon().at(i);
-        gfit_chi2 = tas::mus_gfit_chi2().at(i);
-        // gfit_ndof = tas::mus_gfit_ndof().at(i);
-        gfit_validSTAHits = tas::mus_gfit_validSTAHits().at(i);
-        numberOfMatchedStations = tas::mus_numberOfMatchedStations().at(i);
-        validPixelHits = tas::mus_validPixelHits().at(i);
-        nlayers = tas::mus_nlayers().at(i);
-        type = tas::mus_type().at(i);
-        chi2LocalPosition = tas::mus_chi2LocalPosition().at(i);
-        trkKink = tas::mus_trkKink().at(i);
-        validHits = tas::mus_validHits().at(i);
-        lostHits = tas::mus_lostHits().at(i);
-        exp_innerlayers = tas::mus_exp_innerlayers().at(i);
-        exp_outerlayers = tas::mus_exp_outerlayers().at(i);
-        segmCompatibility = tas::mus_segmCompatibility().at(i);
-        if (addAnnulus){
-          reliso04 = muRelIsoCustomCone(i, 0.4, true, 0.5, false, true);
-          annulus04 = reliso04 - miniiso;
-	}
-	if (addPFCandidates || checkIsPFTrueFalse) {
-	  int pfidx =  isPFmuon(pfmuP4, pfmuIsReco, i);
-	  if (pfidx != -1) {
-	    isPF = true;
-	    AbsTrkIso = pfmuAbsTrkIso[pfidx]; // For this electron, save track iso produced earlier for PFmuon
-	    if (addAnnulus) TrkAn04 = pfmuTrkAn04[pfidx];
-	  }
-        }
-        muID::setCache(idx,miniiso,ptratio,ptrelv1);
-
-        //Save SS ID bools
-        if(muonID(i, SS_tight_v3))              passes_SS_tight_v3 = true;
-        if(muonID(i, SS_tight_noiso_v3))        passes_SS_tight_noiso_v3 = true;
-        if(muonID(i, SS_fo_v3))                 passes_SS_fo_v3 = true;
-        if(muonID(i, SS_fo_noiso_v3))           passes_SS_fo_noiso_v3 = true;
-        if(muonID(i, SS_veto_v3))               passes_SS_veto_v3 = true;
-        if(muonID(i, SS_veto_noiso_v3))         passes_SS_veto_noiso_v3 = true;
-	LorentzVector close_jet_v4 = closestJet(p4, 0.4, 3.0, 1);
-	float ptrel_v4 = ptRel(p4, close_jet_v4, true);
-	float ptratio_v4 = close_jet_v4.pt() > 0 ? p4.pt()/close_jet_v4.pt() : 1;
-        muID::unsetCache();
-        muID::setCache(idx,miniiso,ptratio_v4,ptrel_v4);
-        if(muonID(i, SS_tight_v4))              passes_SS_tight_v4 = true;
-        if(muonID(i, SS_tight_noiso_v4))        passes_SS_tight_noiso_v4 = true;
-        if(muonID(i, SS_fo_v4))                 passes_SS_fo_v4 = true;
-        if(muonID(i, SS_fo_noiso_v4))           passes_SS_fo_noiso_v4 = true;
-        if(muonID(i, SS_veto_v4))               passes_SS_veto_v4 = true;
-        if(muonID(i, SS_veto_noiso_v4))         passes_SS_veto_noiso_v4 = true;
-	LorentzVector close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);
-	float ptrel_v5 = ptRel(p4, close_jet_v5, true);
-	float ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt()/close_jet_v5.pt() : 1;
-        muID::unsetCache();
-        muID::setCache(idx,miniiso,ptratio_v5,ptrel_v5);
-        if(muonID(i, SS_tight_v5))              passes_SS_tight_v5 = true;
-        if(muonID(i, SS_tight_noiso_v5))        passes_SS_tight_noiso_v5 = true;
-        if(muonID(i, SS_fo_v5))                 passes_SS_fo_v5 = true;
-        if(muonID(i, SS_fo_noiso_v5))           passes_SS_fo_noiso_v5 = true;
-        if(muonID(i, SS_veto_v5))               passes_SS_veto_v5 = true;
-        if(muonID(i, SS_veto_noiso_v5))         passes_SS_veto_noiso_v5 = true;
-
-        muID::unsetCache();
-        muID::setCache(idx,miniiso,ptratio,ptrelv1);
-
-        //Save WW ID bools
-        if(muonID(i, WW_medium_v2))             passes_WW_medium_v2 = true;
-        if(muonID(i, WW_medium_noiso_v2))       passes_WW_medium_noiso_v2 = true;
-        if(muonID(i, WW_fo_v2))                 passes_WW_fo_v2 = true;
-        if(muonID(i, WW_fo_noiso_v2))           passes_WW_fo_noiso_v2 = true;
-        if(muonID(i, WW_veto_v2))               passes_WW_veto_v2 = true;
-        if(muonID(i, WW_veto_noiso_v2))         passes_WW_veto_noiso_v2 = true;
-
-        //Save HAD ID bools
-        if(muonID(i, HAD_loose_v3))              passes_HAD_loose_v3 = true;
-        if(muonID(i, HAD_loose_noiso_v3))        passes_HAD_loose_noiso_v3 = true;
-
-        //Save POG ID bools
-        if( isLooseMuonPOG(i) )                  passes_POG_looseID = true;
-        if( isMediumMuonPOG(i) )                 passes_POG_mediumID = true;
-        if( isTightMuonPOG(i) )                  passes_POG_tightID = true;
-
-        muID::unsetCache();
-
-        //Fill trigger branches
-        fillMuonTriggerBranches(p4,idx,false);
-
-        //Fill baby once per probe
-        BabyTree->Fill();
-
-      } //close muon loop
-
-      //Electron Loop
-      if (verbose) cout << "Electron Loop" << endl;
-      for(unsigned int i=0; i<tas::els_p4().size(); i++){
-
-        // Require pT > 10 GeV
-	float maxPt = 10.;
-	if (recoLeptonsDownTo5GeV) maxPt = 5.;
-	if (recoLeptonsDownTo20GeV) maxPt = 20.;
-        if (tas::els_p4().at(i).pt() <= maxPt) continue;
-
-        InitLeptonBranches();
-
-        //Check for a tag
-        bool foundTag = checkElectronTag(i, v25nsMVAreader);
-        if (foundTag) foundElTag = true;
-
-        //Save the electron if we have a tag OR if it passes loose ID
-        if(electronID(i, SS_veto_noiso_v4)==0 && electronID(i, HAD_veto_v3)==0 && foundTag==false) continue;
-	if (onlySaveTagProbePairs && foundTag==false ) continue;
-
-        //p4
-        p4 = tas::els_p4().at(i);
-        savedElP4s.push_back(p4);
-
-        //Dilepton stuff
-        if (foundTag){
-          dilep_p4 = p4 + tag_p4;
-          dilep_mass = dilep_p4.M();
-        }
-
-	if (onlySaveTagProbePairs && (dilep_mass < 60 || dilep_mass > 120) ) continue;
-
-	if (verbose) cout << "Saving this electron: pt/eta/phi "<<p4.pt()<<"/"<<p4.eta()<<"/"<<p4.phi() << endl;
-
-
-        //ID & idx stuff
-        id = -11.0*tas::els_charge().at(i);
-        idx = i;
-
-        //MC Stuff
-        if (!evt_isRealData){
-          mc_p4 = tas::els_mc_p4().at(i);
-          mc_id = tas::els_mc_id().at(i);
-        }
-
-        //Impact Parameter
-        dxyPV = abs(id) == 11 ? tas::els_dxyPV().at(i) : tas::mus_dxyPV().at(i);
-        dxyPV_err = abs(id) == 11 ? tas::els_d0Err().at(i) : tas::mus_d0Err().at(i);
-        dZ = abs(id) == 11 ? tas::els_dzPV().at(i) : tas::mus_dzPV().at(i);
-        ip3d = tas::els_ip3d().at(i);
-        ip3derr = tas::els_ip3derr().at(i);
-
-        //Isolation et al
-        RelIso03 = (tas::els_pfChargedHadronIso().at(i)+tas::els_pfNeutralHadronIso().at(i)+tas::els_pfPhotonIso().at(i))/tas::els_p4().at(i).pt();
-        RelIso03EA = eleRelIso03EA(i);
-        RelIso03DB = eleRelIso03DB(i);
-        pfChargedHadronIso = tas::els_pfChargedHadronIso().at(i);
-        pfPhotonIso = tas::els_pfPhotonIso().at(i);
-        pfNeutralHadronIso = tas::els_pfNeutralHadronIso().at(i);
-        tkIso = tas::els_tkIso().at(i);
-        ptrelv0 = getPtRel(id, idx, false, ssWhichCorr);
-        ptrelv1 = getPtRel(id, idx, true, ssWhichCorr);
-	if (verbose) cout << "About to correct jets for this electron" << endl;
-	int closeJetIdx = closestJetIdx(p4,0.4,3.0);
-	if (closeJetIdx>=0) {
-	  jet_close_lep_idx = closeJetIdx;
-	  jet_close_lep = tas::pfjets_p4().at(closeJetIdx);
-	  jet_close_lep_undoJEC = tas::pfjets_undoJEC().at(closeJetIdx);
-	  jet_close_lep_area = tas::pfjets_area().at(closeJetIdx);
-	  if (jetcorr_filenames_pfL1L2L3.size()>0) {
-	    //L1
-	    jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
-	    jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-	    jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
-	    jet_corrector_pfL1->setRho(rho);
-	    jet_close_L1 = jet_corrector_pfL1->getCorrection();
-	    //L1, redo it with a different rho
-	    jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
-	    jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-	    jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
-	    jet_corrector_pfL1->setRho(rho_neut_centr);
-	    jet_close_L1nc = jet_corrector_pfL1->getCorrection();
-	    //L1, redo it with a different rho and MC correction file
-	    jet_corrector_pfL1MC->setJetEta(jet_close_lep.eta());
-	    jet_corrector_pfL1MC->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-	    jet_corrector_pfL1MC->setJetA(tas::pfjets_area().at(closeJetIdx));
-	    jet_corrector_pfL1MC->setRho(rho_neut_centr);
-	    jet_close_L1ncmc = jet_corrector_pfL1MC->getCorrection();
-	    //L1L2L3
-	    jet_corrector_pfL1L2L3->setJetEta(jet_close_lep.eta());
-	    jet_corrector_pfL1L2L3->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-	    jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
-	    jet_corrector_pfL1L2L3->setRho(rho);
-	    jet_close_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
-	    //L2L3
-	    LorentzVector raw_jet = jet_close_lep*tas::pfjets_undoJEC().at(closeJetIdx);
-	    jet_corrector_pfL2L3->setJetEta(raw_jet.eta());
-	    jet_corrector_pfL2L3->setJetPt(raw_jet.pt());
-	    jet_corrector_pfL2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
-	    jet_corrector_pfL2L3->setRho(rho);
-	    jet_close_L2L3 = jet_corrector_pfL2L3->getCorrection();
-	  }
-	}
-	if (verbose) cout << "Finished jet corrections" << endl;
-        ptratio = ( jet_close_lep.pt()>0. ? p4.pt()/jet_close_lep.pt() : 1. );
-        miniiso = elMiniRelIsoCMS3_EA(idx,ssEAversion);
-        miniisoDB = elMiniRelIsoCMS3_DB(idx);
-
-        //MT
-        mt = MT(p4.pt(), p4.phi(), evt_pfmet, evt_pfmetPhi);
-
-        //Other Electron ID stuff
-        sumPUPt = tas::els_pfPUIso().at(i);
-        sigmaIEtaIEta_full5x5 = tas::els_sigmaIEtaIEta_full5x5().at(i);
-        etaSC = tas::els_etaSC().at(i);
-        dEtaIn = tas::els_dEtaIn().at(i);
-        dPhiIn = tas::els_dPhiIn().at(i);
-        hOverE = tas::els_hOverE().at(i);
-        ecalEnergy = tas::els_ecalEnergy().at(i);
-        eOverPIn = tas::els_eOverPIn().at(i);
-        conv_vtx_flag = tas::els_conv_vtx_flag().at(i);
-        exp_innerlayers = tas::els_exp_innerlayers().at(i);
-        exp_outerlayers = tas::els_exp_outerlayers().at(i);
-        charge = tas::els_charge().at(i);
-        sccharge = tas::els_sccharge().at(i);
-        ckf_charge = tas::els_ckf_charge().at(i);
-        trk_charge = tas::els_trk_charge().at(i);
-        threeChargeAgree_branch = threeChargeAgree(i);
-        mva = getMVAoutput(i);
-	mva_25ns = v25nsMVAreader->MVA(i);
-        type = tas::els_type().at(i);
-        ecalIso = tas::els_ecalIso().at(i);
-        hcalIso = tas::els_hcalIso().at(i);
-        sigmaIEtaIEta = tas::els_sigmaIEtaIEta().at(i);
-        ecalPFClusterIso = tas::els_ecalPFClusterIso().at(i);
-        hcalPFClusterIso = tas::els_hcalPFClusterIso().at(i);
-        ckf_laywithmeas        = tas::els_ckf_laywithmeas().at(i);
-        sigmaIPhiIPhi_full5x5  = tas::els_sigmaIPhiIPhi_full5x5().at(i);
-        e1x5_full5x5           = tas::els_e1x5_full5x5().at(i);
-        e5x5_full5x5           = tas::els_e5x5_full5x5().at(i);
-        r9_full5x5             = tas::els_r9_full5x5().at(i);
-        etaSCwidth             = tas::els_etaSCwidth().at(i);
-        phiSCwidth             = tas::els_phiSCwidth().at(i);
-        eSeed                  = tas::els_eSeed().at(i);
-        scSeedEta              = tas::els_scSeedEta().at(i);
-        eSCRaw                 = tas::els_eSCRaw().at(i);
-        eSC                    = tas::els_eSC().at(i);
-        eSCPresh               = tas::els_eSCPresh().at(i);
-        ckf_chi2               = tas::els_ckf_chi2().at(i);
-        ckf_ndof               = tas::els_ckf_ndof().at(i);
-        chi2                   = tas::els_chi2().at(i);
-        ndof                   = tas::els_ndof().at(i);
-        fbrem                  = tas::els_fbrem().at(i);
-        eOverPOut              = tas::els_eOverPOut().at(i);
-        dEtaOut                = tas::els_dEtaOut().at(i);
-        dPhiOut                = tas::els_dPhiOut().at(i);
-	gsf_validHits          = tas::els_validHits().at(i);
-	conv_vtx_prob          = tas::els_conv_vtx_prob().at(i);
-
-        if (addAnnulus){
-          reliso04 = elRelIsoCustomCone(i, 0.4, true, 0.0, false, true);
-          annulus04 = reliso04 - miniiso;
-	}
-	if (addPFCandidates || checkIsPFTrueFalse) {
-	  int pfidx =  isPFelectron(pfelP4, pfelIsReco, i);
-	  if (pfidx != -1) {
-	    isPF = true;
-	    AbsTrkIso = pfelAbsTrkIso[pfidx]; // For this electron, save track iso produced earlier for PFmuon
-	    if (addAnnulus) TrkAn04 = pfelTrkAn04[pfidx];
-	  }
-        }
-
-        elID::setCache(idx,mva,miniiso,ptratio,ptrelv1);
-	if (verbose) cout << "Starting electron IDs" << endl;
-        //Save SS ID bools
-        if(electronID(i, SS_medium_v3))             passes_SS_tight_v3 = true;
-        if(electronID(i, SS_medium_noiso_v3))       passes_SS_tight_noiso_v3 = true;
-        if(electronID(i, SS_fo_v3))                 passes_SS_fo_v3 = true;
-        if(electronID(i, SS_fo_noiso_v3))           passes_SS_fo_noiso_v3 = true;
-        if(electronID(i, SS_fo_looseMVA_v3))        passes_SS_fo_looseMVA_v3 = true;
-        if(electronID(i, SS_fo_looseMVA_noiso_v3))  passes_SS_fo_looseMVA_noiso_v3 = true;
-        if(electronID(i, SS_veto_v3))               passes_SS_veto_v3 = true;
-        if(electronID(i, SS_veto_noiso_v3))         passes_SS_veto_noiso_v3 = true;
-
-	LorentzVector close_jet_v4 = closestJet(p4, 0.4, 3.0, 1);
-	float ptrel_v4 = ptRel(p4, close_jet_v4, true);
-	float ptratio_v4 = close_jet_v4.pt() > 0 ? p4.pt()/close_jet_v4.pt() : 1;
-        elID::unsetCache();
-        elID::setCache(idx,mva_25ns,miniiso,ptratio_v4,ptrel_v4);
-        if(electronID(i, SS_medium_v4))             passes_SS_tight_v4 = true;
-        if(electronID(i, SS_medium_noiso_v4))       passes_SS_tight_noiso_v4 = true;
-        if(electronID(i, SS_fo_v4))                 passes_SS_fo_v4 = true;
-        if(electronID(i, SS_fo_noiso_v4))           passes_SS_fo_noiso_v4 = true;
-        if(electronID(i, SS_fo_looseMVA_v4))        passes_SS_fo_looseMVA_v4 = true;
-        if(electronID(i, SS_fo_looseMVA_noiso_v4))  passes_SS_fo_looseMVA_noiso_v4 = true;
-        if(electronID(i, SS_veto_v4))               passes_SS_veto_v4 = true;
-        if(electronID(i, SS_veto_noiso_v4))         passes_SS_veto_noiso_v4 = true;
-
-	LorentzVector close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);
-	float ptrel_v5 = ptRel(p4, close_jet_v5, true);
-	float ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt()/close_jet_v5.pt() : 1;
-        elID::unsetCache();
-        elID::setCache(idx,mva_25ns,miniiso,ptratio_v5,ptrel_v5);
-        if(electronID(i, SS_medium_v5))             passes_SS_tight_v5 = true;
-        if(electronID(i, SS_medium_noiso_v5))       passes_SS_tight_noiso_v5 = true;
-        if(electronID(i, SS_fo_v5))                 passes_SS_fo_v5 = true;
-        if(electronID(i, SS_fo_noiso_v5))           passes_SS_fo_noiso_v5 = true;
-        if(electronID(i, SS_fo_looseMVA_v5))        passes_SS_fo_looseMVA_v5 = true;
-        if(electronID(i, SS_fo_looseMVA_noiso_v5))  passes_SS_fo_looseMVA_noiso_v5 = true;
-        if(electronID(i, SS_veto_v5))               passes_SS_veto_v5 = true;
-        if(electronID(i, SS_veto_noiso_v5))         passes_SS_veto_noiso_v5 = true;
-	if (verbose) cout << "Done SS IDs" <<endl;
-
-        elID::unsetCache();
-        elID::setCache(idx,mva,miniiso,ptratio,ptrelv1);
-
-        //Save WW ID bools
-        if(electronID(i, WW_medium_v2))             passes_WW_medium_v2 = true;
-        if(electronID(i, WW_medium_noiso_v2))       passes_WW_medium_noiso_v2 = true;
-        if(electronID(i, WW_fo_v2))                 passes_WW_fo_v2 = true;
-        if(electronID(i, WW_fo_noiso_v2))           passes_WW_fo_noiso_v2 = true;
-        if(electronID(i, WW_veto_v2))               passes_WW_veto_v2 = true;
-        if(electronID(i, WW_veto_noiso_v2))         passes_WW_veto_noiso_v2 = true;
-
-        //Save HAD ID bools
-        if(electronID(i, HAD_veto_v3))              passes_HAD_veto_v3 = true;
-        if(electronID(i, HAD_veto_noiso_v3))        passes_HAD_veto_noiso_v3 = true;
-        if(electronID(i, HAD_loose_v3))             passes_HAD_loose_v3 = true;
-        if(electronID(i, HAD_loose_noiso_v3))       passes_HAD_loose_noiso_v3 = true;
-	if (verbose) cout << "Done WW and HAD IDs" <<endl;
-        //Save POG ID bools
-        if( tas::els_passVetoId().at(i) )           passes_POG_vetoID = true;
-        if( tas::els_passLooseId().at(i) )          passes_POG_looseID = true;
-        if( tas::els_passMediumId().at(i) )         passes_POG_mediumID = true;
-        if( tas::els_passTightId().at(i) )          passes_POG_tightID = true;
-	if (verbose) cout << "Done POG IDs"<<endl;
-        elID::unsetCache();
-	if (verbose) cout << "Some MC properties"<<endl;
-        if (!evt_isRealData ) {
-          motherID = lepMotherID(Lep(id, idx));
-          mc_motherp4 = tas::els_mc_motherp4().at(i);
-          mc_motherid = tas::els_mc_motherid().at(i);
-        }
-        //Triggers
-	if (verbose) cout << "Electron triggers" << endl;
-        fillElectronTriggerBranches(p4, idx, false);
-	if (verbose) cout << "Saving electron branches"<<endl;
-        //Fill tree once per tag
-        BabyTree->Fill();
-	if (verbose) cout << "Finished electron"<<endl;
-      }
-
-      ////////// Addition of PF LEPTONS that were not included before //////////////////
-      // check if anything needs to be done:
-      //    - compare size of pfelp4 with probeelp4, and same for muons
-      //    - check whether there is a muon/electron tag
-      // if something to be done, then we need to save the pflepton as well as tag properties and triggers...
-      if (verbose) cout << "Addition of PF LEPTONS that were not included before" << endl;
-      bool addPFel = false;
-      bool addPFmu = false;
-      if ( foundElTag && savedElP4s.size() != pfelP4.size() ) addPFel = true;
-      if ( foundMuTag && savedMuP4s.size() != pfmuP4.size() ) addPFmu = true;
-
-      if ( addPFel && addPFCandidates ) {
-        for (unsigned int i=0; i<pfelP4.size(); i++) {
-          if (pfelIsReco[i]) continue;
-          InitLeptonBranches();
-          // set the tag branches (-1 means we are happy if any reco electron is a tag)
-	  //          checkElectronTag( -1 , 0);
-          checkElectronTag( -1 , v25nsMVAreader);
-          // now let's look at our electron
-          int pfidx = pfelidx[i];
-          p4 = pfelP4[i];
-          id = tas::pfcands_particleId().at(pfidx);
-          isPF = true; // that's why we're here!
-          if (id > 0) id = 1011;
-          else id = -1011;
-          dZ = tas::pfcands_dz().at(pfidx);
-          charge = tas::pfcands_charge().at(pfidx);
-	  AbsTrkIso = pfelAbsTrkIso[i]; // For this muon, save track iso produced earlier for PFmuon
-	  TrkAn04 = pfelTrkAn04[i];
-	  if (!evt_isRealData) motherID = pfLepMotherID(pfidx);
-
-          dilep_p4 = p4 + tag_p4;
-          dilep_mass = dilep_p4.M();
-
-          fillElectronTriggerBranches(p4,-1,false);
-
-          BabyTree->Fill();
-        }
-      } // addPFel
-
-      if (addPFmu && addPFCandidates){
-        for (unsigned int i=0; i<pfmuP4.size(); i++) {
-          if (pfmuIsReco[i]) continue;
-          InitLeptonBranches();
-          // set the tag branches (-1 means we are happy if any reco electron is a tag)
-          checkMuonTag( -1 );
-          // now let's look at our electron
-          int pfidx = pfmuidx[i];
-          p4 = pfmuP4[i];
-          id = tas::pfcands_particleId().at(pfidx);
-          isPF = true; // that's why we're here!
-          if (id > 0) id = 1013;
-          else id = -1013;
-          dZ = tas::pfcands_dz().at(pfidx);
-          charge = tas::pfcands_charge().at(pfidx);
-	  AbsTrkIso = pfmuAbsTrkIso[i]; // For this muon, save track iso produced earlier for PFmuon
-	  TrkAn04 = pfmuTrkAn04[i];
-	  if (!evt_isRealData) motherID = pfLepMotherID(pfidx);
-
-          dilep_p4 = p4 + tag_p4;
-          dilep_mass = dilep_p4.M();
-
-          fillMuonTriggerBranches(p4,-1,false);
-
-          BabyTree->Fill();
-        }
-      } // addPFmu
-
-    }//close event loop
-
-    file->Close();
-    delete file;
-
-    cout << "\nFile done" <<endl;
-  }//close file loop
-
-  cout<<"\nWriting file"<<endl;
-
-  BabyFile->cd();
-  BabyTree->Write();
-  BabyFile->Close();
-
-  return 0;
-
+        //cout << "applying JEC from the following files:" << endl;
+        //for (unsigned int ifile = 0; ifile < jetcorr_filenames_pfL1L2L3.size(); ++ifile) {
+        //cout << " " << jetcorr_filenames_pfL1L2L3.at(ifile) << endl;
+        //}
+        // Get File Content
+        if (nEventsDone >= nEventsToDo) { continue; }
+        TFile *file = TFile::Open(currentFile->GetTitle());
+        TTree *tree = (TTree*)file->Get("Events");
+        cms3.Init(tree);
+        // Loop over Events in current file
+        unsigned int nEventsTree = tree->GetEntriesFast();
+        for (unsigned int evt = 0; evt < nEventsTree; evt++)
+        {
+            //if (verbose) cout << "Event "<<evt<<endl;
+            // Get Event Content
+            if (nEventsDone >= nEventsToDo) { continue; }
+            cms3.GetEntry(evt);
+            nEventsDone++;
+            //if (verbose) cout << "Check prompt reco (Data)"<<endl;
+            if (tas::evt_isRealData() && isPromptReco && tas::evt_run() <= 251562) { continue; }
+            //If data, check good run list
+            //if (verbose) cout << "Check good run (Data)"<<endl;
+            if (applyJson && tas::evt_isRealData() && !goodrun(tas::evt_run(), tas::evt_lumiBlock())) { continue; }
+            //Initialize variables
+            //if (verbose) cout << "InitBabyNtuple"<<endl;
+            InitBabyNtuple();
+            // Progress
+            CMS3::progress(nEventsDone, nEventsToDo);
+            //Debug mode
+            if (verbose && tas::evt_event() != evt_cut && evt_cut != 0) { continue; }
+            if (verbose) { cout << "file name is " << file->GetName() << endl; }
+            //Preliminary stuff
+            if (tas::mus_dxyPV().size() != tas::mus_dzPV().size()) { continue; }
+            //MET variables
+            metStruct trackMetStruct = trackerMET(0.2);
+            pair<float, float> corrMETPair = getT1CHSMET_fromMINIAOD(jet_corrector_pfL1L2L3);
+            //Fill Easy Variables
+            evt_pfmet = cms3.evt_pfmet();
+            evt_pfmetPhi = cms3.evt_pfmetPhi();
+            evt_trackmet = trackMetStruct.met;
+            evt_trackmetPhi = trackMetStruct.metphi;
+            evt_corrMET = corrMETPair.first;
+            evt_corrMETPhi = corrMETPair.second;
+            evt_pfsumet = cms3.evt_pfsumet();
+            evt_pfmetSig = cms3.evt_pfmetSig();
+            evt_event = tas::evt_event();
+            evt_lumiBlock = tas::evt_lumiBlock();
+            evt_run = tas::evt_run();
+            evt_isRealData = tas::evt_isRealData();
+            sample = Form("%s", file->GetName());
+            if (!evt_isRealData)
+            {
+                evt_xsec_incl = tas::evt_xsec_incl();
+                evt_kfactor = tas::evt_kfactor();
+                gen_met = tas::gen_met();
+                gen_metPhi = tas::gen_metPhi();
+            }
+            // Vertex selection:
+            nvtx = 0;
+            for (unsigned int ivtx = 0; ivtx < tas::evt_nvtxs(); ivtx++)
+            {
+                if (!isGoodVertex(ivtx)) { continue; }
+                nvtx++;
+            }
+            rho = tas::evt_fixgridfastjet_all_rho();
+            rho_neut_centr = tas::evt_fixgridfastjet_centralneutral_rho();
+            rho_calo = tas::evt_fixgridfastjet_allcalo_rho();
+            rho_calo_centr = tas::evt_fixgridfastjet_centralcalo_rho();
+            //Fill data vs. mc variables
+            passes_met_filters = evt_isRealData ? passesMETfilter() : 1;
+            filt_hbhe = evt_isRealData ? hbheNoiseFilter() : 1;
+            filt_csc = evt_isRealData ? tas::evt_cscTightHaloId() : 1;
+            filt_hcallaser = evt_isRealData ? tas::filt_hcalLaser() : 1;
+            filt_ecaltp = evt_isRealData ? tas::filt_ecalTP() : 1;
+            filt_trkfail = evt_isRealData ? tas::filt_trackingFailure() : 1;
+            filt_eebadsc = evt_isRealData ? tas::filt_eeBadSc() : 1;
+            scale1fb = evt_isRealData ? 1 : tas::evt_scale1fb();
+            //Determine and save jet variables
+            ht = 0;
+            ht_SS = 0;
+            for (unsigned int i = 0; i < tas::pfjets_p4().size(); i++)
+            {
+                LorentzVector raw_jet = tas::pfjets_p4().at(i) * tas::pfjets_undoJEC().at(i);
+                //Require loose jet ID
+                if (!isLoosePFJet_50nsV1(i)) { continue; }
+                float jet_L1L2L3 = 1.;
+                if (jetcorr_filenames_pfL1L2L3.size() > 0)
+                {
+                    //L1L2L3
+                    jet_corrector_pfL1L2L3->setJetEta(raw_jet.eta());
+                    jet_corrector_pfL1L2L3->setJetPt(raw_jet.pt());
+                    jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(i));
+                    jet_corrector_pfL1L2L3->setRho(rho);
+                    jet_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
+                }
+                LorentzVector jet = raw_jet * jet_L1L2L3;
+                // cout << "jet pT=" << jet.pt() << " pTraw=" << raw_jet.pt() << " eta=" << raw_jet.eta() << " phi=" << raw_jet.phi() << " area=" << tas::pfjets_area().at(i) << " rho=" << rho << " L1=" << jet_L1 << " L2L3=" << jet_L2L3 << " L1L2L3=" << jet_L1L2L3 << endl;
+                //Kinematic jet cuts
+                if (jet.pt() < 25) { continue; }
+                //Verbose
+                if (verbose) { cout << "Possible jet with pT: " << jet.pt() << endl; }
+                //Save jets that make it this far
+                jets.push_back(jet);
+                //HT is sum of jets with pT > 40
+                if (jet.pt() > 40) { ht += jet.pt(); }
+                if (jet.pt() > 40 && fabs(jet.eta()) < 2.4)
+                {
+                    bool jetClean = true;
+                    for (size_t j = 0; j < tas::mus_p4().size(); j++)
+                    {
+                        if (muonID(j, SS_fo_v5) && tas::mus_p4().at(j).pt() > 5. && (ROOT::Math::VectorUtil::DeltaR(jet, tas::mus_p4().at(j)) < 0.4))
+                        {
+                            jetClean = false;
+                            if (verbose) { cout << "jet cleaned by muon p4: " << tas::mus_p4().at(j) << " pt=" << tas::mus_p4().at(j).pt() << endl; }
+                        }
+                    }
+                    for (size_t j = 0; j < tas::els_p4().size(); j++)
+                    {
+                        if (electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt() > 7. && (ROOT::Math::VectorUtil::DeltaR(jet, tas::els_p4().at(j)) < 0.4))
+                        {
+                            jetClean = false;
+                            if (verbose) { cout << "jet cleaned by electron p4: " << tas::els_p4().at(j) << " pt=" << tas::els_p4().at(j).pt() << endl; }
+                        }
+                    }
+                    if (jetClean) { ht_SS += jet.pt(); }
+                }
+                //Save b-tags
+                float disc = tas::pfjets_pfCombinedInclusiveSecondaryVertexV2BJetTag().at(i);
+                jets_disc.push_back(disc);
+                jets_area.push_back(tas::pfjets_area().at(i));
+                jets_undoJEC.push_back(tas::pfjets_undoJEC().at(i));
+            }
+            njets = jets.size();
+            //Verbose for jets
+            if (verbose)
+            {
+                cout << "njets: " << njets << endl;
+                for (unsigned int i = 0; i < jets.size(); i++) { cout << i << " " << jets[i].pt() << " " << jets[i].eta() << endl; }
+            }
+            //Calculate number of fakeable objects
+            if (verbose) { cout << "Calculate number of fakeable objects" << endl; }
+            nFOs_SS = 0;
+            for (size_t j = 0; j < tas::mus_p4().size(); j++)
+            {
+                if (muonID(j, SS_fo_v5) && tas::mus_p4().at(j).pt() > 10) { nFOs_SS++; }
+            }
+            for (size_t j = 0; j < tas::els_p4().size(); j++)
+            {
+                if (electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt() > 10) { nFOs_SS++; }
+            }
+            //These variables are persistent through the event, used for PFlepton saving
+            bool foundMuTag = false;
+            bool foundElTag = false;
+            // Variables to keep track of PFElectrons and PFMuons
+            if (verbose) { cout << "Variables to keep track of PFElectrons and PFMuons" << endl; }
+            // We would like to save PFleptons if they don't overlap with something we've already saved.
+            // If they do overlap, we want to save the fact that they overlap
+            // Load the pflepton p4s in memory, we'll have to check them on each lepton
+            vector<LorentzVector> savedMuP4s;
+            savedMuP4s.clear();
+            vector<LorentzVector> savedElP4s;
+            savedElP4s.clear();
+            vector<int> pfelidx;
+            pfelidx.clear();
+            vector<int> pfmuidx;
+            pfmuidx.clear();
+            vector<bool> pfelIsReco;
+            pfelIsReco.clear();
+            vector<bool> pfmuIsReco;
+            pfmuIsReco.clear();
+            vector<LorentzVector> pfelP4;
+            pfelP4.clear();
+            vector<LorentzVector> pfmuP4;
+            pfmuP4.clear();
+            vector<float> pfelAbsTrkIso;
+            pfelAbsTrkIso.clear();
+            vector<float> pfmuAbsTrkIso;
+            pfmuAbsTrkIso.clear();
+            vector<float> pfelTrkAn04;
+            pfelTrkAn04.clear();
+            vector<float> pfmuTrkAn04;
+            pfmuTrkAn04.clear();
+            for (unsigned int i = 0; i < tas::pfcands_p4().size(); i++)
+            {
+                if (fabs(tas::pfcands_particleId().at(i)) != 11 && fabs(tas::pfcands_particleId().at(i)) != 13) { continue; }
+                if (tas::pfcands_p4().at(i).pt() < 5) { continue; }
+                if (fabs(tas::pfcands_dz().at(i)) > 0.1) { continue; }
+                if (fabs(tas::pfcands_p4().at(i).eta()) > 2.5) { continue; }
+                if (fabs(tas::pfcands_particleId().at(i)) == 11)
+                {
+                    pfelidx.push_back(i);
+                    pfelP4.push_back(tas::pfcands_p4().at(i));
+                    pfelIsReco.push_back(false);
+                    pfelAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
+                    pfelTrkAn04.push_back(PFCandRelIsoAn04(i));
+                }
+                else if (fabs(tas::pfcands_particleId().at(i)) == 13)
+                {
+                    pfmuidx.push_back(i);
+                    pfmuP4.push_back(tas::pfcands_p4().at(i));
+                    pfmuIsReco.push_back(false);
+                    pfmuAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
+                    pfmuTrkAn04.push_back(PFCandRelIsoAn04(i));
+                }
+                continue;
+            }
+            usedMu = false;
+            usedEl = false;
+            TRandom r;
+            rndm = r.Rndm();
+            //Muon Loop -- we loop over the probes
+            if (verbose) { cout << "Muon Loop -- we loop over the probes" << endl; }
+            for (unsigned int i = 0; i < tas::mus_p4().size(); i++)
+            {
+                // Require pT > 10 GeV
+                float maxPt = 10.;
+                if (recoLeptonsDownTo5GeV) { maxPt = 5.; }
+                if (recoLeptonsDownTo20GeV) { maxPt = 20.; }
+                if (tas::mus_p4().at(i).pt() <= maxPt) { continue; }
+                InitLeptonBranches();
+                //Check for a tag
+                bool foundTag = checkMuonTag(i, false);
+                if (foundTag) { foundMuTag = true; }
+                if (muonID(i, SS_veto_noiso_v5) == 0 && muonID(i, HAD_loose_v3) == 0 && foundTag == false) { continue; }
+                if (onlySaveTagProbePairs && foundTag == false) { continue; }
+                //ID & Index for muons
+                id = -13.0 * tas::mus_charge().at(i);
+                idx = i;
+                //p4 for muon
+                p4 = tas::mus_p4().at(i);
+                savedMuP4s.push_back(p4);
+                //Dilepton stuff
+                if (foundTag)
+                {
+                    dilep_p4 = p4 + tag_p4;
+                    dilep_mass = dilep_p4.M();
+                }
+                if (onlySaveTagProbePairs && (dilep_mass < 60 || dilep_mass > 120)) { continue; }
+                if (verbose) { cout << "Saving this muon." << endl; }
+                //MC stuff
+                if (!evt_isRealData)
+                {
+                    motherID = lepMotherID(Lep(id, idx));
+                    mc_motherp4 = tas::mus_mc_motherp4().at(i);
+                    mc_p4 = tas::mus_mc_p4().at(i);
+                    mc_motherid = tas::mus_mc_motherid().at(i);
+                    mc_id = tas::mus_mc_id().at(i);
+                }
+                //Impact parameter
+                dxyPV = abs(id) == 11 ? tas::els_dxyPV().at(i) : tas::mus_dxyPV().at(i);
+                dxyPV_err = abs(id) == 11 ? tas::els_d0Err().at(i) : tas::mus_d0Err().at(i);
+                dZ = abs(id) == 11 ? tas::els_dzPV().at(i) : tas::mus_dzPV().at(i);
+                ip3d = tas::mus_ip3d().at(i);
+                ip3derr = tas::mus_ip3derr().at(i);
+                //Isolation et al
+                RelIso03 = (tas::mus_isoR03_pf_ChargedHadronPt().at(i) + tas::mus_isoR03_pf_NeutralHadronEt().at(i) + tas::mus_isoR03_pf_PhotonEt().at(i)) / tas::mus_p4().at(i).pt();
+                RelIso03EA = muRelIso03EA(i);
+                RelIso03DB = muRelIso03DB(i);
+                pfChargedHadronIso = tas::mus_isoR03_pf_ChargedHadronPt().at(i);
+                pfPhotonIso = tas::mus_isoR03_pf_PhotonEt().at(i);
+                pfNeutralHadronIso = tas::mus_isoR03_pf_NeutralHadronEt().at(i);
+                tkIso = tas::mus_iso03_sumPt().at(i);
+                sumPUPt = tas::mus_isoR03_pf_PUPt().at(i);
+                iso03sumPt = tas::mus_iso03_sumPt().at(i);
+                iso03emEt = tas::mus_iso03_emEt().at(i);
+                iso03hadEt = tas::mus_iso03_hadEt().at(i);
+                ptrelv0 = getPtRel(id, idx, false, ssWhichCorr);
+                ptrelv1 = getPtRel(id, idx, true, ssWhichCorr);
+                miniiso = muMiniRelIsoCMS3_EA(idx, ssEAversion);
+                miniisoDB = muMiniRelIsoCMS3_DB(idx);
+                int closeJetIdx = closestJetIdx(p4, 0.4, 3.0);
+                if (closeJetIdx >= 0)
+                {
+                    jet_close_lep_idx = closeJetIdx;
+                    jet_close_lep = tas::pfjets_p4().at(closeJetIdx);
+                    jet_close_lep_undoJEC = tas::pfjets_undoJEC().at(closeJetIdx);
+                    jet_close_lep_area = tas::pfjets_area().at(closeJetIdx);
+                    if (jetcorr_filenames_pfL1L2L3.size() > 0)
+                    {
+                        //L1
+                        jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
+                        jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+                        jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
+                        jet_corrector_pfL1->setRho(rho);
+                        jet_close_L1 = jet_corrector_pfL1->getCorrection();
+                        //L1, redo it with a different rho
+                        jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
+                        jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+                        jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
+                        jet_corrector_pfL1->setRho(rho_neut_centr);
+                        jet_close_L1nc = jet_corrector_pfL1->getCorrection();
+                        //L1, redo it with a different rho and MC correction file
+                        jet_corrector_pfL1MC->setJetEta(jet_close_lep.eta());
+                        jet_corrector_pfL1MC->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+                        jet_corrector_pfL1MC->setJetA(tas::pfjets_area().at(closeJetIdx));
+                        jet_corrector_pfL1MC->setRho(rho_neut_centr);
+                        jet_close_L1ncmc = jet_corrector_pfL1MC->getCorrection();
+                        //L1L2L3
+                        jet_corrector_pfL1L2L3->setJetEta(jet_close_lep.eta());
+                        jet_corrector_pfL1L2L3->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+                        jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
+                        jet_corrector_pfL1L2L3->setRho(rho);
+                        jet_close_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
+                        //L2L3
+                        LorentzVector raw_jet = jet_close_lep * tas::pfjets_undoJEC().at(closeJetIdx);
+                        jet_corrector_pfL2L3->setJetEta(raw_jet.eta());
+                        jet_corrector_pfL2L3->setJetPt(raw_jet.pt());
+                        jet_corrector_pfL2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
+                        jet_corrector_pfL2L3->setRho(rho);
+                        jet_close_L2L3 = jet_corrector_pfL2L3->getCorrection();
+                    }
+                }
+                ptratio = jet_close_lep.pt() > 0 ? p4.pt() / jet_close_lep.pt() : 1;
+                //MT
+                mt = MT(p4.pt(), p4.phi(), evt_pfmet, evt_pfmetPhi);
+                //Other muon Id
+                pid_PFMuon = tas::mus_pid_PFMuon().at(i);
+                gfit_chi2 = tas::mus_gfit_chi2().at(i);
+                // gfit_ndof = tas::mus_gfit_ndof().at(i);
+                gfit_validSTAHits = tas::mus_gfit_validSTAHits().at(i);
+                numberOfMatchedStations = tas::mus_numberOfMatchedStations().at(i);
+                validPixelHits = tas::mus_validPixelHits().at(i);
+                nlayers = tas::mus_nlayers().at(i);
+                type = tas::mus_type().at(i);
+                chi2LocalPosition = tas::mus_chi2LocalPosition().at(i);
+                trkKink = tas::mus_trkKink().at(i);
+                validHits = tas::mus_validHits().at(i);
+                lostHits = tas::mus_lostHits().at(i);
+                exp_innerlayers = tas::mus_exp_innerlayers().at(i);
+                exp_outerlayers = tas::mus_exp_outerlayers().at(i);
+                segmCompatibility = tas::mus_segmCompatibility().at(i);
+                if (addAnnulus)
+                {
+                    reliso04 = muRelIsoCustomCone(i, 0.4, true, 0.5, false, true);
+                    annulus04 = reliso04 - miniiso;
+                }
+                if (addPFCandidates || checkIsPFTrueFalse)
+                {
+                    int pfidx = isPFmuon(pfmuP4, pfmuIsReco, i);
+                    if (pfidx != -1)
+                    {
+                        isPF = true;
+                        AbsTrkIso = pfmuAbsTrkIso[pfidx]; // For this electron, save track iso produced earlier for PFmuon
+                        if (addAnnulus) { TrkAn04 = pfmuTrkAn04[pfidx]; }
+                    }
+                }
+                muID::setCache(idx, miniiso, ptratio, ptrelv1);
+                //Save SS ID bools
+                if (muonID(i, SS_tight_v3)) { passes_SS_tight_v3 = true; }
+                if (muonID(i, SS_tight_noiso_v3)) { passes_SS_tight_noiso_v3 = true; }
+                if (muonID(i, SS_fo_v3)) { passes_SS_fo_v3 = true; }
+                if (muonID(i, SS_fo_noiso_v3)) { passes_SS_fo_noiso_v3 = true; }
+                if (muonID(i, SS_veto_v3)) { passes_SS_veto_v3 = true; }
+                if (muonID(i, SS_veto_noiso_v3)) { passes_SS_veto_noiso_v3 = true; }
+                LorentzVector close_jet_v4 = closestJet(p4, 0.4, 3.0, 1);
+                float ptrel_v4 = ptRel(p4, close_jet_v4, true);
+                float ptratio_v4 = close_jet_v4.pt() > 0 ? p4.pt() / close_jet_v4.pt() : 1;
+                muID::unsetCache();
+                muID::setCache(idx, miniiso, ptratio_v4, ptrel_v4);
+                if (muonID(i, SS_tight_v4)) { passes_SS_tight_v4 = true; }
+                if (muonID(i, SS_tight_noiso_v4)) { passes_SS_tight_noiso_v4 = true; }
+                if (muonID(i, SS_fo_v4)) { passes_SS_fo_v4 = true; }
+                if (muonID(i, SS_fo_noiso_v4)) { passes_SS_fo_noiso_v4 = true; }
+                if (muonID(i, SS_veto_v4)) { passes_SS_veto_v4 = true; }
+                if (muonID(i, SS_veto_noiso_v4)) { passes_SS_veto_noiso_v4 = true; }
+                LorentzVector close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);
+                float ptrel_v5 = ptRel(p4, close_jet_v5, true);
+                float ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt() / close_jet_v5.pt() : 1;
+                muID::unsetCache();
+                muID::setCache(idx, miniiso, ptratio_v5, ptrel_v5);
+                if (muonID(i, SS_tight_v5)) { passes_SS_tight_v5 = true; }
+                if (muonID(i, SS_tight_noiso_v5)) { passes_SS_tight_noiso_v5 = true; }
+                if (muonID(i, SS_fo_v5)) { passes_SS_fo_v5 = true; }
+                if (muonID(i, SS_fo_noiso_v5)) { passes_SS_fo_noiso_v5 = true; }
+                if (muonID(i, SS_veto_v5)) { passes_SS_veto_v5 = true; }
+                if (muonID(i, SS_veto_noiso_v5)) { passes_SS_veto_noiso_v5 = true; }
+                muID::unsetCache();
+                muID::setCache(idx, miniiso, ptratio, ptrelv1);
+                //Save WW ID bools
+                if (muonID(i, WW_medium_v2)) { passes_WW_medium_v2 = true; }
+                if (muonID(i, WW_medium_noiso_v2)) { passes_WW_medium_noiso_v2 = true; }
+                if (muonID(i, WW_fo_v2)) { passes_WW_fo_v2 = true; }
+                if (muonID(i, WW_fo_noiso_v2)) { passes_WW_fo_noiso_v2 = true; }
+                if (muonID(i, WW_veto_v2)) { passes_WW_veto_v2 = true; }
+                if (muonID(i, WW_veto_noiso_v2)) { passes_WW_veto_noiso_v2 = true; }
+                //Save HAD ID bools
+                if (muonID(i, HAD_loose_v3)) { passes_HAD_loose_v3 = true; }
+                if (muonID(i, HAD_loose_noiso_v3)) { passes_HAD_loose_noiso_v3 = true; }
+                //Save POG ID bools
+                if (isLooseMuonPOG(i)) { passes_POG_looseID = true; }
+                if (isMediumMuonPOG(i)) { passes_POG_mediumID = true; }
+                if (isTightMuonPOG(i)) { passes_POG_tightID = true; }
+                muID::unsetCache();
+                //Fill trigger branches
+                fillMuonTriggerBranches(p4, idx, false);
+                //Fill baby once per probe
+                BabyTree->Fill();
+            } //close muon loop
+            //Electron Loop
+            if (verbose) { cout << "Electron Loop" << endl; }
+            for (unsigned int i = 0; i < tas::els_p4().size(); i++)
+            {
+                // Require pT > 10 GeV
+                float maxPt = 10.;
+                if (recoLeptonsDownTo5GeV) { maxPt = 5.; }
+                if (recoLeptonsDownTo20GeV) { maxPt = 20.; }
+                if (tas::els_p4().at(i).pt() <= maxPt) { continue; }
+                InitLeptonBranches();
+                //Check for a tag
+                bool foundTag = checkElectronTag(i, v25nsMVAreader);
+                if (foundTag) { foundElTag = true; }
+                //Save the electron if we have a tag OR if it passes loose ID
+                if (electronID(i, SS_veto_noiso_v4) == 0 && electronID(i, HAD_veto_v3) == 0 && foundTag == false) { continue; }
+                if (onlySaveTagProbePairs && foundTag == false) { continue; }
+                //p4
+                p4 = tas::els_p4().at(i);
+                savedElP4s.push_back(p4);
+                //Dilepton stuff
+                if (foundTag)
+                {
+                    dilep_p4 = p4 + tag_p4;
+                    dilep_mass = dilep_p4.M();
+                }
+                if (onlySaveTagProbePairs && (dilep_mass < 60 || dilep_mass > 120)) { continue; }
+                if (verbose) { cout << "Saving this electron: pt/eta/phi " << p4.pt() << "/" << p4.eta() << "/" << p4.phi() << endl; }
+                //ID & idx stuff
+                id = -11.0 * tas::els_charge().at(i);
+                idx = i;
+                //MC Stuff
+                if (!evt_isRealData)
+                {
+                    mc_p4 = tas::els_mc_p4().at(i);
+                    mc_id = tas::els_mc_id().at(i);
+                }
+                //Impact Parameter
+                dxyPV = abs(id) == 11 ? tas::els_dxyPV().at(i) : tas::mus_dxyPV().at(i);
+                dxyPV_err = abs(id) == 11 ? tas::els_d0Err().at(i) : tas::mus_d0Err().at(i);
+                dZ = abs(id) == 11 ? tas::els_dzPV().at(i) : tas::mus_dzPV().at(i);
+                ip3d = tas::els_ip3d().at(i);
+                ip3derr = tas::els_ip3derr().at(i);
+                //Isolation et al
+                RelIso03 = (tas::els_pfChargedHadronIso().at(i) + tas::els_pfNeutralHadronIso().at(i) + tas::els_pfPhotonIso().at(i)) / tas::els_p4().at(i).pt();
+                RelIso03EA = eleRelIso03EA(i);
+                RelIso03DB = eleRelIso03DB(i);
+                pfChargedHadronIso = tas::els_pfChargedHadronIso().at(i);
+                pfPhotonIso = tas::els_pfPhotonIso().at(i);
+                pfNeutralHadronIso = tas::els_pfNeutralHadronIso().at(i);
+                tkIso = tas::els_tkIso().at(i);
+                ptrelv0 = getPtRel(id, idx, false, ssWhichCorr);
+                ptrelv1 = getPtRel(id, idx, true, ssWhichCorr);
+                if (verbose) { cout << "About to correct jets for this electron" << endl; }
+                int closeJetIdx = closestJetIdx(p4, 0.4, 3.0);
+                if (closeJetIdx >= 0)
+                {
+                    jet_close_lep_idx = closeJetIdx;
+                    jet_close_lep = tas::pfjets_p4().at(closeJetIdx);
+                    jet_close_lep_undoJEC = tas::pfjets_undoJEC().at(closeJetIdx);
+                    jet_close_lep_area = tas::pfjets_area().at(closeJetIdx);
+                    if (jetcorr_filenames_pfL1L2L3.size() > 0)
+                    {
+                        //L1
+                        jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
+                        jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+                        jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
+                        jet_corrector_pfL1->setRho(rho);
+                        jet_close_L1 = jet_corrector_pfL1->getCorrection();
+                        //L1, redo it with a different rho
+                        jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
+                        jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+                        jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
+                        jet_corrector_pfL1->setRho(rho_neut_centr);
+                        jet_close_L1nc = jet_corrector_pfL1->getCorrection();
+                        //L1, redo it with a different rho and MC correction file
+                        jet_corrector_pfL1MC->setJetEta(jet_close_lep.eta());
+                        jet_corrector_pfL1MC->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+                        jet_corrector_pfL1MC->setJetA(tas::pfjets_area().at(closeJetIdx));
+                        jet_corrector_pfL1MC->setRho(rho_neut_centr);
+                        jet_close_L1ncmc = jet_corrector_pfL1MC->getCorrection();
+                        //L1L2L3
+                        jet_corrector_pfL1L2L3->setJetEta(jet_close_lep.eta());
+                        jet_corrector_pfL1L2L3->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+                        jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
+                        jet_corrector_pfL1L2L3->setRho(rho);
+                        jet_close_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
+                        //L2L3
+                        LorentzVector raw_jet = jet_close_lep * tas::pfjets_undoJEC().at(closeJetIdx);
+                        jet_corrector_pfL2L3->setJetEta(raw_jet.eta());
+                        jet_corrector_pfL2L3->setJetPt(raw_jet.pt());
+                        jet_corrector_pfL2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
+                        jet_corrector_pfL2L3->setRho(rho);
+                        jet_close_L2L3 = jet_corrector_pfL2L3->getCorrection();
+                    }
+                }
+                if (verbose) { cout << "Finished jet corrections" << endl; }
+                ptratio = (jet_close_lep.pt() > 0. ? p4.pt() / jet_close_lep.pt() : 1.);
+                miniiso = elMiniRelIsoCMS3_EA(idx, ssEAversion);
+                miniisoDB = elMiniRelIsoCMS3_DB(idx);
+                //MT
+                mt = MT(p4.pt(), p4.phi(), evt_pfmet, evt_pfmetPhi);
+                //Other Electron ID stuff
+                sumPUPt = tas::els_pfPUIso().at(i);
+                sigmaIEtaIEta_full5x5 = tas::els_sigmaIEtaIEta_full5x5().at(i);
+                etaSC = tas::els_etaSC().at(i);
+                dEtaIn = tas::els_dEtaIn().at(i);
+                dPhiIn = tas::els_dPhiIn().at(i);
+                hOverE = tas::els_hOverE().at(i);
+                ecalEnergy = tas::els_ecalEnergy().at(i);
+                eOverPIn = tas::els_eOverPIn().at(i);
+                conv_vtx_flag = tas::els_conv_vtx_flag().at(i);
+                exp_innerlayers = tas::els_exp_innerlayers().at(i);
+                exp_outerlayers = tas::els_exp_outerlayers().at(i);
+                charge = tas::els_charge().at(i);
+                sccharge = tas::els_sccharge().at(i);
+                ckf_charge = tas::els_ckf_charge().at(i);
+                trk_charge = tas::els_trk_charge().at(i);
+                threeChargeAgree_branch = threeChargeAgree(i);
+                mva = getMVAoutput(i);
+                mva_25ns = v25nsMVAreader->MVA(i);
+                type = tas::els_type().at(i);
+                ecalIso = tas::els_ecalIso().at(i);
+                hcalIso = tas::els_hcalIso().at(i);
+                sigmaIEtaIEta = tas::els_sigmaIEtaIEta().at(i);
+                ecalPFClusterIso = tas::els_ecalPFClusterIso().at(i);
+                hcalPFClusterIso = tas::els_hcalPFClusterIso().at(i);
+                ckf_laywithmeas = tas::els_ckf_laywithmeas().at(i);
+                sigmaIPhiIPhi_full5x5 = tas::els_sigmaIPhiIPhi_full5x5().at(i);
+                e1x5_full5x5 = tas::els_e1x5_full5x5().at(i);
+                e5x5_full5x5 = tas::els_e5x5_full5x5().at(i);
+                r9_full5x5 = tas::els_r9_full5x5().at(i);
+                etaSCwidth = tas::els_etaSCwidth().at(i);
+                phiSCwidth = tas::els_phiSCwidth().at(i);
+                eSeed = tas::els_eSeed().at(i);
+                scSeedEta = tas::els_scSeedEta().at(i);
+                eSCRaw = tas::els_eSCRaw().at(i);
+                eSC = tas::els_eSC().at(i);
+                eSCPresh = tas::els_eSCPresh().at(i);
+                ckf_chi2 = tas::els_ckf_chi2().at(i);
+                ckf_ndof = tas::els_ckf_ndof().at(i);
+                chi2 = tas::els_chi2().at(i);
+                ndof = tas::els_ndof().at(i);
+                fbrem = tas::els_fbrem().at(i);
+                eOverPOut = tas::els_eOverPOut().at(i);
+                dEtaOut = tas::els_dEtaOut().at(i);
+                dPhiOut = tas::els_dPhiOut().at(i);
+                gsf_validHits = tas::els_validHits().at(i);
+                conv_vtx_prob = tas::els_conv_vtx_prob().at(i);
+                if (addAnnulus)
+                {
+                    reliso04 = elRelIsoCustomCone(i, 0.4, true, 0.0, false, true);
+                    annulus04 = reliso04 - miniiso;
+                }
+                if (addPFCandidates || checkIsPFTrueFalse)
+                {
+                    int pfidx = isPFelectron(pfelP4, pfelIsReco, i);
+                    if (pfidx != -1)
+                    {
+                        isPF = true;
+                        AbsTrkIso = pfelAbsTrkIso[pfidx]; // For this electron, save track iso produced earlier for PFmuon
+                        if (addAnnulus) { TrkAn04 = pfelTrkAn04[pfidx]; }
+                    }
+                }
+                elID::setCache(idx, mva, miniiso, ptratio, ptrelv1);
+                if (verbose) { cout << "Starting electron IDs" << endl; }
+                //Save SS ID bools
+                if (electronID(i, SS_medium_v3)) { passes_SS_tight_v3 = true; }
+                if (electronID(i, SS_medium_noiso_v3)) { passes_SS_tight_noiso_v3 = true; }
+                if (electronID(i, SS_fo_v3)) { passes_SS_fo_v3 = true; }
+                if (electronID(i, SS_fo_noiso_v3)) { passes_SS_fo_noiso_v3 = true; }
+                if (electronID(i, SS_fo_looseMVA_v3)) { passes_SS_fo_looseMVA_v3 = true; }
+                if (electronID(i, SS_fo_looseMVA_noiso_v3)) { passes_SS_fo_looseMVA_noiso_v3 = true; }
+                if (electronID(i, SS_veto_v3)) { passes_SS_veto_v3 = true; }
+                if (electronID(i, SS_veto_noiso_v3)) { passes_SS_veto_noiso_v3 = true; }
+                LorentzVector close_jet_v4 = closestJet(p4, 0.4, 3.0, 1);
+                float ptrel_v4 = ptRel(p4, close_jet_v4, true);
+                float ptratio_v4 = close_jet_v4.pt() > 0 ? p4.pt() / close_jet_v4.pt() : 1;
+                elID::unsetCache();
+                elID::setCache(idx, mva_25ns, miniiso, ptratio_v4, ptrel_v4);
+                if (electronID(i, SS_medium_v4)) { passes_SS_tight_v4 = true; }
+                if (electronID(i, SS_medium_noiso_v4)) { passes_SS_tight_noiso_v4 = true; }
+                if (electronID(i, SS_fo_v4)) { passes_SS_fo_v4 = true; }
+                if (electronID(i, SS_fo_noiso_v4)) { passes_SS_fo_noiso_v4 = true; }
+                if (electronID(i, SS_fo_looseMVA_v4)) { passes_SS_fo_looseMVA_v4 = true; }
+                if (electronID(i, SS_fo_looseMVA_noiso_v4)) { passes_SS_fo_looseMVA_noiso_v4 = true; }
+                if (electronID(i, SS_veto_v4)) { passes_SS_veto_v4 = true; }
+                if (electronID(i, SS_veto_noiso_v4)) { passes_SS_veto_noiso_v4 = true; }
+                LorentzVector close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);
+                float ptrel_v5 = ptRel(p4, close_jet_v5, true);
+                float ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt() / close_jet_v5.pt() : 1;
+                elID::unsetCache();
+                elID::setCache(idx, mva_25ns, miniiso, ptratio_v5, ptrel_v5);
+                if (electronID(i, SS_medium_v5)) { passes_SS_tight_v5 = true; }
+                if (electronID(i, SS_medium_noiso_v5)) { passes_SS_tight_noiso_v5 = true; }
+                if (electronID(i, SS_fo_v5)) { passes_SS_fo_v5 = true; }
+                if (electronID(i, SS_fo_noiso_v5)) { passes_SS_fo_noiso_v5 = true; }
+                if (electronID(i, SS_fo_looseMVA_v5)) { passes_SS_fo_looseMVA_v5 = true; }
+                if (electronID(i, SS_fo_looseMVA_noiso_v5)) { passes_SS_fo_looseMVA_noiso_v5 = true; }
+                if (electronID(i, SS_veto_v5)) { passes_SS_veto_v5 = true; }
+                if (electronID(i, SS_veto_noiso_v5)) { passes_SS_veto_noiso_v5 = true; }
+                if (verbose) { cout << "Done SS IDs" << endl; }
+                elID::unsetCache();
+                elID::setCache(idx, mva, miniiso, ptratio, ptrelv1);
+                //Save WW ID bools
+                if (electronID(i, WW_medium_v2)) { passes_WW_medium_v2 = true; }
+                if (electronID(i, WW_medium_noiso_v2)) { passes_WW_medium_noiso_v2 = true; }
+                if (electronID(i, WW_fo_v2)) { passes_WW_fo_v2 = true; }
+                if (electronID(i, WW_fo_noiso_v2)) { passes_WW_fo_noiso_v2 = true; }
+                if (electronID(i, WW_veto_v2)) { passes_WW_veto_v2 = true; }
+                if (electronID(i, WW_veto_noiso_v2)) { passes_WW_veto_noiso_v2 = true; }
+                //Save HAD ID bools
+                if (electronID(i, HAD_veto_v3)) { passes_HAD_veto_v3 = true; }
+                if (electronID(i, HAD_veto_noiso_v3)) { passes_HAD_veto_noiso_v3 = true; }
+                if (electronID(i, HAD_loose_v3)) { passes_HAD_loose_v3 = true; }
+                if (electronID(i, HAD_loose_noiso_v3)) { passes_HAD_loose_noiso_v3 = true; }
+                if (verbose) { cout << "Done WW and HAD IDs" << endl; }
+                //Save POG ID bools
+                if (tas::els_passVetoId().at(i)) { passes_POG_vetoID = true; }
+                if (tas::els_passLooseId().at(i)) { passes_POG_looseID = true; }
+                if (tas::els_passMediumId().at(i)) { passes_POG_mediumID = true; }
+                if (tas::els_passTightId().at(i)) { passes_POG_tightID = true; }
+                if (verbose) { cout << "Done POG IDs" << endl; }
+                elID::unsetCache();
+                if (verbose) { cout << "Some MC properties" << endl; }
+                if (!evt_isRealData)
+                {
+                    motherID = lepMotherID(Lep(id, idx));
+                    mc_motherp4 = tas::els_mc_motherp4().at(i);
+                    mc_motherid = tas::els_mc_motherid().at(i);
+                }
+                //Triggers
+                if (verbose) { cout << "Electron triggers" << endl; }
+                fillElectronTriggerBranches(p4, idx, false);
+                if (verbose) { cout << "Saving electron branches" << endl; }
+                //Fill tree once per tag
+                BabyTree->Fill();
+                if (verbose) { cout << "Finished electron" << endl; }
+            }
+            ////////// Addition of PF LEPTONS that were not included before //////////////////
+            // check if anything needs to be done:
+            // - compare size of pfelp4 with probeelp4, and same for muons
+            // - check whether there is a muon/electron tag
+            // if something to be done, then we need to save the pflepton as well as tag properties and triggers...
+            if (verbose) { cout << "Addition of PF LEPTONS that were not included before" << endl; }
+            bool addPFel = false;
+            bool addPFmu = false;
+            if (foundElTag && savedElP4s.size() != pfelP4.size()) { addPFel = true; }
+            if (foundMuTag && savedMuP4s.size() != pfmuP4.size()) { addPFmu = true; }
+            if (addPFel && addPFCandidates)
+            {
+                for (unsigned int i = 0; i < pfelP4.size(); i++)
+                {
+                    if (pfelIsReco[i]) { continue; }
+                    InitLeptonBranches();
+                    // set the tag branches (-1 means we are happy if any reco electron is a tag)
+                    // checkElectronTag( -1 , 0);
+                    checkElectronTag(-1, v25nsMVAreader);
+                    // now let's look at our electron
+                    int pfidx = pfelidx[i];
+                    p4 = pfelP4[i];
+                    id = tas::pfcands_particleId().at(pfidx);
+                    isPF = true; // that's why we're here!
+                    if (id > 0) { id = 1011; }
+                    else { id = -1011; }
+                    dZ = tas::pfcands_dz().at(pfidx);
+                    charge = tas::pfcands_charge().at(pfidx);
+                    AbsTrkIso = pfelAbsTrkIso[i]; // For this muon, save track iso produced earlier for PFmuon
+                    TrkAn04 = pfelTrkAn04[i];
+                    if (!evt_isRealData) { motherID = pfLepMotherID(pfidx); }
+                    dilep_p4 = p4 + tag_p4;
+                    dilep_mass = dilep_p4.M();
+                    fillElectronTriggerBranches(p4, -1, false);
+                    BabyTree->Fill();
+                }
+            } // addPFel
+            if (addPFmu && addPFCandidates)
+            {
+                for (unsigned int i = 0; i < pfmuP4.size(); i++)
+                {
+                    if (pfmuIsReco[i]) { continue; }
+                    InitLeptonBranches();
+                    // set the tag branches (-1 means we are happy if any reco electron is a tag)
+                    checkMuonTag(-1);
+                    // now let's look at our electron
+                    int pfidx = pfmuidx[i];
+                    p4 = pfmuP4[i];
+                    id = tas::pfcands_particleId().at(pfidx);
+                    isPF = true; // that's why we're here!
+                    if (id > 0) { id = 1013; }
+                    else { id = -1013; }
+                    dZ = tas::pfcands_dz().at(pfidx);
+                    charge = tas::pfcands_charge().at(pfidx);
+                    AbsTrkIso = pfmuAbsTrkIso[i]; // For this muon, save track iso produced earlier for PFmuon
+                    TrkAn04 = pfmuTrkAn04[i];
+                    if (!evt_isRealData) { motherID = pfLepMotherID(pfidx); }
+                    dilep_p4 = p4 + tag_p4;
+                    dilep_mass = dilep_p4.M();
+                    fillMuonTriggerBranches(p4, -1, false);
+                    BabyTree->Fill();
+                }
+            } // addPFmu
+        }//close event loop
+        file->Close();
+        delete file;
+        cout << "\nFile done" << endl;
+    }//close file loop
+    cout << "\nWriting file" << endl;
+    BabyFile->cd();
+    BabyTree->Write();
+    BabyFile->Close();
+    return 0;
 }
 
-void babyMaker::SetOutputPath(std::string outputpath){
-  path = outputpath;
+//___________________________________________________________________________________________________________________________________________
+void babyMaker::SetOutputPath(std::string outputpath)
+{
+    path = outputpath;
 }
