@@ -548,10 +548,6 @@ void babyMaker::InitLeptonBranches()
     HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ = 0;
     HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ = 0;
 
-//  HLT_Mu10_CentralPFJet30_BTagCSV0p5PF = 0;
-//  HLT_Mu10_CentralPFJet30_BTagCSV0p54PF = 0;
-//  HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF = 0;
-//  HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p54PF = 0;
 }
 
 bool babyMaker::checkMuonTag(unsigned int i, bool oldTag){
