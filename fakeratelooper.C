@@ -21,12 +21,10 @@ bool isDataFromFileName = false; // set automatically later on
 //___________________________________________________________________________________________________________________________________________
 void babyMaker::MakeBabyNtuple(const char* output_name)
 {
-
     //Create Baby
     BabyFile = new TFile(Form("%s/%s", path.c_str(), output_name), "RECREATE");
     BabyFile->cd();
     BabyTree = new TTree("t", "Lepton Baby Ntuple");
-
     //General
     BabyTree->Branch("evt_pfmet", &evt_pfmet);
     BabyTree->Branch("evt_pfmetPhi", &evt_pfmetPhi);
@@ -66,7 +64,6 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("rho_neut_centr", &rho_neut_centr);
     BabyTree->Branch("rho_calo", &rho_calo);
     BabyTree->Branch("rho_calo_centr", &rho_calo_centr);
-
     //All leptons
     BabyTree->Branch("p4", &p4);
     BabyTree->Branch("tag_p4", &tag_p4);
@@ -162,17 +159,13 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("tag_ecalEnergy", &tag_ecalEnergy);
     BabyTree->Branch("exp_innerlayers", &exp_innerlayers);
     BabyTree->Branch("exp_outerlayers", &exp_outerlayers);
-
     //Tag triggers
     BabyTree->Branch("tag_HLT_Ele27_eta2p1_WPTight_Gsf", &tag_HLT_Ele27_eta2p1_WPTight_Gsf);
     BabyTree->Branch("tag_HLT_Ele32_eta2p1_WPTight_Gsf", &tag_HLT_Ele32_eta2p1_WPTight_Gsf);
-
     BabyTree->Branch("tag_HLT_IsoMu24", &tag_HLT_IsoMu24);
     BabyTree->Branch("tag_HLT_IsoTkMu24", &tag_HLT_IsoTkMu24);
-
     BabyTree->Branch("dilep_mass", &dilep_mass);
     BabyTree->Branch("isRandom", &isRandom);
-
     //Electrons
     BabyTree->Branch("sigmaIEtaIEta_full5x5", &sigmaIEtaIEta_full5x5);
     BabyTree->Branch("sigmaIEtaIEta", &sigmaIEtaIEta);
@@ -217,7 +210,6 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("dPhiOut", &dPhiOut);
     BabyTree->Branch("gsf_validHits", &gsf_validHits);
     BabyTree->Branch("conv_vtx_prob", &conv_vtx_prob);
-
     //Muons
     BabyTree->Branch("pid_PFMuon", &pid_PFMuon);
     BabyTree->Branch("gfit_chi2", &gfit_chi2);
@@ -230,7 +222,6 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("validHits", &validHits);
     BabyTree->Branch("lostHits", &lostHits);
     BabyTree->Branch("segmCompatibility", &segmCompatibility);
-
     //Single Muon Triggers
     BabyTree->Branch("HLT_Mu8", &HLT_Mu8);
     BabyTree->Branch("HLT_Mu17", &HLT_Mu17);
@@ -241,13 +232,10 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("HLT_Mu50", &HLT_Mu50);
     BabyTree->Branch("HLT_Mu55", &HLT_Mu55);
     BabyTree->Branch("HLT_TkMu50", &HLT_TkMu50);
-
     BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg);
     BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg);
     BabyTree->Branch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg);
     BabyTree->Branch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg);
-
-
     //Single Electron Triggers
     BabyTree->Branch("HLT_Ele8_CaloIdM_TrackIdM_PFJet30", &HLT_Ele8_CaloIdM_TrackIdM_PFJet30);
     BabyTree->Branch("HLT_Ele12_CaloIdM_TrackIdM_PFJet30", &HLT_Ele12_CaloIdM_TrackIdM_PFJet30);
@@ -257,12 +245,10 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30);
     BabyTree->Branch("HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30);
     BabyTree->Branch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30);
-
     BabyTree->Branch("HLT_Ele27_eta2p1_WPTight_Gsf", &HLT_Ele27_eta2p1_WPTight_Gsf);
     BabyTree->Branch("HLT_Ele32_eta2p1_WPTight_Gsf", &HLT_Ele32_eta2p1_WPTight_Gsf);
     BabyTree->Branch("HLT_Ele105_CaloIdVT_GsfTrkIdT", &HLT_Ele105_CaloIdVT_GsfTrkIdT);
     BabyTree->Branch("HLT_Ele115_CaloIdVT_GsfTrkIdT", &HLT_Ele115_CaloIdVT_GsfTrkIdT);
-
     //Double Electron Triggers
     BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
     BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
@@ -272,13 +258,11 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
     BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1);
     BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL);
-
 }
 
 //___________________________________________________________________________________________________________________________________________
 void babyMaker::InitBabyNtuple()
 {
-
     //General
     evt_pfmet = -1;
     evt_pfmetPhi = -99.;
@@ -317,15 +301,12 @@ void babyMaker::InitBabyNtuple()
     jets_disc.clear();
     jets_area.clear();
     jets_undoJEC.clear();
-
     InitLeptonBranches();
-
 }
 
 //___________________________________________________________________________________________________________________________________________
 void babyMaker::InitLeptonBranches()
 {
-
     //Leptons
     p4 = LorentzVector(0, 0, 0, 0);
     tag_p4 = LorentzVector(0, 0, 0, 0);
@@ -415,7 +396,6 @@ void babyMaker::InitLeptonBranches()
     ptratio = -1;
     dilep_mass = -1.;
     isRandom = false;
-
     //Tag variables
     tag_charge = 0.;
     tag_mc_motherid = 0.;
@@ -423,12 +403,10 @@ void babyMaker::InitLeptonBranches()
     tag_eSCRaw = -1;
     tag_eSC = -1;
     tag_ecalEnergy = -1;
-
     tag_HLT_Ele27_eta2p1_WPTight_Gsf = 0;
     tag_HLT_Ele32_eta2p1_WPTight_Gsf = 0;
     tag_HLT_IsoMu24 = 0;
     tag_HLT_IsoTkMu24 = 0;
-
     //Muons
     pid_PFMuon = -1;
     gfit_chi2 = -1;
@@ -443,7 +421,6 @@ void babyMaker::InitLeptonBranches()
     lostHits = -99;
     exp_outerlayers = -99;
     segmCompatibility = -99;
-
     //Electrons
     sigmaIEtaIEta_full5x5 = -1;
     sigmaIEtaIEta = -1;
@@ -493,7 +470,6 @@ void babyMaker::InitLeptonBranches()
     dPhiOut = -1;
     gsf_validHits = -1;
     conv_vtx_prob = -1;
-
     //Single Muon Trigger
     HLT_Mu8_TrkIsoVVL = 0;
     HLT_Mu17_TrkIsoVVL = 0;
@@ -504,12 +480,10 @@ void babyMaker::InitLeptonBranches()
     HLT_Mu50 = 0;
     HLT_Mu55 = 0;
     HLT_TkMu50 = 0;
-
     HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg = 0;
     HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg = 0;
     HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg = 0;
     HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg = 0;
-
     //Single Electron Trigger
     HLT_Ele8_CaloIdM_TrackIdM_PFJet30 = 0;
     HLT_Ele12_CaloIdM_TrackIdM_PFJet30 = 0;
@@ -523,8 +497,6 @@ void babyMaker::InitLeptonBranches()
     HLT_Ele32_eta2p1_WPTight_Gsf = 0;
     HLT_Ele105_CaloIdVT_GsfTrkIdT = 0;
     HLT_Ele115_CaloIdVT_GsfTrkIdT = 0;
-
-
     //Double Electron Trigger
     HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
     HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
@@ -534,81 +506,70 @@ void babyMaker::InitLeptonBranches()
     HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
     HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1 = 0;
     HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
-
-
     //MuEl Trigger
     HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300 = 0;
     HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
     HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL = 0;
-
     //Double Muon Trigger
     HLT_DoubleMu8_Mass8_PFHT300 = 0;
     HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL = 0;
     HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL = 0;
     HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ = 0;
     HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ = 0;
-
 }
 
 //___________________________________________________________________________________________________________________________________________
 bool babyMaker::checkMuonTag(unsigned int i, bool oldTag)
 {
-    for(unsigned int j = 0; j < tas::mus_p4().size(); j++)
+    for (unsigned int j = 0; j < tas::mus_p4().size(); j++)
     {
         // Tag muon selection
-        if(i == j) continue;
-        if(tas::mus_p4().at(j).pt()          < 20.0) continue;
-        if(fabs(tas::mus_p4().at(j).eta()) >  2.4) continue;
-        if(fabs(tas::mus_dxyPV().at(j))    >  0.02) continue;
-        if(fabs(tas::mus_dzPV().at(j))     >  0.05) continue;
-        if(fabs(tas::mus_ip3d().at(j)
-                / tas::mus_ip3derr().at(j))   >  4) continue;
-        if(!isTightMuonPOG(j)) continue;
-        if(muRelIso03EA(j)                   >  0.2) continue;
-
+        if (i == j)  { continue; }
+        if (tas::mus_p4().at(j).pt() < 20.0)  { continue; }
+        if (fabs(tas::mus_p4().at(j).eta()) > 2.4)  { continue; }
+        if (fabs(tas::mus_dxyPV().at(j)) > 0.02)  { continue; }
+        if (fabs(tas::mus_dzPV().at(j)) > 0.05)  { continue; }
+        if (fabs(tas::mus_ip3d().at(j)
+                    / tas::mus_ip3derr().at(j)) > 4)  { continue; }
+        if (!isTightMuonPOG(j))  { continue; }
+        if (muRelIso03EA(j) > 0.2)  { continue; }
         // Retrieve tag muon information
         tag_p4 = tas::mus_p4().at(j);
         tag_charge = tas::mus_charge().at(j);
         tag_RelIso03EA = muRelIso03EA(j);
-
         // If MC, get the motherID of the tag
-        if(!evt_isRealData)
-            tag_mc_motherid = tas::mus_mc_motherid().at(j);
-
+        if (!evt_isRealData) { tag_mc_motherid = tas::mus_mc_motherid().at(j); }
         // Set the branch of the tag muons single lepton trigger bit
-        setHLTBranch("HLT_IsoMu24_v", (j >= 0 ? tas::mus_HLT_IsoMu24().at(j)   : 0), tag_HLT_IsoMu24);
+        setHLTBranch("HLT_IsoMu24_v", (j >= 0 ? tas::mus_HLT_IsoMu24().at(j) : 0), tag_HLT_IsoMu24);
         setHLTBranch("HLT_IsoTkMu24_v", (j >= 0 ? tas::mus_HLT_IsoTkMu24().at(j) : 0), tag_HLT_IsoTkMu24);
-
         //Randomize if needed
-        if(usedMu == false && ((rndm < 0.5 && tag_charge < 0) || (rndm >= 0.5 && tag_charge > 0)))
+        if (usedMu == false && ((rndm < 0.5 && tag_charge < 0) || (rndm >= 0.5 && tag_charge > 0)))
         {
             isRandom = true;
             usedMu = true;
         }
         else
+        {
             isRandom = false;
-
+        }
         // Exit with true when tag muon found
         return true;
-
     }
-
     return false;
 }
 
 //___________________________________________________________________________________________________________________________________________
 bool babyMaker::checkElectronTag(unsigned int i, readMVA* v25nsMVAreader)
 {
-    for(unsigned int j = 0; j < tas::els_p4().size(); j++)
+    for (unsigned int j = 0; j < tas::els_p4().size(); j++)
     {
         // Tag electron selection
-        if(i == j) continue;
-        if(tas::els_p4().at(j).pt()        < 20.0) continue;
-        if(fabs(tas::els_etaSC().at(j))  >  2.5) continue;
-        if(!tas::els_passMediumId().at(j)) continue;
-        if(fabs(tas::els_ip3d().at(j)
-                / tas::els_ip3derr().at(j)) >  4) continue;
-
+        if (i == j)  { continue; }
+        if (tas::els_p4().at(j).pt() < 20.0)  { continue; }
+        if (fabs(tas::els_etaSC().at(j)) > 2.5)  { continue; }
+        if (!tas::els_passMediumId().at(j))  { continue; }
+        if (fabs(tas::els_ip3d().at(j)
+                    / tas::els_ip3derr().at(j)) > 4)  { continue; }
         // Retreive tag electron information
         tag_p4 = tas::els_p4().at(j);
         tag_charge = tas::els_charge().at(j);
@@ -617,30 +578,27 @@ bool babyMaker::checkElectronTag(unsigned int i, readMVA* v25nsMVAreader)
         tag_eSC = tas::els_eSC().at(j);
         tag_ecalEnergy = tas::els_ecalEnergy().at(j);
         tag_r9_full5x5 = tas::els_r9_full5x5().at(j);
-        if(v25nsMVAreader != 0) tag_mva_25ns = v25nsMVAreader->MVA(j);
+        if (v25nsMVAreader != 0)  { tag_mva_25ns = v25nsMVAreader->MVA(j); }
         tag_RelIso03EA = eleRelIso03EA(j);
-
         // If MC, get the motherID of the tag
-        if(!evt_isRealData)
-            tag_mc_motherid = tas::els_mc_motherid().at(j);
-
+        if (!evt_isRealData)
+        { tag_mc_motherid = tas::els_mc_motherid().at(j); }
         // Set the branch of the tag electrons single lepton trigger bit
         setHLTBranch("HLT_Ele27_eta2p1_WPTight_Gsf_v", (j >= 0 ? tas::els_HLT_Ele27_eta2p1_WPTight_Gsf().at(j) : 0), tag_HLT_Ele27_eta2p1_WPTight_Gsf);
         setHLTBranch("HLT_Ele32_eta2p1_WPTight_Gsf_v", (j >= 0 ? tas::els_HLT_Ele32_eta2p1_WPTight_Gsf().at(j) : 0), tag_HLT_Ele32_eta2p1_WPTight_Gsf);
-
         // Randomize if needed
-        if(usedEl == false && ((rndm < 0.5 && tag_charge < 0) || (rndm >= 0.5 && tag_charge > 0)))
+        if (usedEl == false && ((rndm < 0.5 && tag_charge < 0) || (rndm >= 0.5 && tag_charge > 0)))
         {
             isRandom = true;
             usedEl = true;
         }
         else
+        {
             isRandom = false;
-
+        }
         // Return true when tag electron found
         return true;
     }
-
     return false;
 }
 
@@ -648,17 +606,15 @@ bool babyMaker::checkElectronTag(unsigned int i, readMVA* v25nsMVAreader)
 // To check whether a muon is a PF cand, match the candidate to a PF via deltaR matching
 int babyMaker::isPFmuon(vector<LorentzVector> &pfP4, vector<bool> &pfmuIsReco, int idx)
 {
-    for(size_t i = 0; i < pfP4.size(); i++)
+    for (size_t i = 0; i < pfP4.size(); i++)
     {
         float dR2 = ROOT::Math::VectorUtil::DeltaR2(pfP4[i], tas::mus_p4().at(idx));
-
-        if(dR2 < 0.0025)
+        if (dR2 < 0.0025)
         {
             pfmuIsReco[i] = true;
             return i;
         }
     }
-
     return -1;
 }
 
@@ -666,162 +622,65 @@ int babyMaker::isPFmuon(vector<LorentzVector> &pfP4, vector<bool> &pfmuIsReco, i
 // To check whether a muon is a PF cand, match the candidate to a PF via deltaR matching
 int babyMaker::isPFelectron(vector<LorentzVector> &pfP4, vector<bool> &pfelIsReco, int idx)
 {
-    for(size_t i = 0; i < pfP4.size(); i++)
+    for (size_t i = 0; i < pfP4.size(); i++)
     {
         float dR2 = ROOT::Math::VectorUtil::DeltaR2(pfP4[i], tas::els_p4().at(idx));
-
-        if(dR2 < 0.0025)
+        if (dR2 < 0.0025)
         {
             pfelIsReco[i] = true;
             return i;
         }
     }
-
     return -1;
 }
 
+//___________________________________________________________________________________________________________________________________________
 // NJA June 6, 2016: some triggers matching p4 to last path will match jet and not lepton, so explicitly check match here
-void babyMaker::alternativeFilterMatch(LorentzVector &p4, const char* trigName, const char* filtName, int& HLTbranch) {
-    if(abs(HLTbranch) == 0) return; // if we didn't previously see that we fired the trigger (1 or -1), give up and go home
+void babyMaker::alternativeFilterMatch(LorentzVector &p4, const char* trigName, const char* filtName, int& HLTbranch)
+{
+    if (abs(HLTbranch) == 0) { return; } // if we didn't previously see that we fired the trigger (1 or -1), give up and go home
     float test = 0;
     HLTbranch = matchToHLTFilter(trigName, filtName, p4, 0.2, &test);
 }
-void babyMaker::fillElectronTriggerBranches(LorentzVector &p4, int idx, bool oldTag){
 
-  if (idx == -1) return;
-
-  //Single Electron Trigger with Jet
-//  if (isDataFromFileName) {
-//    setHLTBranch("HLT_Ele8_CaloIdM_TrackIdM_PFJet30_v" ,        p4  ,  HLT_Ele8_CaloIdM_TrackIdM_PFJet30 );
-//    setHLTBranch("HLT_Ele12_CaloIdM_TrackIdM_PFJet30_v",        p4  , HLT_Ele12_CaloIdM_TrackIdM_PFJet30);
-//    setHLTBranch("HLT_Ele17_CaloIdM_TrackIdM_PFJet30_v",        p4  , HLT_Ele17_CaloIdM_TrackIdM_PFJet30);
-//    setHLTBranch("HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v",        p4  , HLT_Ele23_CaloIdM_TrackIdM_PFJet30);
-//    setHLTBranch("HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v",   p4  ,  HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30);
-//    setHLTBranch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  p4  , HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30);
-//    setHLTBranch("HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  p4  , HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30);
-//    setHLTBranch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  p4  , HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30);
-//
-//    //Single Electron Trigger
-//    setHLTBranch("HLT_Ele27_eta2p1_WPTight_Gsf_v",  p4  , HLT_Ele27_eta2p1_WPTight_Gsf);
-//    setHLTBranch("HLT_Ele32_eta2p1_WPTight_Gsf_v",  p4  , HLT_Ele32_eta2p1_WPTight_Gsf);
-//    setHLTBranch("HLT_Ele105_CaloIdVT_GsfTrkIdT_v", p4  , HLT_Ele105_CaloIdVT_GsfTrkIdT);
-//    setHLTBranch("HLT_Ele115_CaloIdVT_GsfTrkIdT_v", p4  , HLT_Ele115_CaloIdVT_GsfTrkIdT);
-//  }
-//  else {
-    setHLTBranch("HLT_Ele8_CaloIdM_TrackIdM_PFJet30_v" ,        tas::els_HLT_Ele8_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx)  ,  HLT_Ele8_CaloIdM_TrackIdM_PFJet30 );
-    setHLTBranch("HLT_Ele12_CaloIdM_TrackIdM_PFJet30_v",        tas::els_HLT_Ele12_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx) , HLT_Ele12_CaloIdM_TrackIdM_PFJet30);
-    setHLTBranch("HLT_Ele17_CaloIdM_TrackIdM_PFJet30_v",        tas::els_HLT_Ele17_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx) , HLT_Ele17_CaloIdM_TrackIdM_PFJet30);
-    setHLTBranch("HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v",        tas::els_HLT_Ele23_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx) , HLT_Ele23_CaloIdM_TrackIdM_PFJet30);
-    setHLTBranch("HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v",   tas::els_HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx)  ,  HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    setHLTBranch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  tas::els_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx) , HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    setHLTBranch("HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  tas::els_HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx) , HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    setHLTBranch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  tas::els_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx) , HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30);
-
+//___________________________________________________________________________________________________________________________________________
+void babyMaker::fillElectronTriggerBranches(LorentzVector &p4, int idx, bool oldTag)
+{
+    if (idx == -1) { return; }
+    //Single Electron Trigger with Jet
+    setHLTBranch("HLT_Ele8_CaloIdM_TrackIdM_PFJet30_v", tas::els_HLT_Ele8_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx), HLT_Ele8_CaloIdM_TrackIdM_PFJet30);
+    setHLTBranch("HLT_Ele12_CaloIdM_TrackIdM_PFJet30_v", tas::els_HLT_Ele12_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx), HLT_Ele12_CaloIdM_TrackIdM_PFJet30);
+    setHLTBranch("HLT_Ele17_CaloIdM_TrackIdM_PFJet30_v", tas::els_HLT_Ele17_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx), HLT_Ele17_CaloIdM_TrackIdM_PFJet30);
+    setHLTBranch("HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v", tas::els_HLT_Ele23_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx), HLT_Ele23_CaloIdM_TrackIdM_PFJet30);
+    setHLTBranch("HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v", tas::els_HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx), HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30);
+    setHLTBranch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v", tas::els_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx), HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30);
+    setHLTBranch("HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_v", tas::els_HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx), HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30);
+    setHLTBranch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v", tas::els_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx), HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30);
     //Single Electron Trigger
-    setHLTBranch("HLT_Ele27_eta2p1_WPTight_Gsf_v",   tas::els_HLT_Ele27_eta2p1_WPTight_Gsf().at(idx)  , HLT_Ele27_eta2p1_WPTight_Gsf);
-    setHLTBranch("HLT_Ele32_eta2p1_WPTight_Gsf_v",   tas::els_HLT_Ele32_eta2p1_WPTight_Gsf().at(idx)  , HLT_Ele32_eta2p1_WPTight_Gsf);
-    setHLTBranch("HLT_Ele105_CaloIdVT_GsfTrkIdT_v",  tas::els_HLT_Ele105_CaloIdVT_GsfTrkIdT().at(idx) , HLT_Ele105_CaloIdVT_GsfTrkIdT);
-    setHLTBranch("HLT_Ele115_CaloIdVT_GsfTrkIdT_v",  tas::els_HLT_Ele115_CaloIdVT_GsfTrkIdT().at(idx) , HLT_Ele115_CaloIdVT_GsfTrkIdT);
-//  }
-
-
-
-//ToDo  //Double Electron Trigger 23-12
-//ToDo  HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL =              tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL().at(idx) ;
-//ToDo  HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1 =           tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1OR().at(idx) ;
-//ToDo  HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg =   tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg().at(idx) ;
-//ToDo  HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg =  tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg().at(idx) ;
-//ToDo
-//ToDo  //Double Electron Trigger 17-12
-//ToDo  HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL =              tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL().at(idx) ;
-//ToDo  HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1 =           tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1OR().at(idx) ;
-//ToDo  HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg =   tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg().at(idx) ;
-//ToDo  HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg =  tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg().at(idx) ;
-
-  // Still need to do the rest
-
-//ToDo  HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG2210 = matchToHLTFilter("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", "hltL1sL1DoubleEG2210", p4, 0.6, &probe_L1EG2210_pt);
-//ToDo  HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG1510 = matchToHLTFilter("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", "hltL1sL1DoubleEG1510", p4, 0.6, &probe_L1EG1510_pt);
-//ToDo  HLT_Ele23_CaloIdL_TrackIdL_IsoVL_L1EG20 = matchToHLTFilter("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_v", "hltL1sL1SingleEG20", p4, 0.6, &probe_L1EG20_pt);
-//ToDo  HLT_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG10 = matchToHLTFilter("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_v", "hltL1sL1SingleEG10", p4, 0.6, &probe_L1EG10_pt);
-//ToDo
-//ToDo  //MuElectron Triggers
-//ToDo  setHLTBranch("HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300_v",     (idx>=0 ? tas::els_HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300_ElectronLeg().at(idx) : 0)    , HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300);
-//ToDo  setHLTBranch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v", (idx>=0 ? tas::els_HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_ElectronLeg().at(idx) : 0), HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL);
-//ToDo  setHLTBranch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v",  (idx>=0 ? tas::els_HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_ElectronLeg().at(idx) : 0) , HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL);
-//ToDo
-//ToDo  //Double Electron Trigger
-//ToDo  setHLTBranch("HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300_v",  (idx>=0 ? tas::els_HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300_ElectronLeg().at(idx) : 0), HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300);
-//ToDo  setHLTBranch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",  p4, HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
-//ToDo  setHLTBranch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v",  p4, HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL);
-//ToDo  setHLTBranch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",  p4, HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
-//ToDo  setHLTBranch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_v",     p4, HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL);
-//ToDo  if (HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ != 0) {
-//ToDo    float test = 0;
-//ToDo    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg  = matchToHLTFilter("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", "hltEle17Ele12CaloIdLTrackIdLIsoVLTrackIsoLeg1Filter", p4, 0.1, &test);
-//ToDo    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = matchToHLTFilter("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", "hltEle17Ele12CaloIdLTrackIdLIsoVLTrackIsoLeg2Filter", p4, 0.1, &test);
-//ToDo  }
-
-
-
+    setHLTBranch("HLT_Ele27_eta2p1_WPTight_Gsf_v", tas::els_HLT_Ele27_eta2p1_WPTight_Gsf().at(idx), HLT_Ele27_eta2p1_WPTight_Gsf);
+    setHLTBranch("HLT_Ele32_eta2p1_WPTight_Gsf_v", tas::els_HLT_Ele32_eta2p1_WPTight_Gsf().at(idx), HLT_Ele32_eta2p1_WPTight_Gsf);
+    setHLTBranch("HLT_Ele105_CaloIdVT_GsfTrkIdT_v", tas::els_HLT_Ele105_CaloIdVT_GsfTrkIdT().at(idx), HLT_Ele105_CaloIdVT_GsfTrkIdT);
+    setHLTBranch("HLT_Ele115_CaloIdVT_GsfTrkIdT_v", tas::els_HLT_Ele115_CaloIdVT_GsfTrkIdT().at(idx), HLT_Ele115_CaloIdVT_GsfTrkIdT);
 }
 
-void babyMaker::fillMuonTriggerBranches(LorentzVector &p4, int idx, bool oldTag) {
-
-  //temporary until we run on mc with the new tag
-  if (oldTag) idx = -1;
-  if (idx == -1) return;
-
-  //Single Muon Triggers
-//  if (isDataFromFileName) {
-//
-//    setHLTBranch("HLT_Mu8_v"             ,   p4 , HLT_Mu8             );
-//    setHLTBranch("HLT_Mu17_v"            ,   p4 , HLT_Mu17            );
-//    setHLTBranch("HLT_Mu8_TrkIsoVVL_v"   ,   p4 , HLT_Mu8_TrkIsoVVL   );
-//    setHLTBranch("HLT_Mu17_TrkIsoVVL_v"  ,   p4 , HLT_Mu17_TrkIsoVVL  );
-//    setHLTBranch("HLT_IsoMu24_v"         ,   p4 , HLT_IsoMu24         );
-//    setHLTBranch("HLT_IsoTkMu24_v"       ,   p4 , HLT_IsoTkMu24       );
-//    setHLTBranch("HLT_Mu50_v"            ,   p4 , HLT_Mu50            );
-//    setHLTBranch("HLT_Mu55_v"            ,   p4 , HLT_Mu55            );
-//    setHLTBranch("HLT_TkMu50_v"          ,   p4 , HLT_TkMu50          );
-//  }
-//  else {
-    setHLTBranch("HLT_Mu8_v"             ,  tas::mus_HLT_Mu8().at(idx)            , HLT_Mu8             );
-    setHLTBranch("HLT_Mu17_v"            ,  tas::mus_HLT_Mu17().at(idx)           , HLT_Mu17            );
-    setHLTBranch("HLT_Mu8_TrkIsoVVL_v"   ,  tas::mus_HLT_Mu8_TrkIsoVVL().at(idx)  , HLT_Mu8_TrkIsoVVL   );
-    setHLTBranch("HLT_Mu17_TrkIsoVVL_v"  ,  tas::mus_HLT_Mu17_TrkIsoVVL().at(idx) , HLT_Mu17_TrkIsoVVL  );
-    setHLTBranch("HLT_IsoMu24_v"         ,  tas::mus_HLT_IsoMu24().at(idx)        , HLT_IsoMu24         );
-    setHLTBranch("HLT_IsoTkMu24_v"       ,  tas::mus_HLT_IsoTkMu24().at(idx)      , HLT_IsoTkMu24       );
-    setHLTBranch("HLT_Mu50_v"            ,  tas::mus_HLT_Mu50().at(idx)           , HLT_Mu50            );
-    setHLTBranch("HLT_Mu55_v"            ,  tas::mus_HLT_Mu55().at(idx)           , HLT_Mu55            );
-    setHLTBranch("HLT_TkMu50_v"          ,  tas::mus_HLT_TkMu50().at(idx)         , HLT_TkMu50          );
-
-//  }
-
-  HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg().at(idx);
-  HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg  = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg().at(idx);
-
-  //  if (tas::evt_isRealData()) setHLTBranch("HLT_Mu10_CentralPFJet30_BTagCSV0p54PF_v", (idx>=0 ? tas::mus_HLT_Mu10_CentralPFJet30_BTagCSV0p54PF_MuonLeg().at(idx) : 0), HLT_Mu10_CentralPFJet30_BTagCSV0p54PF);
-  //  else setHLTBranch("HLT_Mu10_CentralPFJet30_BTagCSV0p5PF_v", (idx>=0 ? tas::mus_HLT_Mu10_CentralPFJet30_BTagCSV0p5PF_MuonLeg().at(idx) : 0), HLT_Mu10_CentralPFJet30_BTagCSV0p5PF);
-
-//ToDo  //MuElectron Trigger
-//ToDo  setHLTBranch("HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300_v"    , (idx>=0 ? tas::mus_HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300_MuonLeg().at(idx)     : 0), HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300);
-//ToDo  setHLTBranch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v", (idx>=0 ? tas::mus_HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_MuonLeg().at(idx) : 0), HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL);
-//ToDo  setHLTBranch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v" , (idx>=0 ? tas::mus_HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_MuonLeg().at(idx)  : 0), HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL);
-//ToDo
-//ToDo  //Double Muon Trigger
-//ToDo  setHLTBranch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v"     , p4, HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL     );
-//ToDo  setHLTBranch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v"   , p4, HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL   );
-//ToDo  setHLTBranch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"  , p4, HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ  );
-//ToDo  setHLTBranch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v", p4, HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ);
-//ToDo  setHLTBranch("HLT_DoubleMu8_Mass8_PFHT300_v",  (idx>=0 ? tas::mus_HLT_DoubleMu8_Mass8_PFHT300_MuonLeg().at(idx) : 0), HLT_DoubleMu8_Mass8_PFHT300);
-
-//ToDo        //check to which leg a match has been found
-//ToDo	HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg       = tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg().at(i);
-//ToDo	HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg        = tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg().at(i);
-//ToDo	HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg         = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg().at(i);
-//ToDo	HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg          = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg().at(i);
-
+//___________________________________________________________________________________________________________________________________________
+void babyMaker::fillMuonTriggerBranches(LorentzVector &p4, int idx, bool oldTag)
+{
+    //temporary until we run on mc with the new tag
+    if (oldTag) { idx = -1; }
+    if (idx == -1) { return; }
+    //Single Muon Triggers
+    setHLTBranch("HLT_Mu8_v", tas::mus_HLT_Mu8().at(idx), HLT_Mu8);
+    setHLTBranch("HLT_Mu17_v", tas::mus_HLT_Mu17().at(idx), HLT_Mu17);
+    setHLTBranch("HLT_Mu8_TrkIsoVVL_v", tas::mus_HLT_Mu8_TrkIsoVVL().at(idx), HLT_Mu8_TrkIsoVVL);
+    setHLTBranch("HLT_Mu17_TrkIsoVVL_v", tas::mus_HLT_Mu17_TrkIsoVVL().at(idx), HLT_Mu17_TrkIsoVVL);
+    setHLTBranch("HLT_IsoMu24_v", tas::mus_HLT_IsoMu24().at(idx), HLT_IsoMu24);
+    setHLTBranch("HLT_IsoTkMu24_v", tas::mus_HLT_IsoTkMu24().at(idx), HLT_IsoTkMu24);
+    setHLTBranch("HLT_Mu50_v", tas::mus_HLT_Mu50().at(idx), HLT_Mu50);
+    setHLTBranch("HLT_Mu55_v", tas::mus_HLT_Mu55().at(idx), HLT_Mu55);
+    setHLTBranch("HLT_TkMu50_v", tas::mus_HLT_TkMu50().at(idx), HLT_TkMu50);
+    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg().at(idx);
+    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg().at(idx);
 }
 
 
