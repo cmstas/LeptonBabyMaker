@@ -237,22 +237,6 @@ private:
     int exp_innerlayers;
     int exp_outerlayers;
 
-    // -- tag HLT match -- //
-
-    int tag_HLT_Ele27_eta2p1_WPTight_Gsf = 0;
-    int tag_HLT_Ele32_eta2p1_WPTight_Gsf = 0;
-    int tag_HLT_IsoMu24 = 0;
-    int tag_HLT_IsoTkMu24 = 0;
-
-    // -- probe HLT match -- //
-
-
-
-    int HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg;
-    int HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg;
-    int HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg;
-    int HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg;
-
     //---els---//
     float sigmaIEtaIEta_full5x5;
     float sigmaIEtaIEta;
@@ -312,6 +296,68 @@ private:
     int lostHits;
     float segmCompatibility;
 
+    // -- tag HLT match -- //
+
+    int tag_HLT_Ele27_eta2p1_WPTight_Gsf = 0;
+    int tag_HLT_Ele32_eta2p1_WPTight_Gsf = 0;
+    int tag_HLT_IsoMu24 = 0;
+    int tag_HLT_IsoTkMu24 = 0;
+
+    // -- probe HLT match -- //
+
+    int HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL;
+    int HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL;
+    int HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL;
+    int HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ;
+    int HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL;
+    int HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL;
+    int HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ;
+    int HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ;
+    int HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ;
+    int HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ;
+    int HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ;
+    int HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ;
+    int HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL;
+    int HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL;
+    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL;
+    int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ;
+    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ;
+
+    int HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_TrailingLeg;
+    int HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_LeadingLeg;
+    int HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_TrailingLeg;
+    int HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_LeadingLeg;
+    int HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg;
+    int HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg;
+    int HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg;
+    int HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg;
+    int HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg;
+    int HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg;
+    int HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg;
+    int HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg;
+    int HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg;
+    int HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg;
+    int HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg;
+    int HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg;
+    int HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
+    int HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
+    int HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
+    int HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
+    int HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg;
+    int HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg;
+    int HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
+    int HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
+    int HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
+    int HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
+    int HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
+    int HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
+    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
+    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
+    int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg;
+    int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg;
+    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg;
+    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg;
+
     //---single mu trigger---//
     // for trigger branches the following conventions hold:
     // 0,1,N mean respectively not passes, passed unprescaled, passed with prescale N
@@ -352,22 +398,13 @@ private:
     int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
     int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1;
     int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL;
-    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
-    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
     int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1;
-    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL;
 
     //--- mu-el trigger---//
     int HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300;
-    int HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL;
-    int HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL;
 
     //--- double mu trigger---//
     int HLT_DoubleMu8_Mass8_PFHT300;
-    int HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL;
-    int HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL;
-    int HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ;//xxx
-    int HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ;//xxx
 
 };
 

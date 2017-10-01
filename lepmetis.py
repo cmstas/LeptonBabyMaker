@@ -12,7 +12,7 @@ import sys
 import os
 
 # Configurations
-job_tag = "v1"
+job_tag = "2016_tnp_sample_v1"
 exec_path = "run.sh"
 tar_path = "package.tar.gz"
 hadoop_path = "metis/lepbaby/{}".format(job_tag)
