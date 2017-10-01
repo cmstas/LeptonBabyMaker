@@ -65,6 +65,9 @@ else
         echo "Failed to untar package."
         exit
     fi
+    source root.sh ""
+    echo "Compiling the code"
+    make
 fi
 ###################################################################################################
 

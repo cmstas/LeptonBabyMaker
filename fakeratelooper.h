@@ -172,6 +172,28 @@ private:
     bool passes_HAD_veto_noiso_v3;
     bool passes_HAD_loose_v3;
     bool passes_HAD_loose_noiso_v3;
+    //VVV bools
+//    bool passes_VVV_cutbased_veto;
+//    bool passes_VVV_cutbased_veto_noiso;
+//    bool passes_VVV_cutbased_veto_noiso_noip;
+//    bool passes_VVV_cutbased_fo;
+//    bool passes_VVV_cutbased_fo_noiso;
+//    bool passes_VVV_baseline;
+//    bool passes_VVV_cutbased_tight;
+//    bool passes_VVV_cutbased_tight_noiso;
+    bool passes_VVV_cutbased_veto_bak1;
+    bool passes_VVV_cutbased_veto_noiso_bak1;
+    bool passes_VVV_cutbased_veto_noiso_noip_bak1;
+    bool passes_VVV_cutbased_veto;
+    bool passes_VVV_cutbased_veto_noiso;
+    bool passes_VVV_cutbased_veto_noiso_noip;
+    bool passes_VVV_cutbased_fo;
+    bool passes_VVV_cutbased_fo_noiso;
+    bool passes_VVV_baseline;
+    bool passes_VVV_MVAbased_tight;
+    bool passes_VVV_MVAbased_tight_noiso;
+    bool passes_VVV_cutbased_tight;
+    bool passes_VVV_cutbased_tight_noiso;
     //POG bools
     bool passes_POG_vetoID;
     bool passes_POG_looseID;

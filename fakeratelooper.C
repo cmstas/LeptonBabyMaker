@@ -560,6 +560,15 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 //Save HAD ID bools
                 if (muonID(i, HAD_loose_v3)) { passes_HAD_loose_v3 = true; }
                 if (muonID(i, HAD_loose_noiso_v3)) { passes_HAD_loose_noiso_v3 = true; }
+                // Save VVV ID bools
+                if (muonID(i, VVV_cutbased_veto)) { passes_VVV_cutbased_veto = true; }
+                if (muonID(i, VVV_cutbased_veto_noiso)) { passes_VVV_cutbased_veto_noiso = true; }
+                if (muonID(i, VVV_cutbased_veto_noiso_noip)) { passes_VVV_cutbased_veto_noiso_noip = true; }
+                if (muonID(i, VVV_cutbased_fo)) { passes_VVV_cutbased_fo = true; }
+                if (muonID(i, VVV_cutbased_fo_noiso)) { passes_VVV_cutbased_fo_noiso = true; }
+                if (muonID(i, VVV_baseline)) { passes_VVV_baseline = true; }
+                if (muonID(i, VVV_cutbased_tight)) { passes_VVV_cutbased_tight = true; }
+                if (muonID(i, VVV_cutbased_tight_noiso)) { passes_VVV_cutbased_tight_noiso = true; }
                 //Save POG ID bools
                 if (isLooseMuonPOG(i)) { passes_POG_looseID = true; }
                 if (isMediumMuonPOG(i)) { passes_POG_mediumID = true; }
@@ -800,6 +809,20 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 if (electronID(i, HAD_loose_v3)) { passes_HAD_loose_v3 = true; }
                 if (electronID(i, HAD_loose_noiso_v3)) { passes_HAD_loose_noiso_v3 = true; }
                 if (verbose) { cout << "Done WW and HAD IDs" << endl; }
+                // Save WWW ID bools
+                if (electronID(i, VVV_cutbased_veto_bak1)) { passes_VVV_cutbased_veto_bak1 = true; }
+                if (electronID(i, VVV_cutbased_veto_noiso_bak1)) { passes_VVV_cutbased_veto_noiso_bak1 = true; }
+                if (electronID(i, VVV_cutbased_veto_noiso_noip_bak1)) { passes_VVV_cutbased_veto_noiso_noip_bak1 = true; }
+                if (electronID(i, VVV_cutbased_veto)) { passes_VVV_cutbased_veto = true; }
+                if (electronID(i, VVV_cutbased_veto_noiso)) { passes_VVV_cutbased_veto_noiso = true; }
+                if (electronID(i, VVV_cutbased_veto_noiso_noip)) { passes_VVV_cutbased_veto_noiso_noip = true; }
+                if (electronID(i, VVV_cutbased_fo)) { passes_VVV_cutbased_fo = true; }
+                if (electronID(i, VVV_cutbased_fo_noiso)) { passes_VVV_cutbased_fo_noiso = true; }
+                if (electronID(i, VVV_baseline)) { passes_VVV_baseline = true; }
+                if (electronID(i, VVV_MVAbased_tight)) { passes_VVV_MVAbased_tight = true; }
+                if (electronID(i, VVV_MVAbased_tight_noiso)) { passes_VVV_MVAbased_tight_noiso = true; }
+                if (electronID(i, VVV_cutbased_tight)) { passes_VVV_cutbased_tight = true; }
+                if (electronID(i, VVV_cutbased_tight_noiso)) { passes_VVV_cutbased_tight_noiso = true; }
                 //Save POG ID bools
                 if (tas::els_passVetoId().at(i)) { passes_POG_vetoID = true; }
                 if (tas::els_passLooseId().at(i)) { passes_POG_looseID = true; }
@@ -1035,6 +1058,19 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("passes_HAD_veto_noiso_v3", &passes_HAD_veto_noiso_v3);
     BabyTree->Branch("passes_HAD_loose_v3", &passes_HAD_loose_v3);
     BabyTree->Branch("passes_HAD_loose_noiso_v3", &passes_HAD_loose_noiso_v3);
+    BabyTree->Branch("passes_VVV_cutbased_veto_bak1", &passes_VVV_cutbased_veto_bak1);
+    BabyTree->Branch("passes_VVV_cutbased_veto_noiso_bak1", &passes_VVV_cutbased_veto_noiso_bak1);
+    BabyTree->Branch("passes_VVV_cutbased_veto_noiso_noip_bak1", &passes_VVV_cutbased_veto_noiso_noip_bak1);
+    BabyTree->Branch("passes_VVV_cutbased_veto", &passes_VVV_cutbased_veto);
+    BabyTree->Branch("passes_VVV_cutbased_veto_noiso", &passes_VVV_cutbased_veto_noiso);
+    BabyTree->Branch("passes_VVV_cutbased_veto_noiso_noip", &passes_VVV_cutbased_veto_noiso_noip);
+    BabyTree->Branch("passes_VVV_cutbased_fo", &passes_VVV_cutbased_fo);
+    BabyTree->Branch("passes_VVV_cutbased_fo_noiso", &passes_VVV_cutbased_fo_noiso);
+    BabyTree->Branch("passes_VVV_baseline", &passes_VVV_baseline);
+    BabyTree->Branch("passes_VVV_MVAbased_tight", &passes_VVV_MVAbased_tight);
+    BabyTree->Branch("passes_VVV_MVAbased_tight_noiso", &passes_VVV_MVAbased_tight_noiso);
+    BabyTree->Branch("passes_VVV_cutbased_tight", &passes_VVV_cutbased_tight);
+    BabyTree->Branch("passes_VVV_cutbased_tight_noiso", &passes_VVV_cutbased_tight_noiso);
     BabyTree->Branch("passes_POG_vetoID", &passes_POG_vetoID);
     BabyTree->Branch("passes_POG_looseID", &passes_POG_looseID);
     BabyTree->Branch("passes_POG_mediumID", &passes_POG_mediumID);
@@ -1278,6 +1314,19 @@ void babyMaker::InitLeptonBranches()
     passes_HAD_veto_noiso_v3 = 0;
     passes_HAD_loose_v3 = 0;
     passes_HAD_loose_noiso_v3 = 0;
+    passes_VVV_cutbased_veto_bak1 = 0;
+    passes_VVV_cutbased_veto_noiso_bak1 = 0;
+    passes_VVV_cutbased_veto_noiso_noip_bak1 = 0;
+    passes_VVV_cutbased_veto = 0;
+    passes_VVV_cutbased_veto_noiso = 0;
+    passes_VVV_cutbased_veto_noiso_noip = 0;
+    passes_VVV_cutbased_fo = 0;
+    passes_VVV_cutbased_fo_noiso = 0;
+    passes_VVV_baseline = 0;
+    passes_VVV_MVAbased_tight = 0;
+    passes_VVV_MVAbased_tight_noiso = 0;
+    passes_VVV_cutbased_tight = 0;
+    passes_VVV_cutbased_tight_noiso = 0;
     passes_POG_vetoID = 0;
     passes_POG_looseID = 0;
     passes_POG_mediumID = 0;

@@ -43,6 +43,8 @@ void run( TString scanchainname, const char* input_path, TString treename, TStri
     TString pwd = gSystem->WorkingDirectory();
     gROOT->ProcessLine( ".include " + analysis_base );
     gROOT->ProcessLine( ".L fakeratelooper.h" );
+    gROOT->ProcessLine( ".L hadoopmap.cc" );
+    gROOT->ProcessLine( "HadoopPathMap hmap;" );
 //    gROOT->ProcessLine( ".L " + scanchainname + "+" + compilerflag );
     gROOT->ProcessLine( Form( "TString input_path = \"%s\";", input_path ) );
     gROOT->ProcessLine( "TString output_path = \"" + output_path + "\";" );
@@ -51,7 +53,7 @@ void run( TString scanchainname, const char* input_path, TString treename, TStri
     gROOT->ProcessLine( "TString nevents = \"" + nevents + "\";" );
     gROOT->ProcessLine( "TChain *chain = new TChain(ttreename);" );
     gROOT->ProcessLine( "TObjArray* files = input_path.Tokenize(\",\");" );
-    gROOT->ProcessLine( "for (unsigned int ifile = 0; ifile < files->GetEntries(); ++ifile) { TString filepath = ((TObjString*) files->At(ifile))->GetString(); std::cout << \"Adding to TChain: file = \" << filepath << std::endl; chain->Add(filepath); }" );
+    gROOT->ProcessLine( "for (unsigned int ifile = 0; ifile < files->GetEntries(); ++ifile) { TString filepath = ((TObjString*) files->At(ifile))->GetString();  if (filepath.Contains(\"nfs\")) { std::cout << \"Adding to TChain: file = \" << hmap.getHadoopPath(filepath) << std::endl; chain->Add(hmap.getHadoopPath(filepath));} else { std::cout << \"Adding to TChain: file = \" << filepath << std::endl; chain->Add(filepath); } }" );
     gROOT->ProcessLine( "TString CMSxVersion = TString(gSystem->BaseName(gSystem->DirName(chain->GetListOfFiles()->At(0)->GetTitle())));");//.ReplaceAll(\"/\",\"_\").ReplaceAll(\"-\",\"_\");" );
     gROOT->ProcessLine( "TString sample_name = TString(gSystem->BaseName(gSystem->DirName(gSystem->DirName(chain->GetListOfFiles()->At(0)->GetTitle()))));");//.ReplaceAll(\"/\",\"_\").ReplaceAll(\"-\",\"_\");" );
     gROOT->ProcessLine( "TString file_name   = TString(gSystem->BaseName(gSystem->BaseName(chain->GetListOfFiles()->At(0)->GetTitle())));");//.ReplaceAll(\"/\",\"_\").ReplaceAll(\"-\",\"_\");" );
