@@ -19,7 +19,7 @@ hadoop_path = "metis/lepbaby/{}".format(job_tag)
 args = "dummy output.root Events -1 dummy" # dummy arguments are there because the executable run.sh was copied from another framework.
 
 # Get into the directory where this lepmetis.py sits. So we can tar up the condor package.
-os.system("tar -czvf package.tar.gz fakeratelooper.h fakeratelooper.C main.C LinkDef.h sample.dat Makefile CORE goodRunList run.C run.sh root.sh hadoopmap.cc hadoopmap.txt")
+os.system("tar -czf package.tar.gz fakeratelooper.h fakeratelooper.C main.C LinkDef.h sample.dat Makefile CORE goodRunList run.C run.sh root.sh hadoopmap.cc hadoopmap.txt")
 
 dslocs = [
     ["/ZZ"                                                , "/hadoop/cms/store/group/snt/run2_moriond17/EWK_LNuJJ_MJJ-120_13TeV-madgraph-pythia8_RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/V08-00-16/" ] , 
@@ -50,7 +50,7 @@ while True:
                 sample = DirectorySample( dataset=ds, location=loc ),
                 open_dataset = False,
                 flush = True,
-                files_per_output = 1,
+                files_per_output = 8,
                 output_name = "merged.root",
                 tag = job_tag,
                 cmssw_version = "CMSSW_9_2_1", # doesn't do anything
