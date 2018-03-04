@@ -11,11 +11,12 @@ bool addPFCandidates = false; // Default is false
 bool checkIsPFTrueFalse = false; // Default is false (requires double loop on recocandidates and pfcandidates)
 bool addAnnulus = false; // Default is false
 bool recoLeptonsDownTo5GeV = false; // Default is false (meaning 10 GeV)
-bool recoLeptonsDownTo20GeV = true; // Default is false (meaning 10 GeV)
-bool onlySaveTagProbePairs = true; // Default is false
+bool recoLeptonsDownTo20GeV = false; // Default is false (meaning 10 GeV)
+bool onlySaveTagProbePairs = false; // Default is false
 bool applyJson = true;
 
 bool isDataFromFileName = false; // set automatically later on
+
 
 //Main function
 //___________________________________________________________________________________________________________________________________________
@@ -50,6 +51,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
     jetcorr_filenames_50ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2Relative_AK4PFchs.txt");
     jetcorr_filenames_50ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L3Absolute_AK4PFchs.txt");
     jetcorr_filenames_50ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2L3Residual_AK4PFchs.txt");
+    std::string jetcorrunc_filename_50ns_MC = "CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_Uncertainty_AK4PFchs.txt";
     //JEC files -- 50 ns DATA
     std::vector<std::string> jetcorr_filenames_50ns_DATA_pfL1;
     std::vector<std::string> jetcorr_filenames_50ns_DATA_pfL1L2L3;
@@ -58,6 +60,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
     jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L2Relative_AK4PFchs.txt");
     jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L3Absolute_AK4PFchs.txt");
     jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L2L3Residual_AK4PFchs.txt");
+    std::string jetcorrunc_filename_50ns_DATA = "CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_Uncertainty_AK4PFchs.txt";
     //JEC files -- 25 ns MC
     std::vector<std::string> jetcorr_filenames_25ns_MC_pfL1;
     std::vector<std::string> jetcorr_filenames_25ns_MC_pfL1L2L3;
@@ -69,6 +72,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
     jetcorr_filenames_25ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2Relative_AK4PFchs.txt");
     jetcorr_filenames_25ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L3Absolute_AK4PFchs.txt");
     jetcorr_filenames_25ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2L3Residual_AK4PFchs.txt");
+    std::string jetcorrunc_filename_25ns_MC = "CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_Uncertainty_AK4PFchs.txt";
     //JEC files -- 25 ns DATA
     std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL1;
     std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL1L2L3;
@@ -81,6 +85,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
     jetcorr_filenames_25ns_DATA_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2Relative_AK4PFchs.txt");
     jetcorr_filenames_25ns_DATA_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L3Absolute_AK4PFchs.txt");
     jetcorr_filenames_25ns_DATA_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2L3Residual_AK4PFchs.txt");
+    std::string jetcorrunc_filename_25ns_DATA = "CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_Uncertainty_AK4PFchs.txt";
     //Make JEC for each of these
     FactorizedJetCorrector *jet_corrector_50ns_MC_pfL1;
     FactorizedJetCorrector *jet_corrector_50ns_MC_pfL1L2L3;
@@ -93,6 +98,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
     FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL1;
     FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL1L2L3;
     FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL2L3;
+    JetCorrectionUncertainty *jetUnc = 0;
     //Fill the JEC
     jet_corrector_50ns_MC_pfL1 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL1);
     jet_corrector_50ns_MC_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL1L2L3);
@@ -118,6 +124,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
     // ~-~-~-~-~-~-~-
     // The main loop.
     // ~-~-~-~-~-~-~-
+    bool doFileIntegrityCheckTestRun = false; // Write a single faux-event and exit and let RSR check the integrity. This is a "shallow" test of seeing whether ROOT files open nicely.
     unsigned int nEventsDone = 0;
     unsigned int nEventsToDo = chain->GetEntries();
     if (nEvents >= 0) { nEventsToDo = nEvents; }
@@ -147,6 +154,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
             jet_corrector_pfL2L3 = jet_corrector_25ns_MC_pfL2L3; //just a kludge, we will never use this
             jetcorr_filenames_pfL1 = jetcorr_filenames_50ns_DATA_pfL1;
             jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_50ns_DATA_pfL1L2L3;
+            jetUnc = new JetCorrectionUncertainty(jetcorrunc_filename_50ns_DATA);
         }
         else if (bx == 50 && !isDataFromFileName)
         {
@@ -156,6 +164,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
             jet_corrector_pfL1L2L3 = jet_corrector_50ns_MC_pfL1L2L3;
             jetcorr_filenames_pfL1 = jetcorr_filenames_50ns_MC_pfL1;
             jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_50ns_MC_pfL1L2L3;
+            jetUnc = new JetCorrectionUncertainty(jetcorrunc_filename_50ns_MC);
         }
         else if (bx == 25 && isDataFromFileName)
         {
@@ -165,6 +174,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
             jet_corrector_pfL2L3 = jet_corrector_25ns_DATA_pfL2L3;
             jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_DATA_pfL1;
             jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_DATA_pfL1L2L3;
+            jetUnc = new JetCorrectionUncertainty(jetcorrunc_filename_25ns_DATA);
         }
         else if (bx == 25 && !isDataFromFileName)
         {
@@ -174,6 +184,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
             jet_corrector_pfL2L3 = jet_corrector_25ns_MC_pfL2L3;
             jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_MC_pfL1;
             jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_MC_pfL1L2L3;
+            jetUnc = new JetCorrectionUncertainty(jetcorrunc_filename_25ns_MC);
         }
 
         // Check whether to start looping over this 'currentFile'.
@@ -184,6 +195,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
         TTree *tree = (TTree*) file->Get("Events");
         cms3.Init(tree);
 
+        std::cout << file->GetTitle() << " " << file->IsZombie() << std::endl;
+
         // Loop over Events in current file.
         unsigned int nEventsTree = tree->GetEntriesFast();
         for (unsigned int evt = 0; evt < nEventsTree; evt++)
@@ -193,6 +206,15 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
 
             // Get event content into CMS3 class instancej.
             cms3.GetEntry(evt);
+
+            if (tree->GetBranch(tree->GetAlias("evt_lumiBlock"))->GetEntry(evt) < 0)
+            {
+                std::cout << "Got an error reading an entry. " << std::endl;
+                std::cout << "The corrupted filename is " << file->GetName() << std::endl;
+                std::cout << "Please report to the relevant people for this corrupted file." << std::endl;
+                std::cout << "Meanwhile, skipping this root file...." << std::endl;
+                break;
+            }
 
             // Increase counter.
             nEventsDone++;
@@ -205,6 +227,15 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
             // Initialize output baby ntuple variables.
             InitBabyNtuple();
 
+            // As soon as it gets to this point on the first event, if the following option is turned on, it will write an event to the ttree and exit the loop.
+            // Then the rsr will check whether it passes the sweep. If not, it most likely means that the input CMS3/4 file is corrupted.
+            // In that case, we need to re run CMS3.
+            if (doFileIntegrityCheckTestRun)
+            {
+                BabyTree->Fill();
+                break;
+            }
+
             // Print progress.
             CMS3::progress(nEventsDone, nEventsToDo);
 
@@ -214,6 +245,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
             // Calculate MET variables.
             metStruct trackMetStruct = trackerMET(0.2);
             pair<float, float> corrMETPair = getT1CHSMET_fromMINIAOD(jet_corrector_pfL1L2L3);
+            pair<float,float> corrMETPair_up = getT1CHSMET_fromMINIAOD(jet_corrector_pfL1L2L3, jetUnc, true);
+            pair<float,float> corrMETPair_dn = getT1CHSMET_fromMINIAOD(jet_corrector_pfL1L2L3, jetUnc, false);
 
             // Fill easy Variables
             evt_pfmet = cms3.evt_pfmet();
@@ -222,6 +255,10 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
             evt_trackmetPhi = trackMetStruct.metphi;
             evt_corrMET = corrMETPair.first;
             evt_corrMETPhi = corrMETPair.second;
+            evt_corrMET_up    = corrMETPair_up.first;
+            evt_corrMETPhi_up = corrMETPair_up.second;
+            evt_corrMET_dn    = corrMETPair_dn.first;
+            evt_corrMETPhi_dn = corrMETPair_dn.second;
             evt_pfsumet = cms3.evt_pfsumet();
             evt_pfmetSig = cms3.evt_pfmetSig();
             evt_event = tas::evt_event();
@@ -246,6 +283,14 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 if (!isGoodVertex(ivtx)) { continue; }
                 nvtx++;
             }
+
+            if (!evt_isRealData)
+                if (tas::puInfo_trueNumInteractions().size() > 0)
+                    pu_ntrue = tas::puInfo_trueNumInteractions().at(0);
+
+            if (evt_isRealData)
+                instantLumi = tas::evt_instantLumi();
+
 
             // PU density variables
             rho = tas::evt_fixgridfastjet_all_rho();
@@ -330,6 +375,11 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 jets_disc.push_back(disc);
                 jets_area.push_back(tas::pfjets_area().at(i));
                 jets_undoJEC.push_back(tas::pfjets_undoJEC().at(i));
+                // Following jet uncertainty treatement taken from here:
+                // https://github.com/cmstas/StopAnalysis/blob/8cdba10500dd12b7dc18300f321b83e09f038459/StopBabyMaker/JetTree.cc#L226-L231
+                jetUnc->setJetEta(raw_jet.eta());
+                jetUnc->setJetPt(jet.pt()); // Must use CORRECTED pt
+                jets_unc.push_back(jetUnc->getUncertainty(true));
             }
 
             // Set the jet multiplicity.
@@ -429,6 +479,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 //Isolation et al
                 RelIso03 = (tas::mus_isoR03_pf_ChargedHadronPt().at(i) + tas::mus_isoR03_pf_NeutralHadronEt().at(i) + tas::mus_isoR03_pf_PhotonEt().at(i)) / tas::mus_p4().at(i).pt();
                 RelIso03EA = muRelIso03EA(i);
+                RelIso03EAv2 = muRelIso03EA(i, 2);
+                RelIso04EAv2 = muRelIsoCustomCone(i, 0.4, /*useVetoCones=*/false, 0.5, false, true, -1, 2);
                 RelIso03DB = muRelIso03DB(i);
                 pfChargedHadronIso = tas::mus_isoR03_pf_ChargedHadronPt().at(i);
                 pfPhotonIso = tas::mus_isoR03_pf_PhotonEt().at(i);
@@ -503,6 +555,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 exp_innerlayers = tas::mus_exp_innerlayers().at(i);
                 exp_outerlayers = tas::mus_exp_outerlayers().at(i);
                 segmCompatibility = tas::mus_segmCompatibility().at(i);
+                ptErr = tas::mus_ptErr().at(i);
+                trk_pt = tas::mus_trk_p4().at(i).pt();
                 if (addAnnulus)
                 {
                     reliso04 = muRelIsoCustomCone(i, 0.4, true, 0.5, false, true);
@@ -577,6 +631,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 //Fill trigger branches
                 fillMuonTriggerBranches(p4, idx, false);
                 //Fill baby once per probe
+                ptratio = ptratio_v5;
                 BabyTree->Fill();
             } //close muon loop
 
@@ -638,6 +693,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 //Isolation et al
                 RelIso03 = (tas::els_pfChargedHadronIso().at(i) + tas::els_pfNeutralHadronIso().at(i) + tas::els_pfPhotonIso().at(i)) / tas::els_p4().at(i).pt();
                 RelIso03EA = eleRelIso03EA(i);
+                RelIso03EAv2 = eleRelIso03EA(i, 2);
+                RelIso04EAv2 = elRelIsoCustomCone(i, 0.4, false, 0.0, /*useDBCorr=*/false, /*useEACorr=*/true, /*mindr=*/-1, /*eaversion=*/2);
                 RelIso03DB = eleRelIso03DB(i);
                 pfChargedHadronIso = tas::els_pfChargedHadronIso().at(i);
                 pfPhotonIso = tas::els_pfPhotonIso().at(i);
@@ -743,7 +800,9 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 conv_vtx_prob = tas::els_conv_vtx_prob().at(i);
                 if (addAnnulus)
                 {
-                    reliso04 = elRelIsoCustomCone(i, 0.4, true, 0.0, false, true);
+                    //https://github.com/cmstas/VVVBabyMaker/blob/098bfe59c52ca31f810416cc9c3e00958fdc8a79/dilepbabymaker/ScanChain.cc#L1223
+                    // vec_lep_relIso04EAv2         .push_back(elRelIsoCustomCone(iEl, 0.4, false, 0.0, /*useDBCorr=*/false, /*useEACorr=*/true, /*mindr=*/-1, /*eaversion=*/2));
+                    reliso04 = elRelIsoCustomCone(i, 0.4, false, 0.0, false, true, -1, 2);
                     annulus04 = reliso04 - miniiso;
                 }
                 if (addPFCandidates || checkIsPFTrueFalse)
@@ -824,10 +883,17 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 if (electronID(i, VVV_cutbased_tight)) { passes_VVV_cutbased_tight = true; }
                 if (electronID(i, VVV_cutbased_tight_noiso)) { passes_VVV_cutbased_tight_noiso = true; }
                 //Save POG ID bools
-                if (tas::els_passVetoId().at(i)) { passes_POG_vetoID = true; }
-                if (tas::els_passLooseId().at(i)) { passes_POG_looseID = true; }
-                if (tas::els_passMediumId().at(i)) { passes_POG_mediumID = true; }
-                if (tas::els_passTightId().at(i)) { passes_POG_tightID = true; }
+//                if (tas::els_passVetoId().at(i)) { passes_POG_vetoID = true; }
+//                if (tas::els_passLooseId().at(i)) { passes_POG_looseID = true; }
+//                if (tas::els_passMediumId().at(i)) { passes_POG_mediumID = true; }
+//                if (tas::els_passTightId().at(i)) { passes_POG_tightID = true; }
+                if (isVetoElectronPOGspring16_v1(i)) { passes_POG_vetoID = true; }
+                if (isLooseElectronPOGspring16_v1(i)) { passes_POG_looseID = true; }
+                if (isMediumElectronPOGspring16_v1(i)) { passes_POG_mediumID = true; }
+                if (isTightElectronPOGspring16_v1(i)) { passes_POG_tightID = true; }
+                // Save isTriggerSafe_v1
+                if (isTriggerSafe_v1(i)) { passes_isTriggerSafe_v1 = true; }
+                if (isTriggerSafe_v2(i)) { passes_isTriggerSafe_v2 = true; }
                 if (verbose) { cout << "Done POG IDs" << endl; }
                 elID::unsetCache();
                 if (verbose) { cout << "Some MC properties" << endl; }
@@ -842,6 +908,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
                 fillElectronTriggerBranches(p4, idx, false);
                 if (verbose) { cout << "Saving electron branches" << endl; }
                 //Fill tree once per tag
+                ptratio = ptratio_v5;
                 BabyTree->Fill();
                 if (verbose) { cout << "Finished electron" << endl; }
             }
@@ -968,6 +1035,10 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("evt_trackmetPhi", &evt_trackmetPhi);
     BabyTree->Branch("evt_corrMET", &evt_corrMET);
     BabyTree->Branch("evt_corrMETPhi", &evt_corrMETPhi);
+    BabyTree->Branch("evt_corrMET_up", &evt_corrMET_up);
+    BabyTree->Branch("evt_corrMETPhi_up", &evt_corrMETPhi_up);
+    BabyTree->Branch("evt_corrMET_dn", &evt_corrMET_dn);
+    BabyTree->Branch("evt_corrMETPhi_dn", &evt_corrMETPhi_dn);
     BabyTree->Branch("evt_pfsumet", &evt_pfsumet);
     BabyTree->Branch("evt_pfmetSig", &evt_pfmetSig);
     BabyTree->Branch("evt_event", &evt_event);
@@ -993,9 +1064,12 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("jets_disc", &jets_disc);
     BabyTree->Branch("jets_area", &jets_area);
     BabyTree->Branch("jets_undoJEC", &jets_undoJEC);
+    BabyTree->Branch("jets_unc", &jets_unc);
     BabyTree->Branch("sample", &sample);
     BabyTree->Branch("nFOs_SS", &nFOs_SS);
     BabyTree->Branch("nvtx", &nvtx);
+    BabyTree->Branch("pu_ntrue", &pu_ntrue);
+    BabyTree->Branch("instantLumi", &instantLumi);
     BabyTree->Branch("rho", &rho);
     BabyTree->Branch("rho_neut_centr", &rho_neut_centr);
     BabyTree->Branch("rho_calo", &rho_calo);
@@ -1017,6 +1091,8 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("mc_id", &mc_id);
     BabyTree->Branch("RelIso03", &RelIso03);
     BabyTree->Branch("RelIso03EA", &RelIso03EA);
+    BabyTree->Branch("RelIso03EAv2", &RelIso03EAv2);
+    BabyTree->Branch("RelIso04EAv2", &RelIso04EAv2);
     BabyTree->Branch("tag_RelIso03EA", &tag_RelIso03EA);
     BabyTree->Branch("RelIso03DB", &RelIso03DB);
     BabyTree->Branch("pfChargedHadronIso", &pfChargedHadronIso);
@@ -1075,6 +1151,8 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("passes_POG_looseID", &passes_POG_looseID);
     BabyTree->Branch("passes_POG_mediumID", &passes_POG_mediumID);
     BabyTree->Branch("passes_POG_tightID", &passes_POG_tightID);
+    BabyTree->Branch("passes_isTriggerSafe_v1", &passes_isTriggerSafe_v1);
+    BabyTree->Branch("passes_isTriggerSafe_v2", &passes_isTriggerSafe_v2);
     BabyTree->Branch("ip3d", &ip3d);
     BabyTree->Branch("ip3derr", &ip3derr);
     BabyTree->Branch("type", &type);
@@ -1171,6 +1249,8 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("validHits", &validHits);
     BabyTree->Branch("lostHits", &lostHits);
     BabyTree->Branch("segmCompatibility", &segmCompatibility);
+    BabyTree->Branch("ptErr", &ptErr);
+    BabyTree->Branch("trk_pt", &trk_pt);
     //Single Muon Triggers
     BabyTree->Branch("HLT_Mu8", &HLT_Mu8);
     BabyTree->Branch("HLT_Mu17", &HLT_Mu17);
@@ -1183,12 +1263,8 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("HLT_TkMu50", &HLT_TkMu50);
     BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
     BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
+    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
+    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
     BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
     BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
     BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
@@ -1231,8 +1307,6 @@ void babyMaker::MakeBabyNtuple(const char* output_name)
     BabyTree->Branch("HLT_Ele105_CaloIdVT_GsfTrkIdT", &HLT_Ele105_CaloIdVT_GsfTrkIdT);
     BabyTree->Branch("HLT_Ele115_CaloIdVT_GsfTrkIdT", &HLT_Ele115_CaloIdVT_GsfTrkIdT);
     //Double Electron Triggers
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
     BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1);
     BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL);
     BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1);
@@ -1265,6 +1339,10 @@ void babyMaker::InitBabyNtuple()
     evt_trackmetPhi = -99;
     evt_corrMET = -1;
     evt_corrMETPhi = -99.;
+    evt_corrMET_up = -1;
+    evt_corrMET_dn = -1;
+    evt_corrMETPhi_up = -99.;
+    evt_corrMETPhi_dn = -99.;
     evt_pfsumet = -1;
     evt_pfmetSig = -1;
     evt_event = -1;
@@ -1289,6 +1367,8 @@ void babyMaker::InitBabyNtuple()
     sample = "";
     nFOs_SS = -1;
     nvtx = -1;
+    pu_ntrue = -1;
+    instantLumi = -1;
     rho = -1;
     rho_calo = -1;
     rho_calo_centr = -1;
@@ -1296,6 +1376,7 @@ void babyMaker::InitBabyNtuple()
     jets_disc.clear();
     jets_area.clear();
     jets_undoJEC.clear();
+    jets_unc.clear();
     InitLeptonBranches();
 }
 
@@ -1319,6 +1400,8 @@ void babyMaker::InitLeptonBranches()
     mc_id = -1;
     RelIso03 = -1;
     RelIso03EA = -1;
+    RelIso03EAv2 = -1;
+    RelIso04EAv2 = -1;
     tag_RelIso03EA = -1;
     RelIso03DB = -1;
     pfChargedHadronIso = -1;
@@ -1377,6 +1460,8 @@ void babyMaker::InitLeptonBranches()
     passes_POG_looseID = 0;
     passes_POG_mediumID = 0;
     passes_POG_tightID = 0;
+    passes_isTriggerSafe_v1 = 0;
+    passes_isTriggerSafe_v2 = 0;
     type = -1;
     ip3d = -1;
     ip3derr = -1;
@@ -1429,6 +1514,8 @@ void babyMaker::InitLeptonBranches()
     lostHits = -99;
     exp_outerlayers = -99;
     segmCompatibility = -99;
+    ptErr = -99;
+    trk_pt = -99;
     //Electrons
     sigmaIEtaIEta_full5x5 = -1;
     sigmaIEtaIEta = -1;
@@ -1490,12 +1577,8 @@ void babyMaker::InitLeptonBranches()
     HLT_TkMu50 = 0;
     HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
     HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = 0;
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
+    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
+    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
     HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
     HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
     HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
@@ -1715,10 +1798,8 @@ void babyMaker::fillElectronTriggerBranches(LorentzVector &p4, int idx, bool old
 //    setHLTBranch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ().at(idx), HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
     HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg().at(idx);
     HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg().at(idx);
-//    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg().at(idx);
-//    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg().at(idx);
-//    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg().at(idx);
-//    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg().at(idx);
+    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg().at(idx);
+    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg().at(idx);
 }
 
 //___________________________________________________________________________________________________________________________________________

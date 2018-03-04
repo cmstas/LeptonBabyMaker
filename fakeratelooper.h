@@ -76,6 +76,10 @@ private:
     float evt_trackmetPhi; //not CMS3
     float evt_corrMET;
     float evt_corrMETPhi;
+    float evt_corrMET_up;
+    float evt_corrMETPhi_up;
+    float evt_corrMET_dn;
+    float evt_corrMETPhi_dn;
     float evt_pfsumet;
     float evt_pfmetSig;
     int evt_event;
@@ -101,9 +105,12 @@ private:
     vector <float> jets_disc;
     vector <float> jets_area;
     vector <float> jets_undoJEC;
+    vector <float> jets_unc;
     TString sample;
     int nFOs_SS;
     int nvtx;
+    int pu_ntrue;
+    int instantLumi;
     float rho;
     float rho_neut_centr;
     float rho_calo;
@@ -126,6 +133,8 @@ private:
     int mc_id;
     float RelIso03; //RelIso03 (not corrected)
     float RelIso03EA; //RelIso03 (EffectiveArea corrected)
+    float RelIso03EAv2; //RelIso03 (EffectiveArea corrected)
+    float RelIso04EAv2; //RelIso03 (EffectiveArea corrected)
     float tag_RelIso03EA; //RelIso03 (EffectiveArea corrected)
     float RelIso03DB; //RelIso03 (DeltaBeta corrected)
     float pfChargedHadronIso;
@@ -199,6 +208,9 @@ private:
     bool passes_POG_looseID;
     bool passes_POG_mediumID;
     bool passes_POG_tightID;
+    // Trigger safe bools
+    bool passes_isTriggerSafe_v1;
+    bool passes_isTriggerSafe_v2;
     //
     float ip3d;
     float ip3derr;
@@ -282,6 +294,12 @@ private:
     int gsf_validHits;
     float conv_vtx_prob;
 
+    //
+    //bool isFirstTnpPair;
+    //bool tag_passes_VVV_cutbased_tight;
+    //bool tag_passes_VVV_cutbased_fo;
+    //bool tag_HLT_Ele23;
+
     //---mus---//
     int pid_PFMuon;
     float gfit_chi2;
@@ -295,6 +313,8 @@ private:
     int validHits;
     int lostHits;
     float segmCompatibility;
+    float ptErr;
+    float trk_pt;
 
     // -- tag HLT match -- //
 
@@ -353,10 +373,8 @@ private:
     int HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
     int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
     int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
-    int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg;
-    int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg;
-    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg;
-    int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg;
+    int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
+    int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
 
     //---single mu trigger---//
     // for trigger branches the following conventions hold:
@@ -394,8 +412,6 @@ private:
     int HLT_Ele115_CaloIdVT_GsfTrkIdT;
 
 
-    int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg;
-    int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg;
     int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1;
     int HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL;
     int HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1;
