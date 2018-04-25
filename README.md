@@ -1,44 +1,35 @@
 # LeptonBabyMaker
 one lepton babymaker for common SS+OS effort
 
-Instructions for 74X
+Instructions for 9X
 
-Setup CMSSW74X (if not already setup):
 ```
-cmsrel CMSSW_7_4_1_patch1
-cd CMSSW_7_4_1_patch1/src
+cd /cvmfs/cms.cern.ch/slc6_amd64_gcc530/cms/cmssw/CMSSW_9_2_8
 cmsenv
+cd -
+git clone https://github.com/cmstas/CORE
 ```
 
-Then 
+Then setup Metis for batch submission
 
 ```
-git clone git@github.com:cmstas/LeptonBabyMaker.git
-cd LeptonBabyMaker
-git checkout master
-source setupCORE.sh
-make
-./main.exe
+git clone https://github.com/aminnj/ProjectMetis/
+cd ProjectMetis
+. setup.sh
 ```
 
-Currently running main.C, while runLooper.C is kept for reference.
+Edit
+* `fakeratelooper.C`, `fakeratelooper.h` as this is the main looper
+* `draw.py` makes some helper histograms from output babies (if needed)
+* `lepmetis.py` is the main submission script with sample definitions/locations
 
-main.C can have 4 inputs
+Compile with `make -j4` and test with 
 ```
-./main.exe SampleName NumberOfEvents FileNumber OutputDirectory
-```
-The default values are
-   * SampleName = default.
-   * NumberOfEvents = -1 (meaning all)
-   * FileNumber = 0 (meaning merged_ntuple_*.root)
-   * OutputDirectory = ./
-
-Also note, that the samples are stored in sample.dat in format
-```
-SAMPLE
-Name SampleName
-Path CMSntuplePath
+./main.exe ntuplepath outputname nevents
 ```
 
-Batch mode is now implemented to work for root6.
-
+Submit with 
+```
+. make_tar.sh
+python lepmetis.py
+```
