@@ -23,8 +23,8 @@ endif
 CC = g++
 CMSROOT = ./
 INCLUDE = $(shell root-config --cflags) -I$(CMSROOT) -I$(CMSROOT)/CORE
-CFLAGS = -Wall -Wno-unused-function -g -O2 -fPIC $(INCLUDE) $(EXTRACFLAGS)
-#CFLAGS = -Wall -Wno-unused-function -g -fPIC $(INCLUDE) $(EXTRACFLAGS)
+# CFLAGS = -Wall -Wno-unused-function -g -O2 -fPIC $(INCLUDE) $(EXTRACFLAGS)
+CFLAGS = -Wall -Wno-unused-function -g -fPIC $(INCLUDE) $(EXTRACFLAGS)
 ROOTLIBS = $(shell root-config --ldflags --cflags --libs) -lTMVA #-lEG -lGenVector
 COREDIR = CORE
 TOOLSDIR = CORE/Tools
@@ -51,7 +51,8 @@ CORESOURCES=$(DIR)/$(COREDIR)/CMS3.cc \
  $(DIR)/$(COREDIR)/SSSelections.cc \
  $(DIR)/$(TOOLSDIR)/JetCorrector.cc \
  $(DIR)/$(TOOLSDIR)/goodrun.cc \
- $(DIR)/$(COREDIR)/Tools/utils.cc
+ $(DIR)/$(COREDIR)/Tools/utils.cc \
+ $(DIR)/$(COREDIR)/Tools/datasetinfo/getDatasetInfo.cc
 COREOBJECTS=$(CORESOURCES:.cc=.o)
 CORELIB=libCMS3CORE.so
 

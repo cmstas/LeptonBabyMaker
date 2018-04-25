@@ -1,1776 +1,2038 @@
-#include "fakeratelooper.h"
+#include "fakeratelooper.h" 
 #include "CORE/Tools/goodrun.h"
 #include "CORE/Tools/jetcorr/Utilities.icc"
 #include "CORE/Tools/jetcorr/SimpleJetCorrectionUncertainty.h"
 #include "CORE/Tools/jetcorr/JetCorrectionUncertainty.h"
 
 //Switches
-bool verbose = 0;
+bool verbose = false;
 unsigned int evt_cut = 0;
 bool addPFCandidates = false; // Default is false
 bool checkIsPFTrueFalse = false; // Default is false (requires double loop on recocandidates and pfcandidates)
 bool addAnnulus = false; // Default is false
 bool recoLeptonsDownTo5GeV = false; // Default is false (meaning 10 GeV)
-bool recoLeptonsDownTo20GeV = true; // Default is false (meaning 10 GeV)
-bool onlySaveTagProbePairs = true; // Default is false
-bool applyJson = true;
-
-bool isDataFromFileName = false; // set automatically later on
-
-//Main function
-//___________________________________________________________________________________________________________________________________________
-int babyMaker::looper(TChain* chain, char* output_name, int nEvents)
-{
-    //Print warning!
-    cout << "Careful!! Path is " << path << endl;
-
-    // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
-    // Make baby root file. This is our main output.
-    // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
-    MakeBabyNtuple(Form("%s", output_name));
-    InitBabyNtuple();
-
-    // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
-    // Set up all the tools needed for looping over CMS3/4.
-    // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
-    //Add good run list
-    set_goodrun_file("goodRunList/goldenJson_2016rereco_36p46ifb.txt");
-    //Create and init MVA
-    createAndInitMVA("./CORE", true, false, 80); // Moriond
-    readMVA* v25nsMVAreader = new readMVA();
-    v25nsMVAreader->InitMVA("CORE", true);
-    //JEC files -- 50 ns MC
-    std::vector<std::string> jetcorr_filenames_50ns_MC_pfL1;
-    std::vector<std::string> jetcorr_filenames_50ns_MC_pfL1L2L3;
-    std::vector<std::string> jetcorr_filenames_50ns_MC_pfL2L3;
-    jetcorr_filenames_50ns_MC_pfL1.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L1FastJet_AK4PFchs.txt");
-    jetcorr_filenames_50ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L1FastJet_AK4PFchs.txt");
-    jetcorr_filenames_50ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2Relative_AK4PFchs.txt");
-    jetcorr_filenames_50ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L3Absolute_AK4PFchs.txt");
-    jetcorr_filenames_50ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2Relative_AK4PFchs.txt");
-    jetcorr_filenames_50ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L3Absolute_AK4PFchs.txt");
-    jetcorr_filenames_50ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_MC_L2L3Residual_AK4PFchs.txt");
-    //JEC files -- 50 ns DATA
-    std::vector<std::string> jetcorr_filenames_50ns_DATA_pfL1;
-    std::vector<std::string> jetcorr_filenames_50ns_DATA_pfL1L2L3;
-    jetcorr_filenames_50ns_DATA_pfL1.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L1FastJet_AK4PFchs.txt");
-    jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L1FastJet_AK4PFchs.txt");
-    jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L2Relative_AK4PFchs.txt");
-    jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L3Absolute_AK4PFchs.txt");
-    jetcorr_filenames_50ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_50ns/Summer15_50nsV4_DATA_L2L3Residual_AK4PFchs.txt");
-    //JEC files -- 25 ns MC
-    std::vector<std::string> jetcorr_filenames_25ns_MC_pfL1;
-    std::vector<std::string> jetcorr_filenames_25ns_MC_pfL1L2L3;
-    std::vector<std::string> jetcorr_filenames_25ns_MC_pfL2L3;
-    jetcorr_filenames_25ns_MC_pfL1.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L1FastJet_AK4PFchs.txt");
-    jetcorr_filenames_25ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L1FastJet_AK4PFchs.txt");
-    jetcorr_filenames_25ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2Relative_AK4PFchs.txt");
-    jetcorr_filenames_25ns_MC_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L3Absolute_AK4PFchs.txt");
-    jetcorr_filenames_25ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2Relative_AK4PFchs.txt");
-    jetcorr_filenames_25ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L3Absolute_AK4PFchs.txt");
-    jetcorr_filenames_25ns_MC_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_MC_L2L3Residual_AK4PFchs.txt");
-    //JEC files -- 25 ns DATA
-    std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL1;
-    std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL1L2L3;
-    std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL2L3;
-    jetcorr_filenames_25ns_DATA_pfL1.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L1FastJet_AK4PFchs.txt");
-    jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L1FastJet_AK4PFchs.txt");
-    jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2Relative_AK4PFchs.txt");
-    jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L3Absolute_AK4PFchs.txt");
-    jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2L3Residual_AK4PFchs.txt");
-    jetcorr_filenames_25ns_DATA_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2Relative_AK4PFchs.txt");
-    jetcorr_filenames_25ns_DATA_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L3Absolute_AK4PFchs.txt");
-    jetcorr_filenames_25ns_DATA_pfL2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/Spring16_25nsV6_DATA_L2L3Residual_AK4PFchs.txt");
-    //Make JEC for each of these
-    FactorizedJetCorrector *jet_corrector_50ns_MC_pfL1;
-    FactorizedJetCorrector *jet_corrector_50ns_MC_pfL1L2L3;
-    FactorizedJetCorrector *jet_corrector_50ns_MC_pfL2L3;
-    FactorizedJetCorrector *jet_corrector_50ns_DATA_pfL1;
-    FactorizedJetCorrector *jet_corrector_50ns_DATA_pfL1L2L3;
-    FactorizedJetCorrector *jet_corrector_25ns_MC_pfL1;
-    FactorizedJetCorrector *jet_corrector_25ns_MC_pfL1L2L3;
-    FactorizedJetCorrector *jet_corrector_25ns_MC_pfL2L3;
-    FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL1;
-    FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL1L2L3;
-    FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL2L3;
-    //Fill the JEC
-    jet_corrector_50ns_MC_pfL1 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL1);
-    jet_corrector_50ns_MC_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL1L2L3);
-    jet_corrector_50ns_MC_pfL2L3 = makeJetCorrector(jetcorr_filenames_50ns_MC_pfL2L3);
-    jet_corrector_50ns_DATA_pfL1 = makeJetCorrector(jetcorr_filenames_50ns_DATA_pfL1);
-    jet_corrector_50ns_DATA_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_50ns_DATA_pfL1L2L3);
-    jet_corrector_25ns_MC_pfL1 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL1);
-    jet_corrector_25ns_MC_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL1L2L3);
-    jet_corrector_25ns_MC_pfL2L3 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL2L3);
-    jet_corrector_25ns_DATA_pfL1 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL1);
-    jet_corrector_25ns_DATA_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL1L2L3);
-    jet_corrector_25ns_DATA_pfL2L3 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL2L3);
-    //JECs
-    FactorizedJetCorrector *jet_corrector_pfL1 = 0;
-    FactorizedJetCorrector *jet_corrector_pfL1MC = 0;
-    FactorizedJetCorrector *jet_corrector_pfL1L2L3 = 0;
-    FactorizedJetCorrector *jet_corrector_pfL2L3 = 0;
-    //Record filenames
-    std::vector <string> jetcorr_filenames_pfL1;
-    std::vector <string> jetcorr_filenames_pfL1L2L3;
-    std::vector <string> jetcorr_filenames_pfL2L3;
-
-    // ~-~-~-~-~-~-~-
-    // The main loop.
-    // ~-~-~-~-~-~-~-
-    unsigned int nEventsDone = 0;
-    unsigned int nEventsToDo = chain->GetEntries();
-    if (nEvents >= 0) { nEventsToDo = nEvents; }
-    TObjArray *listOfFiles = chain->GetListOfFiles();
-    TIter fileIter(listOfFiles);
-    TFile *currentFile = 0;
-    while ((currentFile = (TFile*)fileIter.Next()))
-    {
-
-        // ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
-        // Based on the current file name, set various configurations.
-        // ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
-        bool isPromptReco = TString(currentFile->GetTitle()).Contains("PromptReco");
-        isDataFromFileName = TString(currentFile->GetTitle()).Contains("Run2015") || TString(currentFile->GetTitle()).Contains("Run2016");
-        if (isPromptReco) { isDataFromFileName = true; }
-        else if (TString(currentFile->GetTitle()).Contains("DoubleMuon")) { isDataFromFileName = true; }
-        else if (TString(currentFile->GetTitle()).Contains("DoubleEG")) { isDataFromFileName = true; }
-        int bx = 25;
-        if (TString(currentFile->GetTitle()).Contains("Run2015B") || TString(currentFile->GetTitle()).Contains("50ns")) { bx = 50; }
-        // Retrieve JEC from files, if using
-        //// files for RunIISpring15 MC
-        if (bx == 50 && isDataFromFileName)
-        {
-            jet_corrector_pfL1 = jet_corrector_50ns_DATA_pfL1;
-            jet_corrector_pfL1MC = jet_corrector_50ns_MC_pfL1;
-            jet_corrector_pfL1L2L3 = jet_corrector_50ns_DATA_pfL1L2L3;
-            jet_corrector_pfL2L3 = jet_corrector_25ns_MC_pfL2L3; //just a kludge, we will never use this
-            jetcorr_filenames_pfL1 = jetcorr_filenames_50ns_DATA_pfL1;
-            jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_50ns_DATA_pfL1L2L3;
-        }
-        else if (bx == 50 && !isDataFromFileName)
-        {
-            jet_corrector_pfL1 = jet_corrector_50ns_MC_pfL1;
-            jet_corrector_pfL1MC = jet_corrector_50ns_MC_pfL1;
-            jet_corrector_pfL2L3 = jet_corrector_50ns_MC_pfL2L3;
-            jet_corrector_pfL1L2L3 = jet_corrector_50ns_MC_pfL1L2L3;
-            jetcorr_filenames_pfL1 = jetcorr_filenames_50ns_MC_pfL1;
-            jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_50ns_MC_pfL1L2L3;
-        }
-        else if (bx == 25 && isDataFromFileName)
-        {
-            jet_corrector_pfL1 = jet_corrector_25ns_DATA_pfL1;
-            jet_corrector_pfL1MC = jet_corrector_25ns_MC_pfL1;
-            jet_corrector_pfL1L2L3 = jet_corrector_25ns_DATA_pfL1L2L3;
-            jet_corrector_pfL2L3 = jet_corrector_25ns_DATA_pfL2L3;
-            jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_DATA_pfL1;
-            jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_DATA_pfL1L2L3;
-        }
-        else if (bx == 25 && !isDataFromFileName)
-        {
-            jet_corrector_pfL1 = jet_corrector_25ns_MC_pfL1;
-            jet_corrector_pfL1MC = jet_corrector_25ns_MC_pfL1;
-            jet_corrector_pfL1L2L3 = jet_corrector_25ns_MC_pfL1L2L3;
-            jet_corrector_pfL2L3 = jet_corrector_25ns_MC_pfL2L3;
-            jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_MC_pfL1;
-            jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_MC_pfL1L2L3;
-        }
-
-        // Check whether to start looping over this 'currentFile'.
-        if (nEventsDone >= nEventsToDo) { continue; }
-
-        // Get file content and initialize to CMS3 class.
-        TFile *file = TFile::Open(currentFile->GetTitle());
-        TTree *tree = (TTree*) file->Get("Events");
-        cms3.Init(tree);
-
-        // Loop over Events in current file.
-        unsigned int nEventsTree = tree->GetEntriesFast();
-        for (unsigned int evt = 0; evt < nEventsTree; evt++)
-        {
-            // Check whether to stop looping over this TTree in 'currentFile'
-            if (nEventsDone >= nEventsToDo) { continue; }
-
-            // Get event content into CMS3 class instancej.
-            cms3.GetEntry(evt);
-
-            // Increase counter.
-            nEventsDone++;
-
-            if (tas::evt_isRealData() && isPromptReco && tas::evt_run() <= 251562) { continue; }
-
-            // If data, check good run list.
-            if (applyJson && tas::evt_isRealData() && !goodrun(tas::evt_run(), tas::evt_lumiBlock())) { continue; }
-
-            // Initialize output baby ntuple variables.
-            InitBabyNtuple();
-
-            // Print progress.
-            CMS3::progress(nEventsDone, nEventsToDo);
-
-            // The following should never occur, if it does something is wrong about the CMS3/4 processing.
-            if (tas::mus_dxyPV().size() != tas::mus_dzPV().size()) { continue; }
-
-            // Calculate MET variables.
-            metStruct trackMetStruct = trackerMET(0.2);
-            pair<float, float> corrMETPair = getT1CHSMET_fromMINIAOD(jet_corrector_pfL1L2L3);
-
-            // Fill easy Variables
-            evt_pfmet = cms3.evt_pfmet();
-            evt_pfmetPhi = cms3.evt_pfmetPhi();
-            evt_trackmet = trackMetStruct.met;
-            evt_trackmetPhi = trackMetStruct.metphi;
-            evt_corrMET = corrMETPair.first;
-            evt_corrMETPhi = corrMETPair.second;
-            evt_pfsumet = cms3.evt_pfsumet();
-            evt_pfmetSig = cms3.evt_pfmetSig();
-            evt_event = tas::evt_event();
-            evt_lumiBlock = tas::evt_lumiBlock();
-            evt_run = tas::evt_run();
-            evt_isRealData = tas::evt_isRealData();
-            sample = Form("%s", file->GetName());
-
-            // If not data, i.e. MC, save extra information.
-            if (!evt_isRealData)
-            {
-                evt_xsec_incl = tas::evt_xsec_incl();
-                evt_kfactor = tas::evt_kfactor();
-                gen_met = tas::gen_met();
-                gen_metPhi = tas::gen_metPhi();
-            }
-
-            // Count number of good vertices.
-            nvtx = 0;
-            for (unsigned int ivtx = 0; ivtx < tas::evt_nvtxs(); ivtx++)
-            {
-                if (!isGoodVertex(ivtx)) { continue; }
-                nvtx++;
-            }
-
-            // PU density variables
-            rho = tas::evt_fixgridfastjet_all_rho();
-            rho_neut_centr = tas::evt_fixgridfastjet_centralneutral_rho();
-            rho_calo = tas::evt_fixgridfastjet_allcalo_rho();
-            rho_calo_centr = tas::evt_fixgridfastjet_centralcalo_rho();
-
-            // Event filters.
-            passes_met_filters = evt_isRealData ? passesMETfilter() : 1;
-            filt_hbhe = evt_isRealData ? hbheNoiseFilter() : 1;
-            filt_csc = evt_isRealData ? tas::evt_cscTightHaloId() : 1;
-            filt_hcallaser = evt_isRealData ? tas::filt_hcalLaser() : 1;
-            filt_ecaltp = evt_isRealData ? tas::filt_ecalTP() : 1;
-            filt_trkfail = evt_isRealData ? tas::filt_trackingFailure() : 1;
-            filt_eebadsc = evt_isRealData ? tas::filt_eeBadSc() : 1;
-
-            // Weight of MC events scaled to 1 fb-1.
-            scale1fb = evt_isRealData ? 1 : tas::evt_scale1fb();
-
-            // Determine and save jet variables
-            ht = 0;
-            ht_SS = 0;
-            // Loop over the pf jet collection
-            for (unsigned int i = 0; i < tas::pfjets_p4().size(); i++)
-            {
-                // Get the raw p4 by undoing the JEC.
-                LorentzVector raw_jet = tas::pfjets_p4().at(i) * tas::pfjets_undoJEC().at(i);
-
-                // Require at least loose jet ID.
-                if (!isLoosePFJet_50nsV1(i)) { continue; }
-
-                // Recompute the JEC from the JEC tool configured at the beginning of the run.
-                float jet_L1L2L3 = 1.;
-                if (jetcorr_filenames_pfL1L2L3.size() > 0)
-                {
-                    //L1L2L3
-                    jet_corrector_pfL1L2L3->setJetEta(raw_jet.eta());
-                    jet_corrector_pfL1L2L3->setJetPt(raw_jet.pt());
-                    jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(i));
-                    jet_corrector_pfL1L2L3->setRho(rho);
-                    jet_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
-                }
-
-                // Compute the corrected jet p4.
-                LorentzVector jet = raw_jet * jet_L1L2L3;
-
-                // Kinematic jet cuts
-                if (jet.pt() < 25) { continue; }
-
-                // Save jets that make it this far.
-                jets.push_back(jet);
-
-                // Compute jet related variables.
-                // HT is computed here.
-                if (jet.pt() > 40) { ht += jet.pt(); }
-                // HT in same-sign requires that the pf jets are cleaned against electrons and muons.
-                if (jet.pt() > 40 && fabs(jet.eta()) < 2.4)
-                {
-                    bool isCleanJet = true;
-                    // Loop over muons and kill the jet if overlaps with the jet at hand.
-                    for (size_t j = 0; j < tas::mus_p4().size(); j++)
-                    {
-                        if (muonID(j, SS_fo_v5) && tas::mus_p4().at(j).pt() > 5. && (ROOT::Math::VectorUtil::DeltaR(jet, tas::mus_p4().at(j)) < 0.4))
-                        {
-                            isCleanJet = false;
-                            if (verbose) { cout << "jet cleaned by muon p4: " << tas::mus_p4().at(j) << " pt=" << tas::mus_p4().at(j).pt() << endl; }
-                        }
-                    }
-                    // Loop over electrons and kill the jet if overlaps with the jet at hand.
-                    for (size_t j = 0; j < tas::els_p4().size(); j++)
-                    {
-                        if (electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt() > 7. && (ROOT::Math::VectorUtil::DeltaR(jet, tas::els_p4().at(j)) < 0.4))
-                        {
-                            isCleanJet = false;
-                            if (verbose) { cout << "jet cleaned by electron p4: " << tas::els_p4().at(j) << " pt=" << tas::els_p4().at(j).pt() << endl; }
-                        }
-                    }
-                    if (isCleanJet) { ht_SS += jet.pt(); }
-                }
-                // Save b-tags.
-                float disc = tas::pfjets_pfCombinedInclusiveSecondaryVertexV2BJetTag().at(i);
-                jets_disc.push_back(disc);
-                jets_area.push_back(tas::pfjets_area().at(i));
-                jets_undoJEC.push_back(tas::pfjets_undoJEC().at(i));
-            }
-
-            // Set the jet multiplicity.
-            njets = jets.size();
-
-            //Calculate number of fakeable objects for same sign analysis
-            nFOs_SS = 0;
-            for (size_t j = 0; j < tas::mus_p4().size(); j++)
-            {
-                if (muonID(j, SS_fo_v5) && tas::mus_p4().at(j).pt() > 10) { nFOs_SS++; }
-            }
-
-            for (size_t j = 0; j < tas::els_p4().size(); j++)
-            {
-                if (electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt() > 10) { nFOs_SS++; }
-            }
-
-            // ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
-            // These variables are persistent through the event, used for PFlepton saving
-            // ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
-            bool foundMuTag = false;
-            bool foundElTag = false;
-            vector<LorentzVector> savedMuP4s;
-            vector<LorentzVector> savedElP4s;
-            vector<LorentzVector> pfelP4;
-            vector<LorentzVector> pfmuP4;
-            vector<bool> pfelIsReco;
-            vector<bool> pfmuIsReco;
-            vector<int> pfelidx;
-            vector<int> pfmuidx;
-            vector<float> pfelAbsTrkIso;
-            vector<float> pfmuAbsTrkIso;
-            vector<float> pfelTrkAn04;
-            vector<float> pfmuTrkAn04;
-
-            usedMu = false;
-            usedEl = false;
-            TRandom r;
-            rndm = r.Rndm();
-
-            // Loop over muon candidates, which are our probes.
-            for (unsigned int i = 0; i < tas::mus_p4().size(); i++)
-            {
-
-                // Require pT > 10 GeV.
-                float maxPt = 10.;
-                if (recoLeptonsDownTo5GeV) { maxPt = 5.; }
-                if (recoLeptonsDownTo20GeV) { maxPt = 20.; }
-                if (tas::mus_p4().at(i).pt() <= maxPt) { continue; }
-
-                InitLeptonBranches();
-
-                // Check for a tag.
-                bool foundTag = checkMuonTag(i, false);
-
-                // Require the following on the probe.
-                if (foundTag) { foundMuTag = true; }
-                if (muonID(i, SS_veto_noiso_v5) == 0 && muonID(i, HAD_loose_v3) == 0 && foundTag == false) { continue; }
-                if (onlySaveTagProbePairs && foundTag == false) { continue; }
-
-                // Get the p4 for the muon.
-                p4 = tas::mus_p4().at(i);
-
-                // Dilepton variables in case a tag to this probe is found.
-                if (foundTag)
-                {
-                    dilep_p4 = p4 + tag_p4;
-                    dilep_mass = dilep_p4.M();
-                }
-                if (onlySaveTagProbePairs && (dilep_mass < 60 || dilep_mass > 120)) { continue; }
-
-                // At this point we save the lepton
-                if (verbose) { cout << "Saving this muon." << endl; }
-                savedMuP4s.push_back(p4);
-
-                // Set ID & Index for muons.
-                id = -13.0 * tas::mus_charge().at(i);
-                idx = i;
-
-                // Save truth information if it is a MC sample.
-                if (!evt_isRealData)
-                {
-                    motherID = lepMotherID(Lep(id, idx));
-                    mc_motherp4 = tas::mus_mc_motherp4().at(i);
-                    mc_p4 = tas::mus_mc_p4().at(i);
-                    mc_motherid = tas::mus_mc_motherid().at(i);
-                    mc_id = tas::mus_mc_id().at(i);
-                }
-
-                //Impact parameter
-                dxyPV = abs(id) == 11 ? tas::els_dxyPV().at(i) : tas::mus_dxyPV().at(i);
-                dxyPV_err = abs(id) == 11 ? tas::els_d0Err().at(i) : tas::mus_d0Err().at(i);
-                dZ = abs(id) == 11 ? tas::els_dzPV().at(i) : tas::mus_dzPV().at(i);
-                ip3d = tas::mus_ip3d().at(i);
-                ip3derr = tas::mus_ip3derr().at(i);
-
-                //Isolation et al
-                RelIso03 = (tas::mus_isoR03_pf_ChargedHadronPt().at(i) + tas::mus_isoR03_pf_NeutralHadronEt().at(i) + tas::mus_isoR03_pf_PhotonEt().at(i)) / tas::mus_p4().at(i).pt();
-                RelIso03EA = muRelIso03EA(i);
-                RelIso03DB = muRelIso03DB(i);
-                pfChargedHadronIso = tas::mus_isoR03_pf_ChargedHadronPt().at(i);
-                pfPhotonIso = tas::mus_isoR03_pf_PhotonEt().at(i);
-                pfNeutralHadronIso = tas::mus_isoR03_pf_NeutralHadronEt().at(i);
-                tkIso = tas::mus_iso03_sumPt().at(i);
-                sumPUPt = tas::mus_isoR03_pf_PUPt().at(i);
-                iso03sumPt = tas::mus_iso03_sumPt().at(i);
-                iso03emEt = tas::mus_iso03_emEt().at(i);
-                iso03hadEt = tas::mus_iso03_hadEt().at(i);
-                ptrelv0 = getPtRel(id, idx, false, ssWhichCorr);
-                ptrelv1 = getPtRel(id, idx, true, ssWhichCorr);
-                miniiso = muMiniRelIsoCMS3_EA(idx, ssEAversion);
-                miniisoDB = muMiniRelIsoCMS3_DB(idx);
-                int closeJetIdx = closestJetIdx(p4, 0.4, 3.0);
-                if (closeJetIdx >= 0)
-                {
-                    jet_close_lep_idx = closeJetIdx;
-                    jet_close_lep = tas::pfjets_p4().at(closeJetIdx);
-                    jet_close_lep_undoJEC = tas::pfjets_undoJEC().at(closeJetIdx);
-                    jet_close_lep_area = tas::pfjets_area().at(closeJetIdx);
-                    if (jetcorr_filenames_pfL1L2L3.size() > 0)
-                    {
-                        //L1
-                        jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
-                        jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-                        jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
-                        jet_corrector_pfL1->setRho(rho);
-                        jet_close_L1 = jet_corrector_pfL1->getCorrection();
-                        //L1, redo it with a different rho
-                        jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
-                        jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-                        jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
-                        jet_corrector_pfL1->setRho(rho_neut_centr);
-                        jet_close_L1nc = jet_corrector_pfL1->getCorrection();
-                        //L1, redo it with a different rho and MC correction file
-                        jet_corrector_pfL1MC->setJetEta(jet_close_lep.eta());
-                        jet_corrector_pfL1MC->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-                        jet_corrector_pfL1MC->setJetA(tas::pfjets_area().at(closeJetIdx));
-                        jet_corrector_pfL1MC->setRho(rho_neut_centr);
-                        jet_close_L1ncmc = jet_corrector_pfL1MC->getCorrection();
-                        //L1L2L3
-                        jet_corrector_pfL1L2L3->setJetEta(jet_close_lep.eta());
-                        jet_corrector_pfL1L2L3->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-                        jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
-                        jet_corrector_pfL1L2L3->setRho(rho);
-                        jet_close_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
-                        //L2L3
-                        LorentzVector raw_jet = jet_close_lep * tas::pfjets_undoJEC().at(closeJetIdx);
-                        jet_corrector_pfL2L3->setJetEta(raw_jet.eta());
-                        jet_corrector_pfL2L3->setJetPt(raw_jet.pt());
-                        jet_corrector_pfL2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
-                        jet_corrector_pfL2L3->setRho(rho);
-                        jet_close_L2L3 = jet_corrector_pfL2L3->getCorrection();
-                    }
-                }
-                ptratio = jet_close_lep.pt() > 0 ? p4.pt() / jet_close_lep.pt() : 1;
-                //MT
-                mt = MT(p4.pt(), p4.phi(), evt_pfmet, evt_pfmetPhi);
-                //Other muon Id
-                pid_PFMuon = tas::mus_pid_PFMuon().at(i);
-                gfit_chi2 = tas::mus_gfit_chi2().at(i);
-                // gfit_ndof = tas::mus_gfit_ndof().at(i);
-                gfit_validSTAHits = tas::mus_gfit_validSTAHits().at(i);
-                numberOfMatchedStations = tas::mus_numberOfMatchedStations().at(i);
-                validPixelHits = tas::mus_validPixelHits().at(i);
-                nlayers = tas::mus_nlayers().at(i);
-                type = tas::mus_type().at(i);
-                chi2LocalPosition = tas::mus_chi2LocalPosition().at(i);
-                trkKink = tas::mus_trkKink().at(i);
-                validHits = tas::mus_validHits().at(i);
-                lostHits = tas::mus_lostHits().at(i);
-                exp_innerlayers = tas::mus_exp_innerlayers().at(i);
-                exp_outerlayers = tas::mus_exp_outerlayers().at(i);
-                segmCompatibility = tas::mus_segmCompatibility().at(i);
-                if (addAnnulus)
-                {
-                    reliso04 = muRelIsoCustomCone(i, 0.4, true, 0.5, false, true);
-                    annulus04 = reliso04 - miniiso;
-                }
-                if (addPFCandidates || checkIsPFTrueFalse)
-                {
-                    int pfidx = isPFmuon(pfmuP4, pfmuIsReco, i);
-                    if (pfidx != -1)
-                    {
-                        isPF = true;
-                        AbsTrkIso = pfmuAbsTrkIso[pfidx]; // For this electron, save track iso produced earlier for PFmuon
-                        if (addAnnulus) { TrkAn04 = pfmuTrkAn04[pfidx]; }
-                    }
-                }
-                muID::setCache(idx, miniiso, ptratio, ptrelv1);
-                //Save SS ID bools
-                if (muonID(i, SS_tight_v3)) { passes_SS_tight_v3 = true; }
-                if (muonID(i, SS_tight_noiso_v3)) { passes_SS_tight_noiso_v3 = true; }
-                if (muonID(i, SS_fo_v3)) { passes_SS_fo_v3 = true; }
-                if (muonID(i, SS_fo_noiso_v3)) { passes_SS_fo_noiso_v3 = true; }
-                if (muonID(i, SS_veto_v3)) { passes_SS_veto_v3 = true; }
-                if (muonID(i, SS_veto_noiso_v3)) { passes_SS_veto_noiso_v3 = true; }
-                LorentzVector close_jet_v4 = closestJet(p4, 0.4, 3.0, 1);
-                float ptrel_v4 = ptRel(p4, close_jet_v4, true);
-                float ptratio_v4 = close_jet_v4.pt() > 0 ? p4.pt() / close_jet_v4.pt() : 1;
-                muID::unsetCache();
-                muID::setCache(idx, miniiso, ptratio_v4, ptrel_v4);
-                if (muonID(i, SS_tight_v4)) { passes_SS_tight_v4 = true; }
-                if (muonID(i, SS_tight_noiso_v4)) { passes_SS_tight_noiso_v4 = true; }
-                if (muonID(i, SS_fo_v4)) { passes_SS_fo_v4 = true; }
-                if (muonID(i, SS_fo_noiso_v4)) { passes_SS_fo_noiso_v4 = true; }
-                if (muonID(i, SS_veto_v4)) { passes_SS_veto_v4 = true; }
-                if (muonID(i, SS_veto_noiso_v4)) { passes_SS_veto_noiso_v4 = true; }
-                LorentzVector close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);
-                float ptrel_v5 = ptRel(p4, close_jet_v5, true);
-                float ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt() / close_jet_v5.pt() : 1;
-                muID::unsetCache();
-                muID::setCache(idx, miniiso, ptratio_v5, ptrel_v5);
-                if (muonID(i, SS_tight_v5)) { passes_SS_tight_v5 = true; }
-                if (muonID(i, SS_tight_noiso_v5)) { passes_SS_tight_noiso_v5 = true; }
-                if (muonID(i, SS_fo_v5)) { passes_SS_fo_v5 = true; }
-                if (muonID(i, SS_fo_noiso_v5)) { passes_SS_fo_noiso_v5 = true; }
-                if (muonID(i, SS_veto_v5)) { passes_SS_veto_v5 = true; }
-                if (muonID(i, SS_veto_noiso_v5)) { passes_SS_veto_noiso_v5 = true; }
-                muID::unsetCache();
-                muID::setCache(idx, miniiso, ptratio, ptrelv1);
-                //Save WW ID bools
-                if (muonID(i, WW_medium_v2)) { passes_WW_medium_v2 = true; }
-                if (muonID(i, WW_medium_noiso_v2)) { passes_WW_medium_noiso_v2 = true; }
-                if (muonID(i, WW_fo_v2)) { passes_WW_fo_v2 = true; }
-                if (muonID(i, WW_fo_noiso_v2)) { passes_WW_fo_noiso_v2 = true; }
-                if (muonID(i, WW_veto_v2)) { passes_WW_veto_v2 = true; }
-                if (muonID(i, WW_veto_noiso_v2)) { passes_WW_veto_noiso_v2 = true; }
-                //Save HAD ID bools
-                if (muonID(i, HAD_loose_v3)) { passes_HAD_loose_v3 = true; }
-                if (muonID(i, HAD_loose_noiso_v3)) { passes_HAD_loose_noiso_v3 = true; }
-                // Save VVV ID bools
-                if (muonID(i, VVV_cutbased_veto)) { passes_VVV_cutbased_veto = true; }
-                if (muonID(i, VVV_cutbased_veto_noiso)) { passes_VVV_cutbased_veto_noiso = true; }
-                if (muonID(i, VVV_cutbased_veto_noiso_noip)) { passes_VVV_cutbased_veto_noiso_noip = true; }
-                if (muonID(i, VVV_cutbased_fo)) { passes_VVV_cutbased_fo = true; }
-                if (muonID(i, VVV_cutbased_fo_noiso)) { passes_VVV_cutbased_fo_noiso = true; }
-                if (muonID(i, VVV_baseline)) { passes_VVV_baseline = true; }
-                if (muonID(i, VVV_cutbased_tight)) { passes_VVV_cutbased_tight = true; }
-                if (muonID(i, VVV_cutbased_tight_noiso)) { passes_VVV_cutbased_tight_noiso = true; }
-                //Save POG ID bools
-                if (isLooseMuonPOG(i)) { passes_POG_looseID = true; }
-                if (isMediumMuonPOG(i)) { passes_POG_mediumID = true; }
-                if (isTightMuonPOG(i)) { passes_POG_tightID = true; }
-                muID::unsetCache();
-                //Fill trigger branches
-                fillMuonTriggerBranches(p4, idx, false);
-                //Fill baby once per probe
-                BabyTree->Fill();
-            } //close muon loop
-
-            //Electron Loop
-            if (verbose) { cout << "Electron Loop" << endl; }
-            for (unsigned int i = 0; i < tas::els_p4().size(); i++)
-            {
-
-                // Require pT > 10 GeV
-                float maxPt = 10.;
-                if (recoLeptonsDownTo5GeV) { maxPt = 5.; }
-                if (recoLeptonsDownTo20GeV) { maxPt = 20.; }
-                if (tas::els_p4().at(i).pt() <= maxPt) { continue; }
-
-                InitLeptonBranches();
-
-                //Check for a tag
-                bool foundTag = checkElectronTag(i, v25nsMVAreader);
-
-                // Require the following on the probe.
-                if (foundTag) { foundElTag = true; }
-                //Save the electron if we have a tag OR if it passes loose ID
-                if (electronID(i, SS_veto_noiso_v4) == 0 && electronID(i, HAD_veto_v3) == 0 && foundTag == false) { continue; }
-                if (onlySaveTagProbePairs && foundTag == false) { continue; }
-
-                // Get the p4 for the electron.
-                p4 = tas::els_p4().at(i);
-
-                //Dilepton stuff
-                if (foundTag)
-                {
-                    dilep_p4 = p4 + tag_p4;
-                    dilep_mass = dilep_p4.M();
-                }
-                if (onlySaveTagProbePairs && (dilep_mass < 60 || dilep_mass > 120)) { continue; }
-
-                // At this point we save the lepton
-                if (verbose) { cout << "Saving this electron: pt/eta/phi " << p4.pt() << "/" << p4.eta() << "/" << p4.phi() << endl; }
-                savedElP4s.push_back(p4);
-
-                // Set ID & idx for electron
-                id = -11.0 * tas::els_charge().at(i);
-                idx = i;
-
-                // Save truth information if it is a MC sample.
-                if (!evt_isRealData)
-                {
-                    mc_p4 = tas::els_mc_p4().at(i);
-                    mc_id = tas::els_mc_id().at(i);
-                }
-
-                //Impact Parameter
-                dxyPV = abs(id) == 11 ? tas::els_dxyPV().at(i) : tas::mus_dxyPV().at(i);
-                dxyPV_err = abs(id) == 11 ? tas::els_d0Err().at(i) : tas::mus_d0Err().at(i);
-                dZ = abs(id) == 11 ? tas::els_dzPV().at(i) : tas::mus_dzPV().at(i);
-                ip3d = tas::els_ip3d().at(i);
-                ip3derr = tas::els_ip3derr().at(i);
-
-                //Isolation et al
-                RelIso03 = (tas::els_pfChargedHadronIso().at(i) + tas::els_pfNeutralHadronIso().at(i) + tas::els_pfPhotonIso().at(i)) / tas::els_p4().at(i).pt();
-                RelIso03EA = eleRelIso03EA(i);
-                RelIso03DB = eleRelIso03DB(i);
-                pfChargedHadronIso = tas::els_pfChargedHadronIso().at(i);
-                pfPhotonIso = tas::els_pfPhotonIso().at(i);
-                pfNeutralHadronIso = tas::els_pfNeutralHadronIso().at(i);
-                tkIso = tas::els_tkIso().at(i);
-                ptrelv0 = getPtRel(id, idx, false, ssWhichCorr);
-                ptrelv1 = getPtRel(id, idx, true, ssWhichCorr);
-                if (verbose) { cout << "About to correct jets for this electron" << endl; }
-                int closeJetIdx = closestJetIdx(p4, 0.4, 3.0);
-                if (closeJetIdx >= 0)
-                {
-                    jet_close_lep_idx = closeJetIdx;
-                    jet_close_lep = tas::pfjets_p4().at(closeJetIdx);
-                    jet_close_lep_undoJEC = tas::pfjets_undoJEC().at(closeJetIdx);
-                    jet_close_lep_area = tas::pfjets_area().at(closeJetIdx);
-                    if (jetcorr_filenames_pfL1L2L3.size() > 0)
-                    {
-                        //L1
-                        jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
-                        jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-                        jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
-                        jet_corrector_pfL1->setRho(rho);
-                        jet_close_L1 = jet_corrector_pfL1->getCorrection();
-                        //L1, redo it with a different rho
-                        jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
-                        jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-                        jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
-                        jet_corrector_pfL1->setRho(rho_neut_centr);
-                        jet_close_L1nc = jet_corrector_pfL1->getCorrection();
-                        //L1, redo it with a different rho and MC correction file
-                        jet_corrector_pfL1MC->setJetEta(jet_close_lep.eta());
-                        jet_corrector_pfL1MC->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-                        jet_corrector_pfL1MC->setJetA(tas::pfjets_area().at(closeJetIdx));
-                        jet_corrector_pfL1MC->setRho(rho_neut_centr);
-                        jet_close_L1ncmc = jet_corrector_pfL1MC->getCorrection();
-                        //L1L2L3
-                        jet_corrector_pfL1L2L3->setJetEta(jet_close_lep.eta());
-                        jet_corrector_pfL1L2L3->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
-                        jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
-                        jet_corrector_pfL1L2L3->setRho(rho);
-                        jet_close_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
-                        //L2L3
-                        LorentzVector raw_jet = jet_close_lep * tas::pfjets_undoJEC().at(closeJetIdx);
-                        jet_corrector_pfL2L3->setJetEta(raw_jet.eta());
-                        jet_corrector_pfL2L3->setJetPt(raw_jet.pt());
-                        jet_corrector_pfL2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
-                        jet_corrector_pfL2L3->setRho(rho);
-                        jet_close_L2L3 = jet_corrector_pfL2L3->getCorrection();
-                    }
-                }
-                if (verbose) { cout << "Finished jet corrections" << endl; }
-                ptratio = (jet_close_lep.pt() > 0. ? p4.pt() / jet_close_lep.pt() : 1.);
-                miniiso = elMiniRelIsoCMS3_EA(idx, ssEAversion);
-                miniisoDB = elMiniRelIsoCMS3_DB(idx);
-                //MT
-                mt = MT(p4.pt(), p4.phi(), evt_pfmet, evt_pfmetPhi);
-                //Other Electron ID stuff
-                sumPUPt = tas::els_pfPUIso().at(i);
-                sigmaIEtaIEta_full5x5 = tas::els_sigmaIEtaIEta_full5x5().at(i);
-                etaSC = tas::els_etaSC().at(i);
-                dEtaIn = tas::els_dEtaIn().at(i);
-                dPhiIn = tas::els_dPhiIn().at(i);
-                hOverE = tas::els_hOverE().at(i);
-                ecalEnergy = tas::els_ecalEnergy().at(i);
-                eOverPIn = tas::els_eOverPIn().at(i);
-                conv_vtx_flag = tas::els_conv_vtx_flag().at(i);
-                exp_innerlayers = tas::els_exp_innerlayers().at(i);
-                exp_outerlayers = tas::els_exp_outerlayers().at(i);
-                charge = tas::els_charge().at(i);
-                sccharge = tas::els_sccharge().at(i);
-                ckf_charge = tas::els_ckf_charge().at(i);
-                trk_charge = tas::els_trk_charge().at(i);
-                threeChargeAgree_branch = threeChargeAgree(i);
-                mva = getMVAoutput(i);
-                mva_25ns = v25nsMVAreader->MVA(i);
-                type = tas::els_type().at(i);
-                ecalIso = tas::els_ecalIso().at(i);
-                hcalIso = tas::els_hcalIso().at(i);
-                sigmaIEtaIEta = tas::els_sigmaIEtaIEta().at(i);
-                ecalPFClusterIso = tas::els_ecalPFClusterIso().at(i);
-                hcalPFClusterIso = tas::els_hcalPFClusterIso().at(i);
-                ckf_laywithmeas = tas::els_ckf_laywithmeas().at(i);
-                sigmaIPhiIPhi_full5x5 = tas::els_sigmaIPhiIPhi_full5x5().at(i);
-                e1x5_full5x5 = tas::els_e1x5_full5x5().at(i);
-                e5x5_full5x5 = tas::els_e5x5_full5x5().at(i);
-                r9_full5x5 = tas::els_r9_full5x5().at(i);
-                etaSCwidth = tas::els_etaSCwidth().at(i);
-                phiSCwidth = tas::els_phiSCwidth().at(i);
-                eSeed = tas::els_eSeed().at(i);
-                scSeedEta = tas::els_scSeedEta().at(i);
-                eSCRaw = tas::els_eSCRaw().at(i);
-                eSC = tas::els_eSC().at(i);
-                eSCPresh = tas::els_eSCPresh().at(i);
-                ckf_chi2 = tas::els_ckf_chi2().at(i);
-                ckf_ndof = tas::els_ckf_ndof().at(i);
-                chi2 = tas::els_chi2().at(i);
-                ndof = tas::els_ndof().at(i);
-                fbrem = tas::els_fbrem().at(i);
-                eOverPOut = tas::els_eOverPOut().at(i);
-                dEtaOut = tas::els_dEtaOut().at(i);
-                dPhiOut = tas::els_dPhiOut().at(i);
-                gsf_validHits = tas::els_validHits().at(i);
-                conv_vtx_prob = tas::els_conv_vtx_prob().at(i);
-                if (addAnnulus)
-                {
-                    reliso04 = elRelIsoCustomCone(i, 0.4, true, 0.0, false, true);
-                    annulus04 = reliso04 - miniiso;
-                }
-                if (addPFCandidates || checkIsPFTrueFalse)
-                {
-                    int pfidx = isPFelectron(pfelP4, pfelIsReco, i);
-                    if (pfidx != -1)
-                    {
-                        isPF = true;
-                        AbsTrkIso = pfelAbsTrkIso[pfidx]; // For this electron, save track iso produced earlier for PFmuon
-                        if (addAnnulus) { TrkAn04 = pfelTrkAn04[pfidx]; }
-                    }
-                }
-                elID::setCache(idx, mva, miniiso, ptratio, ptrelv1);
-                if (verbose) { cout << "Starting electron IDs" << endl; }
-                //Save SS ID bools
-                if (electronID(i, SS_medium_v3)) { passes_SS_tight_v3 = true; }
-                if (electronID(i, SS_medium_noiso_v3)) { passes_SS_tight_noiso_v3 = true; }
-                if (electronID(i, SS_fo_v3)) { passes_SS_fo_v3 = true; }
-                if (electronID(i, SS_fo_noiso_v3)) { passes_SS_fo_noiso_v3 = true; }
-                if (electronID(i, SS_fo_looseMVA_v3)) { passes_SS_fo_looseMVA_v3 = true; }
-                if (electronID(i, SS_fo_looseMVA_noiso_v3)) { passes_SS_fo_looseMVA_noiso_v3 = true; }
-                if (electronID(i, SS_veto_v3)) { passes_SS_veto_v3 = true; }
-                if (electronID(i, SS_veto_noiso_v3)) { passes_SS_veto_noiso_v3 = true; }
-                LorentzVector close_jet_v4 = closestJet(p4, 0.4, 3.0, 1);
-                float ptrel_v4 = ptRel(p4, close_jet_v4, true);
-                float ptratio_v4 = close_jet_v4.pt() > 0 ? p4.pt() / close_jet_v4.pt() : 1;
-                elID::unsetCache();
-                elID::setCache(idx, mva_25ns, miniiso, ptratio_v4, ptrel_v4);
-                if (electronID(i, SS_medium_v4)) { passes_SS_tight_v4 = true; }
-                if (electronID(i, SS_medium_noiso_v4)) { passes_SS_tight_noiso_v4 = true; }
-                if (electronID(i, SS_fo_v4)) { passes_SS_fo_v4 = true; }
-                if (electronID(i, SS_fo_noiso_v4)) { passes_SS_fo_noiso_v4 = true; }
-                if (electronID(i, SS_fo_looseMVA_v4)) { passes_SS_fo_looseMVA_v4 = true; }
-                if (electronID(i, SS_fo_looseMVA_noiso_v4)) { passes_SS_fo_looseMVA_noiso_v4 = true; }
-                if (electronID(i, SS_veto_v4)) { passes_SS_veto_v4 = true; }
-                if (electronID(i, SS_veto_noiso_v4)) { passes_SS_veto_noiso_v4 = true; }
-                LorentzVector close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);
-                float ptrel_v5 = ptRel(p4, close_jet_v5, true);
-                float ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt() / close_jet_v5.pt() : 1;
-                elID::unsetCache();
-                elID::setCache(idx, mva_25ns, miniiso, ptratio_v5, ptrel_v5);
-                if (electronID(i, SS_medium_v5)) { passes_SS_tight_v5 = true; }
-                if (electronID(i, SS_medium_noiso_v5)) { passes_SS_tight_noiso_v5 = true; }
-                if (electronID(i, SS_fo_v5)) { passes_SS_fo_v5 = true; }
-                if (electronID(i, SS_fo_noiso_v5)) { passes_SS_fo_noiso_v5 = true; }
-                if (electronID(i, SS_fo_looseMVA_v5)) { passes_SS_fo_looseMVA_v5 = true; }
-                if (electronID(i, SS_fo_looseMVA_noiso_v5)) { passes_SS_fo_looseMVA_noiso_v5 = true; }
-                if (electronID(i, SS_veto_v5)) { passes_SS_veto_v5 = true; }
-                if (electronID(i, SS_veto_noiso_v5)) { passes_SS_veto_noiso_v5 = true; }
-                if (verbose) { cout << "Done SS IDs" << endl; }
-                elID::unsetCache();
-                elID::setCache(idx, mva, miniiso, ptratio, ptrelv1);
-                //Save WW ID bools
-                if (electronID(i, WW_medium_v2)) { passes_WW_medium_v2 = true; }
-                if (electronID(i, WW_medium_noiso_v2)) { passes_WW_medium_noiso_v2 = true; }
-                if (electronID(i, WW_fo_v2)) { passes_WW_fo_v2 = true; }
-                if (electronID(i, WW_fo_noiso_v2)) { passes_WW_fo_noiso_v2 = true; }
-                if (electronID(i, WW_veto_v2)) { passes_WW_veto_v2 = true; }
-                if (electronID(i, WW_veto_noiso_v2)) { passes_WW_veto_noiso_v2 = true; }
-                //Save HAD ID bools
-                if (electronID(i, HAD_veto_v3)) { passes_HAD_veto_v3 = true; }
-                if (electronID(i, HAD_veto_noiso_v3)) { passes_HAD_veto_noiso_v3 = true; }
-                if (electronID(i, HAD_loose_v3)) { passes_HAD_loose_v3 = true; }
-                if (electronID(i, HAD_loose_noiso_v3)) { passes_HAD_loose_noiso_v3 = true; }
-                if (verbose) { cout << "Done WW and HAD IDs" << endl; }
-                // Save WWW ID bools
-                if (electronID(i, VVV_cutbased_veto_bak1)) { passes_VVV_cutbased_veto_bak1 = true; }
-                if (electronID(i, VVV_cutbased_veto_noiso_bak1)) { passes_VVV_cutbased_veto_noiso_bak1 = true; }
-                if (electronID(i, VVV_cutbased_veto_noiso_noip_bak1)) { passes_VVV_cutbased_veto_noiso_noip_bak1 = true; }
-                if (electronID(i, VVV_cutbased_veto)) { passes_VVV_cutbased_veto = true; }
-                if (electronID(i, VVV_cutbased_veto_noiso)) { passes_VVV_cutbased_veto_noiso = true; }
-                if (electronID(i, VVV_cutbased_veto_noiso_noip)) { passes_VVV_cutbased_veto_noiso_noip = true; }
-                if (electronID(i, VVV_cutbased_fo)) { passes_VVV_cutbased_fo = true; }
-                if (electronID(i, VVV_cutbased_fo_noiso)) { passes_VVV_cutbased_fo_noiso = true; }
-                if (electronID(i, VVV_baseline)) { passes_VVV_baseline = true; }
-                if (electronID(i, VVV_MVAbased_tight)) { passes_VVV_MVAbased_tight = true; }
-                if (electronID(i, VVV_MVAbased_tight_noiso)) { passes_VVV_MVAbased_tight_noiso = true; }
-                if (electronID(i, VVV_cutbased_tight)) { passes_VVV_cutbased_tight = true; }
-                if (electronID(i, VVV_cutbased_tight_noiso)) { passes_VVV_cutbased_tight_noiso = true; }
-                //Save POG ID bools
-                if (tas::els_passVetoId().at(i)) { passes_POG_vetoID = true; }
-                if (tas::els_passLooseId().at(i)) { passes_POG_looseID = true; }
-                if (tas::els_passMediumId().at(i)) { passes_POG_mediumID = true; }
-                if (tas::els_passTightId().at(i)) { passes_POG_tightID = true; }
-                if (verbose) { cout << "Done POG IDs" << endl; }
-                elID::unsetCache();
-                if (verbose) { cout << "Some MC properties" << endl; }
-                if (!evt_isRealData)
-                {
-                    motherID = lepMotherID(Lep(id, idx));
-                    mc_motherp4 = tas::els_mc_motherp4().at(i);
-                    mc_motherid = tas::els_mc_motherid().at(i);
-                }
-                //Triggers
-                if (verbose) { cout << "Electron triggers" << endl; }
-                fillElectronTriggerBranches(p4, idx, false);
-                if (verbose) { cout << "Saving electron branches" << endl; }
-                //Fill tree once per tag
-                BabyTree->Fill();
-                if (verbose) { cout << "Finished electron" << endl; }
-            }
-
-            ////////// Addition of PF LEPTONS that were not included before //////////////////
-            // check if anything needs to be done:
-            // - compare size of pfelp4 with probeelp4, and same for muons
-            // - check whether there is a muon/electron tag
-            // if something to be done, then we need to save the pflepton as well as tag properties and triggers...
-
-            // Variables to keep track of PFElectrons and PFMuons.
-            // We would like to save PFleptons if they don't overlap with something we've already saved.
-            // If they do overlap, we want to save the fact that they overlap.
-            // Load the pflepton p4s in memory, we'll have to check them on each lepton.
-            for (unsigned int i = 0; i < tas::pfcands_p4().size(); i++)
-            {
-                if (fabs(tas::pfcands_particleId().at(i)) != 11 && fabs(tas::pfcands_particleId().at(i)) != 13) { continue; }
-                if (tas::pfcands_p4().at(i).pt() < 5) { continue; }
-                if (fabs(tas::pfcands_dz().at(i)) > 0.1) { continue; }
-                if (fabs(tas::pfcands_p4().at(i).eta()) > 2.5) { continue; }
-                if (fabs(tas::pfcands_particleId().at(i)) == 11)
-                {
-                    pfelidx.push_back(i);
-                    pfelP4.push_back(tas::pfcands_p4().at(i));
-                    pfelIsReco.push_back(false);
-                    pfelAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
-                    pfelTrkAn04.push_back(PFCandRelIsoAn04(i));
-                }
-                else if (fabs(tas::pfcands_particleId().at(i)) == 13)
-                {
-                    pfmuidx.push_back(i);
-                    pfmuP4.push_back(tas::pfcands_p4().at(i));
-                    pfmuIsReco.push_back(false);
-                    pfmuAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
-                    pfmuTrkAn04.push_back(PFCandRelIsoAn04(i));
-                }
-                continue;
-            }
-
-            if (verbose) { cout << "Addition of PF LEPTONS that were not included before" << endl; }
-            bool addPFel = false;
-            bool addPFmu = false;
-            if (foundElTag && savedElP4s.size() != pfelP4.size()) { addPFel = true; }
-            if (foundMuTag && savedMuP4s.size() != pfmuP4.size()) { addPFmu = true; }
-            if (addPFel && addPFCandidates)
-            {
-                for (unsigned int i = 0; i < pfelP4.size(); i++)
-                {
-                    if (pfelIsReco[i]) { continue; }
-                    InitLeptonBranches();
-                    // set the tag branches (-1 means we are happy if any reco electron is a tag)
-                    // checkElectronTag( -1 , 0);
-                    checkElectronTag(-1, v25nsMVAreader);
-                    // now let's look at our electron
-                    int pfidx = pfelidx[i];
-                    p4 = pfelP4[i];
-                    id = tas::pfcands_particleId().at(pfidx);
-                    isPF = true; // that's why we're here!
-                    if (id > 0) { id = 1011; }
-                    else { id = -1011; }
-                    dZ = tas::pfcands_dz().at(pfidx);
-                    charge = tas::pfcands_charge().at(pfidx);
-                    AbsTrkIso = pfelAbsTrkIso[i]; // For this muon, save track iso produced earlier for PFmuon
-                    TrkAn04 = pfelTrkAn04[i];
-                    if (!evt_isRealData) { motherID = pfLepMotherID(pfidx); }
-                    dilep_p4 = p4 + tag_p4;
-                    dilep_mass = dilep_p4.M();
-                    fillElectronTriggerBranches(p4, -1, false);
-                    BabyTree->Fill();
-                }
-            } // addPFel
-
-            if (addPFmu && addPFCandidates)
-            {
-                for (unsigned int i = 0; i < pfmuP4.size(); i++)
-                {
-                    if (pfmuIsReco[i]) { continue; }
-                    InitLeptonBranches();
-                    // set the tag branches (-1 means we are happy if any reco electron is a tag)
-                    checkMuonTag(-1);
-                    // now let's look at our electron
-                    int pfidx = pfmuidx[i];
-                    p4 = pfmuP4[i];
-                    id = tas::pfcands_particleId().at(pfidx);
-                    isPF = true; // that's why we're here!
-                    if (id > 0) { id = 1013; }
-                    else { id = -1013; }
-                    dZ = tas::pfcands_dz().at(pfidx);
-                    charge = tas::pfcands_charge().at(pfidx);
-                    AbsTrkIso = pfmuAbsTrkIso[i]; // For this muon, save track iso produced earlier for PFmuon
-                    TrkAn04 = pfmuTrkAn04[i];
-                    if (!evt_isRealData) { motherID = pfLepMotherID(pfidx); }
-                    dilep_p4 = p4 + tag_p4;
-                    dilep_mass = dilep_p4.M();
-                    fillMuonTriggerBranches(p4, -1, false);
-                    BabyTree->Fill();
-                }
-            } // addPFmu
-
-        } //close event loop
-        file->Close();
-        delete file;
-        cout << "\nFile done" << endl;
-    } //close file loop
-    cout << "\nWriting file" << endl;
-    BabyFile->cd();
-    BabyTree->Write();
-    BabyFile->Close();
-    return 0;
-}
+bool recoLeptonsDownTo20GeV = false; // Default is false (meaning 1 GeV)
+bool onlySaveTagProbePairs = false; // Default is false
+bool applyJson = true; // default is true
+bool skipEventsMoreFO = false; // default is false, true will skip events with nFOs_SS>1 # XXX NOTE
 
 //Main functions
-//___________________________________________________________________________________________________________________________________________
-void babyMaker::MakeBabyNtuple(const char* output_name)
-{
-    //Create Baby
-    BabyFile = new TFile(Form("%s/%s", path.c_str(), output_name), "RECREATE");
-    BabyFile->cd();
-    BabyTree = new TTree("t", "Lepton Baby Ntuple");
-    //General
-    BabyTree->Branch("evt_pfmet", &evt_pfmet);
-    BabyTree->Branch("evt_pfmetPhi", &evt_pfmetPhi);
-    BabyTree->Branch("evt_trackmet", &evt_trackmet);
-    BabyTree->Branch("evt_trackmetPhi", &evt_trackmetPhi);
-    BabyTree->Branch("evt_corrMET", &evt_corrMET);
-    BabyTree->Branch("evt_corrMETPhi", &evt_corrMETPhi);
-    BabyTree->Branch("evt_pfsumet", &evt_pfsumet);
-    BabyTree->Branch("evt_pfmetSig", &evt_pfmetSig);
-    BabyTree->Branch("evt_event", &evt_event);
-    BabyTree->Branch("evt_lumiBlock", &evt_lumiBlock);
-    BabyTree->Branch("evt_run", &evt_run);
-    BabyTree->Branch("filt_csc", &filt_csc);
-    BabyTree->Branch("filt_hbhe", &filt_hbhe);
-    BabyTree->Branch("passes_met_filters", &passes_met_filters);
-    BabyTree->Branch("filt_hcallaser", &filt_hcallaser);
-    BabyTree->Branch("filt_ecaltp", &filt_ecaltp);
-    BabyTree->Branch("filt_trkfail", &filt_trkfail);
-    BabyTree->Branch("filt_eebadsc", &filt_eebadsc);
-    BabyTree->Branch("evt_isRealData", &evt_isRealData);
-    BabyTree->Branch("scale1fb", &scale1fb);
-    BabyTree->Branch("evt_xsec_incl", &evt_xsec_incl);
-    BabyTree->Branch("evt_kfactor", &evt_kfactor);
-    BabyTree->Branch("gen_met", &gen_met);
-    BabyTree->Branch("gen_metPhi", &gen_metPhi);
-    BabyTree->Branch("njets", &njets);
-    BabyTree->Branch("ht", &ht);
-    BabyTree->Branch("ht_SS", &ht_SS);
-    BabyTree->Branch("jets", &jets);
-    BabyTree->Branch("jets_disc", &jets_disc);
-    BabyTree->Branch("jets_area", &jets_area);
-    BabyTree->Branch("jets_undoJEC", &jets_undoJEC);
-    BabyTree->Branch("sample", &sample);
-    BabyTree->Branch("nFOs_SS", &nFOs_SS);
-    BabyTree->Branch("nvtx", &nvtx);
-    BabyTree->Branch("rho", &rho);
-    BabyTree->Branch("rho_neut_centr", &rho_neut_centr);
-    BabyTree->Branch("rho_calo", &rho_calo);
-    BabyTree->Branch("rho_calo_centr", &rho_calo_centr);
-    //All leptons
-    BabyTree->Branch("p4", &p4);
-    BabyTree->Branch("tag_p4", &tag_p4);
-    BabyTree->Branch("dilep_p4", &dilep_p4);
-    BabyTree->Branch("mc_p4", &mc_p4);
-    BabyTree->Branch("mc_motherp4", &mc_motherp4);
-    BabyTree->Branch("mc_motherid", &mc_motherid);
-    BabyTree->Branch("id", &id);
-    BabyTree->Branch("isPF", &isPF);
-    BabyTree->Branch("idx", &idx);
-    BabyTree->Branch("dxyPV", &dxyPV);
-    BabyTree->Branch("dZ", &dZ);
-    BabyTree->Branch("dxyPV_err", &dxyPV_err);
-    BabyTree->Branch("motherID", &motherID);
-    BabyTree->Branch("mc_id", &mc_id);
-    BabyTree->Branch("RelIso03", &RelIso03);
-    BabyTree->Branch("RelIso03EA", &RelIso03EA);
-    BabyTree->Branch("tag_RelIso03EA", &tag_RelIso03EA);
-    BabyTree->Branch("RelIso03DB", &RelIso03DB);
-    BabyTree->Branch("pfChargedHadronIso", &pfChargedHadronIso);
-    BabyTree->Branch("pfPhotonIso", &pfPhotonIso);
-    BabyTree->Branch("pfNeutralHadronIso", &pfNeutralHadronIso);
-    BabyTree->Branch("tkIso", &tkIso);
-    BabyTree->Branch("sumPUPt", &sumPUPt);
-    BabyTree->Branch("passes_SS_tight_v3", &passes_SS_tight_v3);
-    BabyTree->Branch("passes_SS_tight_noiso_v3", &passes_SS_tight_noiso_v3);
-    BabyTree->Branch("passes_SS_fo_v3", &passes_SS_fo_v3);
-    BabyTree->Branch("passes_SS_fo_noiso_v3", &passes_SS_fo_noiso_v3);
-    BabyTree->Branch("passes_SS_fo_looseMVA_v3", &passes_SS_fo_looseMVA_v3);
-    BabyTree->Branch("passes_SS_fo_looseMVA_noiso_v3", &passes_SS_fo_looseMVA_noiso_v3);
-    BabyTree->Branch("passes_SS_veto_v3", &passes_SS_veto_v3);
-    BabyTree->Branch("passes_SS_veto_noiso_v3", &passes_SS_veto_noiso_v3);
-    BabyTree->Branch("passes_SS_tight_v4", &passes_SS_tight_v4);
-    BabyTree->Branch("passes_SS_tight_noiso_v4", &passes_SS_tight_noiso_v4);
-    BabyTree->Branch("passes_SS_fo_v4", &passes_SS_fo_v4);
-    BabyTree->Branch("passes_SS_fo_noiso_v4", &passes_SS_fo_noiso_v4);
-    BabyTree->Branch("passes_SS_fo_looseMVA_v4", &passes_SS_fo_looseMVA_v4);
-    BabyTree->Branch("passes_SS_fo_looseMVA_noiso_v4", &passes_SS_fo_looseMVA_noiso_v4);
-    BabyTree->Branch("passes_SS_veto_v4", &passes_SS_veto_v4);
-    BabyTree->Branch("passes_SS_veto_noiso_v4", &passes_SS_veto_noiso_v4);
-    BabyTree->Branch("passes_SS_tight_v5", &passes_SS_tight_v5);
-    BabyTree->Branch("passes_SS_tight_noiso_v5", &passes_SS_tight_noiso_v5);
-    BabyTree->Branch("passes_SS_fo_v5", &passes_SS_fo_v5);
-    BabyTree->Branch("passes_SS_fo_noiso_v5", &passes_SS_fo_noiso_v5);
-    BabyTree->Branch("passes_SS_fo_looseMVA_v5", &passes_SS_fo_looseMVA_v5);
-    BabyTree->Branch("passes_SS_fo_looseMVA_noiso_v5", &passes_SS_fo_looseMVA_noiso_v5);
-    BabyTree->Branch("passes_SS_veto_v5", &passes_SS_veto_v5);
-    BabyTree->Branch("passes_SS_veto_noiso_v5", &passes_SS_veto_noiso_v5);
-    BabyTree->Branch("passes_WW_medium_v2", &passes_WW_medium_v2);
-    BabyTree->Branch("passes_WW_medium_noiso_v2", &passes_WW_medium_noiso_v2);
-    BabyTree->Branch("passes_WW_fo_v2", &passes_WW_fo_v2);
-    BabyTree->Branch("passes_WW_fo_noiso_v2", &passes_WW_fo_noiso_v2);
-    BabyTree->Branch("passes_WW_veto_v2", &passes_WW_veto_v2);
-    BabyTree->Branch("passes_WW_veto_noiso_v2", &passes_WW_veto_noiso_v2);
-    BabyTree->Branch("passes_HAD_veto_v3", &passes_HAD_veto_v3);
-    BabyTree->Branch("passes_HAD_veto_noiso_v3", &passes_HAD_veto_noiso_v3);
-    BabyTree->Branch("passes_HAD_loose_v3", &passes_HAD_loose_v3);
-    BabyTree->Branch("passes_HAD_loose_noiso_v3", &passes_HAD_loose_noiso_v3);
-    BabyTree->Branch("passes_VVV_cutbased_veto_bak1", &passes_VVV_cutbased_veto_bak1);
-    BabyTree->Branch("passes_VVV_cutbased_veto_noiso_bak1", &passes_VVV_cutbased_veto_noiso_bak1);
-    BabyTree->Branch("passes_VVV_cutbased_veto_noiso_noip_bak1", &passes_VVV_cutbased_veto_noiso_noip_bak1);
-    BabyTree->Branch("passes_VVV_cutbased_veto", &passes_VVV_cutbased_veto);
-    BabyTree->Branch("passes_VVV_cutbased_veto_noiso", &passes_VVV_cutbased_veto_noiso);
-    BabyTree->Branch("passes_VVV_cutbased_veto_noiso_noip", &passes_VVV_cutbased_veto_noiso_noip);
-    BabyTree->Branch("passes_VVV_cutbased_fo", &passes_VVV_cutbased_fo);
-    BabyTree->Branch("passes_VVV_cutbased_fo_noiso", &passes_VVV_cutbased_fo_noiso);
-    BabyTree->Branch("passes_VVV_baseline", &passes_VVV_baseline);
-    BabyTree->Branch("passes_VVV_MVAbased_tight", &passes_VVV_MVAbased_tight);
-    BabyTree->Branch("passes_VVV_MVAbased_tight_noiso", &passes_VVV_MVAbased_tight_noiso);
-    BabyTree->Branch("passes_VVV_cutbased_tight", &passes_VVV_cutbased_tight);
-    BabyTree->Branch("passes_VVV_cutbased_tight_noiso", &passes_VVV_cutbased_tight_noiso);
-    BabyTree->Branch("passes_POG_vetoID", &passes_POG_vetoID);
-    BabyTree->Branch("passes_POG_looseID", &passes_POG_looseID);
-    BabyTree->Branch("passes_POG_mediumID", &passes_POG_mediumID);
-    BabyTree->Branch("passes_POG_tightID", &passes_POG_tightID);
-    BabyTree->Branch("ip3d", &ip3d);
-    BabyTree->Branch("ip3derr", &ip3derr);
-    BabyTree->Branch("type", &type);
-    BabyTree->Branch("mt", &mt);
-    BabyTree->Branch("ptrelv0", &ptrelv0);
-    BabyTree->Branch("ptrelv1", &ptrelv1);
-    BabyTree->Branch("miniiso", &miniiso);
-    BabyTree->Branch("miniisoDB", &miniisoDB);
-    BabyTree->Branch("reliso04", &reliso04);
-    BabyTree->Branch("annulus04", &annulus04);
-    BabyTree->Branch("AbsTrkIso", &AbsTrkIso);
-    BabyTree->Branch("TrkAn04", &TrkAn04);
-    BabyTree->Branch("iso03sumPt", &iso03sumPt);
-    BabyTree->Branch("iso03emEt", &iso03emEt);
-    BabyTree->Branch("iso03hadEt", &iso03hadEt);
-    BabyTree->Branch("jet_close_lep_idx", &jet_close_lep_idx);
-    BabyTree->Branch("jet_close_lep", &jet_close_lep);
-    BabyTree->Branch("jet_close_lep_undoJEC", &jet_close_lep_undoJEC);
-    BabyTree->Branch("jet_close_lep_area", &jet_close_lep_area);
-    BabyTree->Branch("jet_close_L1", &jet_close_L1);
-    BabyTree->Branch("jet_close_L1nc", &jet_close_L1nc);
-    BabyTree->Branch("jet_close_L1ncmc", &jet_close_L1ncmc);
-    BabyTree->Branch("jet_close_L1L2L3", &jet_close_L1L2L3);
-    BabyTree->Branch("jet_close_L2L3", &jet_close_L2L3);
-    BabyTree->Branch("ptratio", &ptratio);
-    BabyTree->Branch("tag_charge", &tag_charge);
-    BabyTree->Branch("tag_mc_motherid", &tag_mc_motherid);
-    BabyTree->Branch("tag_eSeed", &tag_eSeed);
-    BabyTree->Branch("tag_eSCRaw", &tag_eSCRaw);
-    BabyTree->Branch("tag_eSC", &tag_eSC);
-    BabyTree->Branch("tag_ecalEnergy", &tag_ecalEnergy);
-    BabyTree->Branch("exp_innerlayers", &exp_innerlayers);
-    BabyTree->Branch("exp_outerlayers", &exp_outerlayers);
-    //Tag triggers
-    BabyTree->Branch("tag_HLT_Ele27_eta2p1_WPTight_Gsf", &tag_HLT_Ele27_eta2p1_WPTight_Gsf);
-    BabyTree->Branch("tag_HLT_Ele32_eta2p1_WPTight_Gsf", &tag_HLT_Ele32_eta2p1_WPTight_Gsf);
-    BabyTree->Branch("tag_HLT_IsoMu24", &tag_HLT_IsoMu24);
-    BabyTree->Branch("tag_HLT_IsoTkMu24", &tag_HLT_IsoTkMu24);
-    BabyTree->Branch("dilep_mass", &dilep_mass);
-    BabyTree->Branch("isRandom", &isRandom);
-    //Electrons
-    BabyTree->Branch("sigmaIEtaIEta_full5x5", &sigmaIEtaIEta_full5x5);
-    BabyTree->Branch("sigmaIEtaIEta", &sigmaIEtaIEta);
-    BabyTree->Branch("etaSC", &etaSC);
-    BabyTree->Branch("dEtaIn", &dEtaIn);
-    BabyTree->Branch("dPhiIn", &dPhiIn);
-    BabyTree->Branch("hOverE", &hOverE);
-    BabyTree->Branch("eSeed", &eSeed);
-    BabyTree->Branch("scSeedEta", &scSeedEta);
-    BabyTree->Branch("ecalEnergy", &ecalEnergy);
-    BabyTree->Branch("eOverPIn", &eOverPIn);
-    BabyTree->Branch("conv_vtx_flag", &conv_vtx_flag);
-    BabyTree->Branch("charge", &charge);
-    BabyTree->Branch("sccharge", &sccharge);
-    BabyTree->Branch("ckf_charge", &ckf_charge);
-    BabyTree->Branch("threeChargeAgree", &threeChargeAgree_branch);
-    BabyTree->Branch("mva", &mva);
-    BabyTree->Branch("mva_25ns", &mva_25ns);
-    BabyTree->Branch("tag_mva_25ns", &tag_mva_25ns);
-    BabyTree->Branch("ecalIso", &ecalIso);
-    BabyTree->Branch("hcalIso", &hcalIso);
-    BabyTree->Branch("ecalPFClusterIso", &ecalPFClusterIso);
-    BabyTree->Branch("hcalPFClusterIso", &hcalPFClusterIso);
-    BabyTree->Branch("ckf_laywithmeas", &ckf_laywithmeas);
-    BabyTree->Branch("sigmaIPhiIPhi_full5x5", &sigmaIPhiIPhi_full5x5);
-    BabyTree->Branch("e1x5_full5x5", &e1x5_full5x5);
-    BabyTree->Branch("e5x5_full5x5", &e5x5_full5x5);
-    BabyTree->Branch("r9_full5x5", &r9_full5x5);
-    BabyTree->Branch("tag_r9_full5x5", &tag_r9_full5x5);
-    BabyTree->Branch("etaSCwidth", &etaSCwidth);
-    BabyTree->Branch("phiSCwidth", &phiSCwidth);
-    BabyTree->Branch("eSCRaw", &eSCRaw);
-    BabyTree->Branch("eSC", &eSC);
-    BabyTree->Branch("eSCPresh", &eSCPresh);
-    BabyTree->Branch("ckf_chi2", &ckf_chi2);
-    BabyTree->Branch("ckf_ndof", &ckf_ndof);
-    BabyTree->Branch("chi2", &chi2);
-    BabyTree->Branch("ndof", &ndof);
-    BabyTree->Branch("fbrem", &fbrem);
-    BabyTree->Branch("eOverPOut", &eOverPOut);
-    BabyTree->Branch("dEtaOut", &dEtaOut);
-    BabyTree->Branch("dPhiOut", &dPhiOut);
-    BabyTree->Branch("gsf_validHits", &gsf_validHits);
-    BabyTree->Branch("conv_vtx_prob", &conv_vtx_prob);
-    //Muons
-    BabyTree->Branch("pid_PFMuon", &pid_PFMuon);
-    BabyTree->Branch("gfit_chi2", &gfit_chi2);
-    BabyTree->Branch("gfit_validSTAHits", &gfit_validSTAHits);
-    BabyTree->Branch("numberOfMatchedStations", &numberOfMatchedStations);
-    BabyTree->Branch("validPixelHits", &validPixelHits);
-    BabyTree->Branch("nlayers", &nlayers);
-    BabyTree->Branch("chi2LocalPosition", &chi2LocalPosition);
-    BabyTree->Branch("trkKink", &trkKink);
-    BabyTree->Branch("validHits", &validHits);
-    BabyTree->Branch("lostHits", &lostHits);
-    BabyTree->Branch("segmCompatibility", &segmCompatibility);
-    //Single Muon Triggers
-    BabyTree->Branch("HLT_Mu8", &HLT_Mu8);
-    BabyTree->Branch("HLT_Mu17", &HLT_Mu17);
-    BabyTree->Branch("HLT_Mu8_TrkIsoVVL", &HLT_Mu8_TrkIsoVVL);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL", &HLT_Mu17_TrkIsoVVL);
-    BabyTree->Branch("HLT_IsoMu24", &HLT_IsoMu24);
-    BabyTree->Branch("HLT_IsoTkMu24", &HLT_IsoTkMu24);
-    BabyTree->Branch("HLT_Mu50", &HLT_Mu50);
-    BabyTree->Branch("HLT_Mu55", &HLT_Mu55);
-    BabyTree->Branch("HLT_TkMu50", &HLT_TkMu50);
-    BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
-    BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
-    BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
-    BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
-    BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
-    BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
-    BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg", &HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
-    BabyTree->Branch("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg", &HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg", &HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg", &HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg", &HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg);
-    BabyTree->Branch("HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg", &HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_TrailingLeg", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_TrailingLeg);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_LeadingLeg", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_LeadingLeg);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_TrailingLeg", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_TrailingLeg);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_LeadingLeg", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_LeadingLeg);
-    //Single Electron Triggers
-    BabyTree->Branch("HLT_Ele8_CaloIdM_TrackIdM_PFJet30", &HLT_Ele8_CaloIdM_TrackIdM_PFJet30);
-    BabyTree->Branch("HLT_Ele12_CaloIdM_TrackIdM_PFJet30", &HLT_Ele12_CaloIdM_TrackIdM_PFJet30);
-    BabyTree->Branch("HLT_Ele17_CaloIdM_TrackIdM_PFJet30", &HLT_Ele17_CaloIdM_TrackIdM_PFJet30);
-    BabyTree->Branch("HLT_Ele23_CaloIdM_TrackIdM_PFJet30", &HLT_Ele23_CaloIdM_TrackIdM_PFJet30);
-    BabyTree->Branch("HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    BabyTree->Branch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    BabyTree->Branch("HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    BabyTree->Branch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30", &HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    BabyTree->Branch("HLT_Ele27_eta2p1_WPTight_Gsf", &HLT_Ele27_eta2p1_WPTight_Gsf);
-    BabyTree->Branch("HLT_Ele32_eta2p1_WPTight_Gsf", &HLT_Ele32_eta2p1_WPTight_Gsf);
-    BabyTree->Branch("HLT_Ele105_CaloIdVT_GsfTrkIdT", &HLT_Ele105_CaloIdVT_GsfTrkIdT);
-    BabyTree->Branch("HLT_Ele115_CaloIdVT_GsfTrkIdT", &HLT_Ele115_CaloIdVT_GsfTrkIdT);
-    //Double Electron Triggers
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL);
-    BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL", &HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL);
-    BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL", &HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL);
-    BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL", &HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL);
-    BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ", &HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL", &HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL", &HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL);
-    BabyTree->Branch("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ", &HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ", &HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ);
-    BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ", &HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ);
-    BabyTree->Branch("HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ", &HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL", &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL);
-    BabyTree->Branch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL", &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL);
-    BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL);
-    BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ", &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
-    BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ", &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
+void babyMaker::MakeBabyNtuple(const char* output_name){
+
+    df.loadFromFile("CORE/Tools/datasetinfo/scale1fbs.txt");
+
+  //Create Baby
+  BabyFile = new TFile(Form("%s/%s", path.c_str(), output_name), "RECREATE");
+  BabyFile->cd();
+  BabyTree = new TTree("t", "Lepton Baby Ntuple");
+
+  //General
+  BabyTree->Branch("evt_pfmet"         , &evt_pfmet);
+  BabyTree->Branch("evt_pfmetPhi"      , &evt_pfmetPhi);
+  BabyTree->Branch("evt_trackmet"      , &evt_trackmet);
+  BabyTree->Branch("evt_trackmetPhi"   , &evt_trackmetPhi);
+  BabyTree->Branch("evt_corrMET"       , &evt_corrMET);
+  BabyTree->Branch("evt_corrMETPhi"    , &evt_corrMETPhi);
+  BabyTree->Branch("evt_pfsumet"       , &evt_pfsumet);
+  BabyTree->Branch("evt_pfmetSig"      , &evt_pfmetSig);
+  BabyTree->Branch("evt_event"         , &evt_event);
+  BabyTree->Branch("evt_lumiBlock"     , &evt_lumiBlock);
+  BabyTree->Branch("evt_run"           , &evt_run);
+  BabyTree->Branch("filt_csc"          , &filt_csc);
+  BabyTree->Branch("filt_json"          , &filt_json);
+  BabyTree->Branch("passes_met_filters", &passes_met_filters); 
+  BabyTree->Branch("filt_hcallaser"    , &filt_hcallaser);
+  BabyTree->Branch("filt_ecaltp"       , &filt_ecaltp);
+  BabyTree->Branch("filt_trkfail"      , &filt_trkfail);
+  BabyTree->Branch("filt_eebadsc"      , &filt_eebadsc);
+  BabyTree->Branch("evt_isRealData"    , &evt_isRealData);
+  BabyTree->Branch("scale1fb"          , &scale1fb);
+  BabyTree->Branch("evt_xsec_incl"     , &evt_xsec_incl);
+  BabyTree->Branch("evt_kfactor"       , &evt_kfactor);
+  BabyTree->Branch("gen_met"           , &gen_met);
+  BabyTree->Branch("gen_metPhi"        , &gen_metPhi);
+  BabyTree->Branch("njets"             , &njets);
+  BabyTree->Branch("ht"                , &ht);
+  BabyTree->Branch("ht_SS"             , &ht_SS);
+  BabyTree->Branch("jets"              , &jets);
+  BabyTree->Branch("jets_disc"         , &jets_disc);
+  BabyTree->Branch("jets_area"         , &jets_area);
+  BabyTree->Branch("jets_undoJEC"      , &jets_undoJEC);
+  BabyTree->Branch("sample"            , &sample);
+  BabyTree->Branch("nFOs_SS"           , &nFOs_SS);
+  BabyTree->Branch("nvtx"              , &nvtx);
+  BabyTree->Branch("trueNumInt"              , &trueNumInt);
+  BabyTree->Branch("puweight"              , &puweight);
+  BabyTree->Branch("rho"               , &rho);
+  BabyTree->Branch("rho_neut_centr"    , &rho_neut_centr);
+  BabyTree->Branch("rho_calo"    , &rho_calo);
+  BabyTree->Branch("rho_calo_centr"    , &rho_calo_centr);
+
+  //All leptons
+  BabyTree->Branch("p4"                            , &p4);
+  BabyTree->Branch("tag_p4"                        , &tag_p4);
+  BabyTree->Branch("dilep_p4"                      , &dilep_p4);
+  BabyTree->Branch("mc_p4"                         , &mc_p4);
+  BabyTree->Branch("mc_motherp4"                   , &mc_motherp4);
+  BabyTree->Branch("mc_motherid"                   , &mc_motherid);
+  BabyTree->Branch("id"                            , &id);
+  BabyTree->Branch("isPF"                          , &isPF);
+  BabyTree->Branch("idx"                           , &idx);
+  BabyTree->Branch("dxyPV"                         , &dxyPV);
+  BabyTree->Branch("dZ"                            , &dZ);
+  BabyTree->Branch("dxyPV_err"                     , &dxyPV_err);
+  BabyTree->Branch("motherID"                      , &motherID);
+  BabyTree->Branch("mc_id"                         , &mc_id);
+  BabyTree->Branch("RelIso03"                      , &RelIso03);
+  BabyTree->Branch("RelIso03EA"                    , &RelIso03EA);
+  BabyTree->Branch("tag_RelIso03EA"                , &tag_RelIso03EA);
+  BabyTree->Branch("RelIso03DB"                    , &RelIso03DB);
+  BabyTree->Branch("pfChargedHadronIso"            , &pfChargedHadronIso);
+  BabyTree->Branch("pfPhotonIso"                   , &pfPhotonIso);
+  BabyTree->Branch("pfNeutralHadronIso"            , &pfNeutralHadronIso);
+  BabyTree->Branch("tkIso"                         , &tkIso);
+  BabyTree->Branch("sumPUPt"                       , &sumPUPt);
+  BabyTree->Branch("passes_SS_tight_v3"            , &passes_SS_tight_v3);
+  BabyTree->Branch("passes_SS_tight_noiso_v3"      , &passes_SS_tight_noiso_v3);
+  BabyTree->Branch("passes_SS_fo_v3"               , &passes_SS_fo_v3);
+  BabyTree->Branch("passes_SS_fo_noiso_v3"         , &passes_SS_fo_noiso_v3);
+  BabyTree->Branch("passes_SS_fo_looseMVA_v3"      , &passes_SS_fo_looseMVA_v3);
+  BabyTree->Branch("passes_SS_fo_looseMVA_noiso_v3", &passes_SS_fo_looseMVA_noiso_v3);
+  BabyTree->Branch("passes_SS_veto_v3"             , &passes_SS_veto_v3);
+  BabyTree->Branch("passes_SS_veto_noiso_v3"       , &passes_SS_veto_noiso_v3);
+  BabyTree->Branch("passes_SS_tight_v4"            , &passes_SS_tight_v4);
+  BabyTree->Branch("passes_SS_tight_noiso_v4"      , &passes_SS_tight_noiso_v4);
+  BabyTree->Branch("passes_SS_fo_v4"               , &passes_SS_fo_v4);
+  BabyTree->Branch("passes_SS_fo_noiso_v4"         , &passes_SS_fo_noiso_v4);
+  BabyTree->Branch("passes_SS_fo_looseMVA_v4"      , &passes_SS_fo_looseMVA_v4);
+  BabyTree->Branch("passes_SS_fo_looseMVA_noiso_v4", &passes_SS_fo_looseMVA_noiso_v4);
+  BabyTree->Branch("passes_SS_veto_v4"             , &passes_SS_veto_v4);
+  BabyTree->Branch("passes_SS_veto_noiso_v4"       , &passes_SS_veto_noiso_v4);
+
+  BabyTree->Branch("passes_SS_tight_v5"            , &passes_SS_tight_v5);
+  BabyTree->Branch("passes_SS_tight_noiso_v5"      , &passes_SS_tight_noiso_v5);
+  BabyTree->Branch("passes_SS_fo_v5"               , &passes_SS_fo_v5);
+  BabyTree->Branch("passes_SS_fo_noiso_v5"         , &passes_SS_fo_noiso_v5);
+  BabyTree->Branch("passes_SS_fo_looseMVA_v5"      , &passes_SS_fo_looseMVA_v5);
+  BabyTree->Branch("passes_SS_fo_looseMVA_noiso_v5", &passes_SS_fo_looseMVA_noiso_v5);
+  BabyTree->Branch("passes_SS_veto_v5"             , &passes_SS_veto_v5);
+  BabyTree->Branch("passes_SS_veto_noiso_v5"       , &passes_SS_veto_noiso_v5);
+
+  BabyTree->Branch("passes_SS_tight_v6"            , &passes_SS_tight_v6);
+  BabyTree->Branch("passes_SS_tight_noiso_v6"      , &passes_SS_tight_noiso_v6);
+  BabyTree->Branch("passes_SS_fo_v6"               , &passes_SS_fo_v6);
+  BabyTree->Branch("passes_SS_fo_noiso_v6"         , &passes_SS_fo_noiso_v6);
+  BabyTree->Branch("passes_SS_fo_looseMVA_v6"      , &passes_SS_fo_looseMVA_v6);
+  BabyTree->Branch("passes_SS_fo_looseMVA_noiso_v6", &passes_SS_fo_looseMVA_noiso_v6);
+  BabyTree->Branch("passes_SS_veto_v6"             , &passes_SS_veto_v6);
+  BabyTree->Branch("passes_SS_veto_noiso_v6"       , &passes_SS_veto_noiso_v6);
+
+  BabyTree->Branch("passes_WW_medium_v2"           , &passes_WW_medium_v2);
+  BabyTree->Branch("passes_WW_medium_noiso_v2"     , &passes_WW_medium_noiso_v2);
+  BabyTree->Branch("passes_WW_fo_v2"               , &passes_WW_fo_v2);
+  BabyTree->Branch("passes_WW_fo_noiso_v2"         , &passes_WW_fo_noiso_v2);
+  BabyTree->Branch("passes_WW_veto_v2"             , &passes_WW_veto_v2);
+  BabyTree->Branch("passes_WW_veto_noiso_v2"       , &passes_WW_veto_noiso_v2);
+  BabyTree->Branch("passes_HAD_veto_v3"            , &passes_HAD_veto_v3);
+  BabyTree->Branch("passes_HAD_veto_noiso_v3"      , &passes_HAD_veto_noiso_v3);
+  BabyTree->Branch("passes_HAD_loose_v3"           , &passes_HAD_loose_v3);
+  BabyTree->Branch("passes_HAD_loose_noiso_v3"     , &passes_HAD_loose_noiso_v3);
+  BabyTree->Branch("passes_POG_vetoID"             , &passes_POG_vetoID);
+  BabyTree->Branch("passes_POG_looseID"            , &passes_POG_looseID);
+  BabyTree->Branch("passes_POG_mediumID"           , &passes_POG_mediumID);
+  BabyTree->Branch("passes_POG_tightID"            , &passes_POG_tightID);
+  BabyTree->Branch("ip3d"                          , &ip3d);
+  BabyTree->Branch("ip3derr"                       , &ip3derr);
+  BabyTree->Branch("type"                          , &type);
+  BabyTree->Branch("mt"                            , &mt);
+  BabyTree->Branch("ptrelv0"                       , &ptrelv0);
+  BabyTree->Branch("ptrelv1"                       , &ptrelv1);
+  BabyTree->Branch("miniiso"                       , &miniiso);
+  BabyTree->Branch("miniisoDB"                     , &miniisoDB);
+  BabyTree->Branch("reliso04"                      , &reliso04);
+  BabyTree->Branch("annulus04"                     , &annulus04);
+  BabyTree->Branch("AbsTrkIso"                     , &AbsTrkIso);
+  BabyTree->Branch("TrkAn04"                       , &TrkAn04);
+  BabyTree->Branch("iso03sumPt"                    , &iso03sumPt);
+  BabyTree->Branch("iso03emEt"                     , &iso03emEt);
+  BabyTree->Branch("iso03hadEt"                    , &iso03hadEt);
+  BabyTree->Branch("jet_close_lep_idx"                 , &jet_close_lep_idx);
+  BabyTree->Branch("jet_close_lep"                 , &jet_close_lep);
+  BabyTree->Branch("jet_close_lep_undoJEC"             , &jet_close_lep_undoJEC);
+  BabyTree->Branch("jet_close_lep_area"             , &jet_close_lep_area);
+  BabyTree->Branch("jet_close_L1"                  , &jet_close_L1);
+  BabyTree->Branch("jet_close_L1nc"                , &jet_close_L1nc);
+  BabyTree->Branch("jet_close_L1ncmc"              , &jet_close_L1ncmc);
+  BabyTree->Branch("jet_close_L1L2L3"              , &jet_close_L1L2L3);
+  BabyTree->Branch("jet_close_L2L3"                , &jet_close_L2L3);
+  BabyTree->Branch("ptratio"                       , &ptratio);
+  BabyTree->Branch("tag_charge"                    , &tag_charge);
+  BabyTree->Branch("tag_mc_motherid"               , &tag_mc_motherid);
+  BabyTree->Branch("tag_eSeed"                     , &tag_eSeed);
+  BabyTree->Branch("tag_eSCRaw"                    , &tag_eSCRaw);
+  BabyTree->Branch("tag_eSC"                       , &tag_eSC);
+  BabyTree->Branch("tag_ecalEnergy"                , &tag_ecalEnergy);
+  BabyTree->Branch("tag_HLTLeadingLeg"             , &tag_HLTLeadingLeg);
+  BabyTree->Branch("exp_innerlayers"               , &exp_innerlayers);
+  BabyTree->Branch("exp_outerlayers"               , &exp_outerlayers);
+
+  //Tag triggers
+  BabyTree->Branch("tag_HLT_Ele25WP60_Ele8_Mass55_LeadingLeg"                , &tag_HLT_Ele25WP60_Ele8_Mass55_LeadingLeg);
+  BabyTree->Branch("tag_HLT_Ele25WP60_SC4_Mass55_LeadingLeg"                 , &tag_HLT_Ele25WP60_SC4_Mass55_LeadingLeg);
+  BabyTree->Branch("tag_HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg", &tag_HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg);
+  BabyTree->Branch("tag_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg", &tag_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg);
+  BabyTree->Branch("tag_HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg", &tag_HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg);
+  BabyTree->Branch("tag_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg", &tag_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg);
+  BabyTree->Branch("tag_HLT_Ele33_CaloIdM_TrackIdM_PFJet30_ElectronLeg"      , &tag_HLT_Ele33_CaloIdM_TrackIdM_PFJet30_ElectronLeg);
+  BabyTree->Branch("tag_HLT_Ele23_CaloIdM_TrackIdM_PFJet30_ElectronLeg"      , &tag_HLT_Ele23_CaloIdM_TrackIdM_PFJet30_ElectronLeg);
+  BabyTree->Branch("tag_HLT_Ele18_CaloIdM_TrackIdM_PFJet30_ElectronLeg"      , &tag_HLT_Ele18_CaloIdM_TrackIdM_PFJet30_ElectronLeg);
+  BabyTree->Branch("tag_HLT_Ele12_CaloIdM_TrackIdM_PFJet30_ElectronLeg"      , &tag_HLT_Ele12_CaloIdM_TrackIdM_PFJet30_ElectronLeg);
+  BabyTree->Branch("tag_HLT_Ele8_CaloIdM_TrackIdM_PFJet30_ElectronLeg"       , &tag_HLT_Ele8_CaloIdM_TrackIdM_PFJet30_ElectronLeg);
+  BabyTree->Branch("tag_HLT_Ele27_eta2p1_WP75_Gsf"                           , &tag_HLT_Ele27_eta2p1_WP75_Gsf);
+  BabyTree->Branch("tag_HLT_Ele27_WP85_Gsf"                                  , &tag_HLT_Ele27_WP85_Gsf);
+  BabyTree->Branch("tag_HLT_Ele27_eta2p1_WPLoose_Gsf"                        , &tag_HLT_Ele27_eta2p1_WPLoose_Gsf);
+  BabyTree->Branch("tag_HLT_Ele27_eta2p1_WPTight_Gsf"                        , &tag_HLT_Ele27_eta2p1_WPTight_Gsf);
+  BabyTree->Branch("tag_HLT_Ele32_eta2p1_WP75_Gsf"                           , &tag_HLT_Ele32_eta2p1_WP75_Gsf);
+  BabyTree->Branch("tag_HLT_Ele32_eta2p1_WPLoose_Gsf"                        , &tag_HLT_Ele32_eta2p1_WPLoose_Gsf);
+  BabyTree->Branch("tag_HLT_Ele32_eta2p1_WPTight_Gsf"                        , &tag_HLT_Ele32_eta2p1_WPTight_Gsf);
+  BabyTree->Branch("tag_HLT_Ele22_eta2p1_WPLoose_Gsf"                        , &tag_HLT_Ele22_eta2p1_WPLoose_Gsf);
+  BabyTree->Branch("tag_HLT_Ele22_eta2p1_WPTight_Gsf"                        , &tag_HLT_Ele22_eta2p1_WPTight_Gsf);
+  BabyTree->Branch("tag_HLT_Ele25_eta2p1_WPTight_Gsf"                        , &tag_HLT_Ele25_eta2p1_WPTight_Gsf);
+  BabyTree->Branch("tag_HLT_Ele23_WPLoose_Gsf"                               , &tag_HLT_Ele23_WPLoose_Gsf);
+  BabyTree->Branch("tag_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg", &tag_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg);
+  BabyTree->Branch("tag_HLT_Ele23_CaloIdL_TrackIdL_IsoVL"                    , &tag_HLT_Ele23_CaloIdL_TrackIdL_IsoVL);
+  BabyTree->Branch("tag_HLT_Ele12_CaloIdL_TrackIdL_IsoVL"                    , &tag_HLT_Ele12_CaloIdL_TrackIdL_IsoVL);
+  BabyTree->Branch("probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg" , &probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
+  BabyTree->Branch("probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
+  BabyTree->Branch("probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG2210", &probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG2210);
+  BabyTree->Branch("probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg" , &probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg);
+  BabyTree->Branch("probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg", &probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg);
+  BabyTree->Branch("probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG1510", &probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG1510);
+  BabyTree->Branch("probe_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_L1EG20", &probe_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_L1EG20);
+  BabyTree->Branch("probe_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG10", &probe_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG10);
+  BabyTree->Branch("probe_L1EG2210_pt", &probe_L1EG2210_pt);
+  BabyTree->Branch("probe_L1EG1510_pt", &probe_L1EG1510_pt);
+  BabyTree->Branch("probe_L1EG20_pt", &probe_L1EG20_pt);
+  BabyTree->Branch("probe_L1EG10_pt", &probe_L1EG10_pt);
+  BabyTree->Branch("tag_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg"   , &tag_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg);
+  BabyTree->Branch("tag_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg"    , &tag_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg);
+  BabyTree->Branch("tag_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg"     , &tag_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg);
+  BabyTree->Branch("tag_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg"      , &tag_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg);
+  BabyTree->Branch("tag_HLT_IsoMu20"                                         , &tag_HLT_IsoMu20);
+  BabyTree->Branch("tag_HLT_IsoTkMu20"                                       , &tag_HLT_IsoTkMu20);
+  BabyTree->Branch("tag_HLT_IsoTkMu20_eta2p1"                                , &tag_HLT_IsoTkMu20_eta2p1);
+  BabyTree->Branch("tag_HLT_IsoMu24_eta2p1"                                  , &tag_HLT_IsoMu24_eta2p1);
+  BabyTree->Branch("tag_HLT_IsoTkMu24_eta2p1"                                , &tag_HLT_IsoTkMu24_eta2p1);
+  BabyTree->Branch("tag_HLT_IsoMu22"                                         , &tag_HLT_IsoMu22);
+  BabyTree->Branch("tag_HLT_IsoTkMu22"                                       , &tag_HLT_IsoTkMu22);
+  BabyTree->Branch("tag_HLT_IsoMu24"                                         , &tag_HLT_IsoMu24);
+  BabyTree->Branch("tag_HLT_IsoTkMu24"                                       , &tag_HLT_IsoTkMu24);
+  BabyTree->Branch("tag_HLT_IsoMu27"                                         , &tag_HLT_IsoMu27);
+  BabyTree->Branch("tag_HLT_IsoTkMu27"                                       , &tag_HLT_IsoTkMu27);
+  BabyTree->Branch("tag_HLT_Mu8_TrkIsoVVL"                                   , &tag_HLT_Mu8_TrkIsoVVL);
+  BabyTree->Branch("tag_HLT_Mu17_TrkIsoVVL"                                  , &tag_HLT_Mu17_TrkIsoVVL);
+  BabyTree->Branch("tag_HLT_Mu8"                                             , &tag_HLT_Mu8);
+  BabyTree->Branch("tag_HLT_Mu17"                                            , &tag_HLT_Mu17);
+  BabyTree->Branch("probe_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg" , &probe_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg);
+  BabyTree->Branch("probe_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg"  , &probe_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg);
+  BabyTree->Branch("probe_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg"   , &probe_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg);
+  BabyTree->Branch("probe_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg"    , &probe_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg);
+  BabyTree->Branch("dilep_mass"                                              , &dilep_mass);
+  BabyTree->Branch("isRandom"                                                , &isRandom);
+
+  //Electrons
+  BabyTree->Branch("sigmaIEtaIEta_full5x5", &sigmaIEtaIEta_full5x5   );
+  BabyTree->Branch("sigmaIEtaIEta"        , &sigmaIEtaIEta           );
+  BabyTree->Branch("etaSC"                , &etaSC                   );
+  BabyTree->Branch("dEtaIn"               , &dEtaIn                  );
+  BabyTree->Branch("dPhiIn"               , &dPhiIn                  );
+  BabyTree->Branch("hOverE"               , &hOverE                  );
+  BabyTree->Branch("eSeed"                , &eSeed                   );
+  BabyTree->Branch("scSeedEta"            , &scSeedEta               );
+  BabyTree->Branch("ecalEnergy"           , &ecalEnergy              );
+  BabyTree->Branch("eOverPIn"             , &eOverPIn                );
+  BabyTree->Branch("conv_vtx_flag"        , &conv_vtx_flag           );
+  BabyTree->Branch("charge"               , &charge                  );
+  BabyTree->Branch("sccharge"             , &sccharge                );
+  BabyTree->Branch("ckf_charge"           , &ckf_charge              );
+  BabyTree->Branch("threeChargeAgree"     , &threeChargeAgree_branch );
+  BabyTree->Branch("mva"                  , &mva                     );
+  BabyTree->Branch("mva_25ns"             , &mva_25ns                );
+  BabyTree->Branch("tag_mva_25ns"         , &tag_mva_25ns            );
+  BabyTree->Branch("ecalIso"              , &ecalIso                 );
+  BabyTree->Branch("hcalIso"              , &hcalIso                 );
+  BabyTree->Branch("ecalPFClusterIso"     , &ecalPFClusterIso        );
+  BabyTree->Branch("hcalPFClusterIso"     , &hcalPFClusterIso        );
+  BabyTree->Branch("ckf_laywithmeas"      , &ckf_laywithmeas         );
+  BabyTree->Branch("sigmaIPhiIPhi_full5x5", &sigmaIPhiIPhi_full5x5   );
+  BabyTree->Branch("e1x5_full5x5"         , &e1x5_full5x5            );
+  BabyTree->Branch("e5x5_full5x5"         , &e5x5_full5x5            );
+  BabyTree->Branch("r9_full5x5"           , &r9_full5x5              );
+  BabyTree->Branch("tag_r9_full5x5"       , &tag_r9_full5x5              );
+  BabyTree->Branch("etaSCwidth"           , &etaSCwidth              );
+  BabyTree->Branch("phiSCwidth"           , &phiSCwidth              );
+  BabyTree->Branch("eSCRaw"               , &eSCRaw                  );
+  BabyTree->Branch("eSC"                  , &eSC                     );
+  BabyTree->Branch("eSCPresh"             , &eSCPresh                );
+  BabyTree->Branch("ckf_chi2"             , &ckf_chi2                );
+  BabyTree->Branch("ckf_ndof"             , &ckf_ndof                );
+  BabyTree->Branch("chi2"                 , &chi2                    );
+  BabyTree->Branch("ndof"                 , &ndof                    );
+  BabyTree->Branch("fbrem"                , &fbrem                   );
+  BabyTree->Branch("eOverPOut"            , &eOverPOut               );
+  BabyTree->Branch("dEtaOut"              , &dEtaOut                 );    
+  BabyTree->Branch("dPhiOut"              , &dPhiOut                 );                
+  BabyTree->Branch("gsf_validHits"        , &gsf_validHits           );                
+  BabyTree->Branch("conv_vtx_prob"        , &conv_vtx_prob           );                
+
+  //Muons
+  BabyTree->Branch("pid_PFMuon"             , &pid_PFMuon);
+  BabyTree->Branch("gfit_chi2"              , &gfit_chi2);
+  // BabyTree->Branch("gfit_ndof"              , &gfit_ndof); // NOTE take out for now because of the int float conflict that Vince fixed
+  BabyTree->Branch("gfit_validSTAHits"      , &gfit_validSTAHits);
+  BabyTree->Branch("numberOfMatchedStations", &numberOfMatchedStations);
+  BabyTree->Branch("validPixelHits"         , &validPixelHits);
+  BabyTree->Branch("nlayers"                , &nlayers);
+  BabyTree->Branch("chi2LocalPosition"      , &chi2LocalPosition);
+  BabyTree->Branch("trkKink"                , &trkKink);
+  BabyTree->Branch("validHits"              , &validHits);
+  BabyTree->Branch("lostHits"               , &lostHits);
+  BabyTree->Branch("segmCompatibility"      , &segmCompatibility);
+
+  //Single Muon Triggers
+  BabyTree->Branch("HLT_Mu8_TrkIsoVVL"                    , &HLT_Mu8_TrkIsoVVL);
+  BabyTree->Branch("HLT_Mu17_TrkIsoVVL"                   , &HLT_Mu17_TrkIsoVVL);
+  BabyTree->Branch("HLT_Mu24_TrkIsoVVL"                   , &HLT_Mu24_TrkIsoVVL);
+  BabyTree->Branch("HLT_Mu34_TrkIsoVVL"                   , &HLT_Mu34_TrkIsoVVL);
+  BabyTree->Branch("HLT_Mu8"                              , &HLT_Mu8);
+  BabyTree->Branch("HLT_Mu17"                             , &HLT_Mu17);
+  BabyTree->Branch("HLT_Mu24"                             , &HLT_Mu24);
+  BabyTree->Branch("HLT_Mu34"                             , &HLT_Mu34);
+  BabyTree->Branch("HLT_Mu10_CentralPFJet30_BTagCSV0p5PF" , &HLT_Mu10_CentralPFJet30_BTagCSV0p5PF);
+  BabyTree->Branch("HLT_IsoMu20"                          , &HLT_IsoMu20);
+  BabyTree->Branch("HLT_IsoTkMu20"                        , &HLT_IsoTkMu20);
+  BabyTree->Branch("HLT_IsoTkMu20_eta2p1"                 , &HLT_IsoTkMu20_eta2p1);
+  BabyTree->Branch("HLT_Mu10_CentralPFJet30_BTagCSV0p54PF", &HLT_Mu10_CentralPFJet30_BTagCSV0p54PF);
+  BabyTree->Branch("HLT_IsoMu24_eta2p1"                   , &HLT_IsoMu24_eta2p1);
+  BabyTree->Branch("HLT_IsoTkMu24_eta2p1"                 , &HLT_IsoTkMu24_eta2p1);
+  BabyTree->Branch("HLT_IsoMu22"                          , &HLT_IsoMu22);
+  BabyTree->Branch("HLT_IsoTkMu22"                        , &HLT_IsoTkMu22);
+  BabyTree->Branch("HLT_IsoMu24"                          , &HLT_IsoMu24);
+  BabyTree->Branch("HLT_IsoTkMu24"                        , &HLT_IsoTkMu24);
+  BabyTree->Branch("HLT_IsoMu27"                          , &HLT_IsoMu27);
+  BabyTree->Branch("HLT_IsoTkMu27"                        , &HLT_IsoTkMu27);
+  BabyTree->Branch("HLT_Mu45_eta2p1"                      , &HLT_Mu45_eta2p1);
+  BabyTree->Branch("HLT_Mu50"                             , &HLT_Mu50);
+
+  //Single Electron Triggers
+  BabyTree->Branch("HLT_Ele8_CaloIdM_TrackIdM_PFJet30"                      , &HLT_Ele8_CaloIdM_TrackIdM_PFJet30);
+  BabyTree->Branch("HLT_Ele12_CaloIdM_TrackIdM_PFJet30"                     , &HLT_Ele12_CaloIdM_TrackIdM_PFJet30);
+  BabyTree->Branch("HLT_Ele17_CaloIdM_TrackIdM_PFJet30"                     , &HLT_Ele17_CaloIdM_TrackIdM_PFJet30);
+  BabyTree->Branch("HLT_Ele18_CaloIdM_TrackIdM_PFJet30"                     , &HLT_Ele18_CaloIdM_TrackIdM_PFJet30);
+  BabyTree->Branch("HLT_Ele23_CaloIdM_TrackIdM_PFJet30"                     , &HLT_Ele23_CaloIdM_TrackIdM_PFJet30);
+  BabyTree->Branch("HLT_Ele33_CaloIdM_TrackIdM_PFJet30"                     , &HLT_Ele33_CaloIdM_TrackIdM_PFJet30);
+  BabyTree->Branch("HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30"                , &HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  BabyTree->Branch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30"               , &HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  BabyTree->Branch("HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30"               , &HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  BabyTree->Branch("HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30"               , &HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  BabyTree->Branch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30"               , &HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  BabyTree->Branch("HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30"               , &HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  BabyTree->Branch("HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF" , &HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF);
+  BabyTree->Branch("HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p54PF", &HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p54PF);
+  BabyTree->Branch("HLT_Ele27_eta2p1_WP75_Gsf"                              , &HLT_Ele27_eta2p1_WP75_Gsf);
+  BabyTree->Branch("HLT_Ele27_WP85_Gsf"                                     , &HLT_Ele27_WP85_Gsf);
+  BabyTree->Branch("HLT_Ele27_eta2p1_WPLoose_Gsf"                           , &HLT_Ele27_eta2p1_WPLoose_Gsf);
+  BabyTree->Branch("HLT_Ele27_eta2p1_WPTight_Gsf"                           , &HLT_Ele27_eta2p1_WPTight_Gsf);
+  BabyTree->Branch("HLT_Ele32_eta2p1_WP75_Gsf"                              , &HLT_Ele32_eta2p1_WP75_Gsf);
+  BabyTree->Branch("HLT_Ele32_eta2p1_WPLoose_Gsf"                           , &HLT_Ele32_eta2p1_WPLoose_Gsf);
+  BabyTree->Branch("HLT_Ele32_eta2p1_WPTight_Gsf"                           , &HLT_Ele32_eta2p1_WPTight_Gsf);
+  BabyTree->Branch("HLT_Ele22_eta2p1_WPLoose_Gsf"                           , &HLT_Ele22_eta2p1_WPLoose_Gsf);
+  BabyTree->Branch("HLT_Ele22_eta2p1_WPTight_Gsf"                           , &HLT_Ele22_eta2p1_WPTight_Gsf);
+  BabyTree->Branch("HLT_Ele25_eta2p1_WPTight_Gsf"                           , &HLT_Ele25_eta2p1_WPTight_Gsf);
+  BabyTree->Branch("HLT_Ele23_WPLoose_Gsf"                                  , &HLT_Ele23_WPLoose_Gsf);
+  BabyTree->Branch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL"                       , &HLT_Ele23_CaloIdL_TrackIdL_IsoVL);
+  BabyTree->Branch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL"                       , &HLT_Ele12_CaloIdL_TrackIdL_IsoVL);
+
+  //MuElectron Triggers
+  BabyTree->Branch("HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300"            , &HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300);
+  BabyTree->Branch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL"        , &HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL);
+  BabyTree->Branch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL"         , &HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL);
+
+  //Double Muon Triggers
+  BabyTree->Branch("HLT_DoubleMu8_Mass8_PFHT300"                            , &HLT_DoubleMu8_Mass8_PFHT300);
+  BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL"                       , &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL);
+  BabyTree->Branch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL"                     , &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL);
+  BabyTree->Branch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ"                    , &HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ);
+  BabyTree->Branch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ"                  , &HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ);
+
+  //Double Electron Triggers
+  BabyTree->Branch("HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300"          , &HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300);
+  BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ"              , &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
+  BabyTree->Branch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL"                 , &HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL);
+  BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ"              , &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
+  BabyTree->Branch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL"                 , &HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL);
+
 }
 
-//___________________________________________________________________________________________________________________________________________
-void babyMaker::InitBabyNtuple()
-{
-    //General
-    evt_pfmet = -1;
-    evt_pfmetPhi = -99.;
-    evt_trackmet = -1;
-    evt_trackmetPhi = -99;
-    evt_corrMET = -1;
-    evt_corrMETPhi = -99.;
-    evt_pfsumet = -1;
-    evt_pfmetSig = -1;
-    evt_event = -1;
-    evt_lumiBlock = -1;
-    evt_run = -1;
-    filt_csc = 0;
-    filt_hbhe = 0;
-    passes_met_filters = 0;
-    filt_hcallaser = 0;
-    filt_ecaltp = 0;
-    filt_trkfail = 0;
-    filt_eebadsc = 0;
-    evt_isRealData = 0;
-    scale1fb = -1;
-    evt_xsec_incl = -1;
-    evt_kfactor = -1;
-    gen_met = -1;
-    gen_metPhi = -99;
-    njets = -1;
-    ht = -1;
-    ht_SS = -1;
-    sample = "";
-    nFOs_SS = -1;
-    nvtx = -1;
-    rho = -1;
-    rho_calo = -1;
-    rho_calo_centr = -1;
-    jets.clear();
-    jets_disc.clear();
-    jets_area.clear();
-    jets_undoJEC.clear();
-    InitLeptonBranches();
+void babyMaker::InitBabyNtuple(){
+
+  //General
+  evt_pfmet = -1;
+  evt_pfmetPhi = -99.;
+  evt_trackmet = -1;
+  evt_trackmetPhi = -99;
+  evt_corrMET = -1;
+  evt_corrMETPhi = -99.;
+  evt_pfsumet = -1;
+  evt_pfmetSig = -1;
+  evt_event = -1;
+  evt_lumiBlock = -1;
+  evt_run = -1;
+  filt_csc = 0;
+  filt_json = 0;
+  passes_met_filters = 0;
+  filt_hcallaser = 0;
+  filt_ecaltp = 0;
+  filt_trkfail = 0;
+  filt_eebadsc = 0;
+  evt_isRealData = 0;
+  scale1fb = -1;
+  evt_xsec_incl = -1;
+  evt_kfactor = -1;
+  gen_met = -1;
+  gen_metPhi = -99;
+  njets = -1;
+  ht = -1;
+  ht_SS = -1;
+  jets.clear();
+  jets_disc.clear();
+  jets_area.clear();
+  jets_undoJEC.clear();
+  sample = "";
+  nFOs_SS = -1;
+  nvtx = -1;
+  trueNumInt = -1;
+  puweight = -1;
+  rho = -1;
+  rho_calo = -1;
+  rho_calo_centr = -1;
+
+  InitLeptonBranches();
+
+} 
+
+void babyMaker::InitLeptonBranches(){
+
+  //Leptons
+  p4 = LorentzVector(0,0,0,0); 
+  tag_p4 = LorentzVector(0,0,0,0); 
+  dilep_p4 = LorentzVector(0,0,0,0); 
+  mc_p4 = LorentzVector(0,0,0,0);
+  mc_motherp4 = LorentzVector(0,0,0,0);
+  mc_motherid = -1;
+  id = -1; 
+  isPF = false; 
+  idx = -1;
+  dxyPV = -1;
+  dZ = -1;
+  dxyPV_err = -1;
+  motherID = -1;
+  mc_id = -1;
+  RelIso03 = -1;
+  RelIso03EA = -1;
+  tag_RelIso03EA = -1;
+  RelIso03DB = -1;
+  pfChargedHadronIso = -1;
+  pfPhotonIso = -1;
+  pfNeutralHadronIso = -1;
+  tkIso = -1;
+  sumPUPt = -1;
+  passes_SS_tight_v3 = 0;
+  passes_SS_tight_noiso_v3 = 0;
+  passes_SS_fo_v3 = 0;
+  passes_SS_fo_noiso_v3 = 0;
+  passes_SS_fo_looseMVA_v3 = 0;
+  passes_SS_fo_looseMVA_noiso_v3 = 0;
+  passes_SS_veto_v3 = 0;
+  passes_SS_veto_noiso_v3 = 0;
+  passes_SS_tight_v4 = 0;
+  passes_SS_tight_noiso_v4 = 0;
+  passes_SS_fo_v4 = 0;
+  passes_SS_fo_noiso_v4 = 0;
+  passes_SS_fo_looseMVA_v4 = 0;
+  passes_SS_fo_looseMVA_noiso_v4 = 0;
+  passes_SS_veto_v4 = 0;
+  passes_SS_veto_noiso_v4 = 0;
+  passes_SS_tight_v5 = 0;
+  passes_SS_tight_noiso_v5 = 0;
+  passes_SS_fo_v5 = 0;
+  passes_SS_fo_noiso_v5 = 0;
+  passes_SS_fo_looseMVA_v5 = 0;
+  passes_SS_fo_looseMVA_noiso_v5 = 0;
+  passes_SS_veto_v5 = 0;
+  passes_SS_veto_noiso_v5 = 0;
+
+  passes_SS_tight_v6 = 0;
+  passes_SS_tight_noiso_v6 = 0;
+  passes_SS_fo_v6 = 0;
+  passes_SS_fo_noiso_v6 = 0;
+  passes_SS_fo_looseMVA_v6 = 0;
+  passes_SS_fo_looseMVA_noiso_v6 = 0;
+  passes_SS_veto_v6 = 0;
+  passes_SS_veto_noiso_v6 = 0;
+
+  passes_WW_medium_v2 = 0;
+  passes_WW_medium_noiso_v2 = 0;
+  passes_WW_fo_v2 = 0;
+  passes_WW_fo_noiso_v2 = 0;
+  passes_WW_veto_v2 = 0;
+  passes_WW_veto_noiso_v2 = 0;
+  passes_HAD_veto_v3 = 0;
+  passes_HAD_veto_noiso_v3 = 0;
+  passes_HAD_loose_v3 = 0;
+  passes_HAD_loose_noiso_v3 = 0;
+  passes_POG_vetoID = 0;
+  passes_POG_looseID = 0;
+  passes_POG_mediumID = 0;
+  passes_POG_tightID = 0;
+  type = -1;
+  ip3d = -1;
+  ip3derr = -1;
+  mt = -1;
+  ptrelv0 = -1;
+  ptrelv1 = -1;
+  miniiso = -1;
+  miniisoDB = -1;
+  reliso04 = -1;
+  annulus04 = -1;
+  AbsTrkIso = -1;
+  TrkAn04 = -1;
+  iso03sumPt = -1;
+  iso03emEt = -1;
+  iso03hadEt = -1;
+  jet_close_lep_idx = -1;
+  jet_close_lep = LorentzVector(0,0,0,0);
+  jet_close_lep_undoJEC = -1;
+  jet_close_lep_area = -1;
+  jet_close_L1 = -1;
+  jet_close_L1nc = -1;
+  jet_close_L1ncmc = -1;
+  jet_close_L1L2L3 = -1;
+  jet_close_L2L3 = -1;
+  ptratio = -1;
+  dilep_mass = -1.;
+  isRandom = false;
+
+  //Tag variables
+  tag_charge = 0.;
+  tag_mc_motherid = 0.;
+  tag_eSeed = -1;
+  tag_eSCRaw = -1;
+  tag_eSC = -1;
+  tag_ecalEnergy = -1;
+  tag_HLTLeadingLeg = false;
+  tag_HLT_Ele25WP60_Ele8_Mass55_LeadingLeg = 0;
+  tag_HLT_Ele25WP60_SC4_Mass55_LeadingLeg = 0;
+  tag_HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg = 0;
+  tag_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg = 0;
+  tag_HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg = 0;
+  tag_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg = 0;
+  tag_HLT_Ele33_CaloIdM_TrackIdM_PFJet30_ElectronLeg = 0;
+  tag_HLT_Ele23_CaloIdM_TrackIdM_PFJet30_ElectronLeg = 0;
+  tag_HLT_Ele18_CaloIdM_TrackIdM_PFJet30_ElectronLeg = 0;
+  tag_HLT_Ele12_CaloIdM_TrackIdM_PFJet30_ElectronLeg = 0;
+  tag_HLT_Ele8_CaloIdM_TrackIdM_PFJet30_ElectronLeg = 0;
+  tag_HLT_Ele27_eta2p1_WP75_Gsf = 0;
+  tag_HLT_Ele27_WP85_Gsf = 0;
+  tag_HLT_Ele27_eta2p1_WPLoose_Gsf = 0;
+  tag_HLT_Ele27_eta2p1_WPTight_Gsf = 0;
+  tag_HLT_Ele32_eta2p1_WP75_Gsf = 0;
+  tag_HLT_Ele32_eta2p1_WPLoose_Gsf = 0;
+  tag_HLT_Ele32_eta2p1_WPTight_Gsf = 0;
+  tag_HLT_Ele22_eta2p1_WPLoose_Gsf = 0;
+  tag_HLT_Ele22_eta2p1_WPTight_Gsf = 0;
+  tag_HLT_Ele25_eta2p1_WPTight_Gsf = 0;
+  tag_HLT_Ele23_WPLoose_Gsf = 0;
+  tag_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
+  tag_HLT_Ele23_CaloIdL_TrackIdL_IsoVL = 0;
+  tag_HLT_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
+  tag_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg = 0;
+  tag_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg = 0;
+  tag_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg = 0;
+  tag_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg = 0;
+  tag_HLT_IsoMu20 = 0;
+  tag_HLT_IsoTkMu20 = 0;
+  tag_HLT_IsoTkMu20_eta2p1 = 0;
+  tag_HLT_IsoMu24_eta2p1 = 0;
+  tag_HLT_IsoTkMu24_eta2p1 = 0;
+  tag_HLT_IsoMu22 = 0;
+  tag_HLT_IsoTkMu22 = 0;
+  tag_HLT_IsoMu24 = 0;
+  tag_HLT_IsoTkMu24 = 0;
+  tag_HLT_IsoMu27 = 0;
+  tag_HLT_IsoTkMu27 = 0;
+  tag_HLT_Mu8_TrkIsoVVL = 0;
+  tag_HLT_Mu17_TrkIsoVVL = 0;
+  tag_HLT_Mu8 = 0;
+  tag_HLT_Mu17 = 0;
+
+  //Probe variables
+  probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
+  probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
+  probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG2210 = 0;
+  probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
+  probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
+  probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG1510 = 0;
+  probe_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_L1EG20 = 0;
+  probe_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG10 = 0;
+  probe_L1EG2210_pt = -1;
+  probe_L1EG1510_pt = -1;
+  probe_L1EG20_pt = -1;
+  probe_L1EG10_pt = -1;
+  probe_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg = 0;
+  probe_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg = 0;
+  probe_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg = 0;
+  probe_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg = 0;
+
+  //Muons
+  pid_PFMuon = -1;
+  gfit_chi2 = -1;
+  // gfit_ndof = -1;
+  gfit_validSTAHits = -1;
+  numberOfMatchedStations = -1;
+  validPixelHits = -1;
+  nlayers = -1;
+  chi2LocalPosition = -99;
+  trkKink = -99;
+  validHits = -99;
+  lostHits = -99;
+  exp_outerlayers = -99;
+  segmCompatibility = -99;
+
+  //Electrons
+  sigmaIEtaIEta_full5x5 = -1;
+  sigmaIEtaIEta = -1;
+  etaSC = -1;
+  dEtaIn = -1;
+  dPhiIn = -99;
+  hOverE = -1;
+  eSeed = -1;
+  eSC = -1;
+  eSCRaw = -1;
+  scSeedEta = -1;
+  ecalEnergy = -1;
+  eOverPIn = -1;
+  conv_vtx_flag = 0;
+  exp_innerlayers = -1;
+  charge = 0;
+  sccharge = 0;
+  ckf_charge = 0;
+  trk_charge = 0;
+  threeChargeAgree_branch = 0;
+  mva = -999.;
+  mva_25ns = -999.;
+  tag_mva_25ns = -999.;
+  ecalIso = -1;
+  hcalIso = -1;
+  ecalPFClusterIso = -1;
+  hcalPFClusterIso = -1;
+  ckf_laywithmeas       = -1;
+  sigmaIPhiIPhi_full5x5 = -1;
+  e1x5_full5x5          = -1;
+  e5x5_full5x5          = -1;
+  r9_full5x5            = -1;
+  tag_r9_full5x5        = -1;
+  etaSCwidth            = -1;
+  phiSCwidth            = -1;
+  eSCRaw                = -1;
+  eSC                   = -1;
+  ecalEnergy            = -1;  
+  eSCPresh              = -1;
+  ckf_chi2              = -1;
+  ckf_ndof              = -1;
+  chi2                  = -1;
+  ndof                  = -1;
+  fbrem                 = -1;
+  eOverPOut             = -1;
+  dEtaOut               = -1;
+  dPhiOut               = -1;
+  gsf_validHits         = -1;
+  conv_vtx_prob         = -1;
+
+  //Single Muon Trigger
+  HLT_Mu8_TrkIsoVVL = 0;
+  HLT_Mu17_TrkIsoVVL = 0;
+  HLT_Mu24_TrkIsoVVL = 0;
+  HLT_Mu34_TrkIsoVVL = 0;
+  HLT_Mu8 = 0;
+  HLT_Mu17 = 0;
+  HLT_Mu24 = 0;
+  HLT_Mu34 = 0;
+  HLT_Mu10_CentralPFJet30_BTagCSV0p5PF = 0;
+  HLT_Mu10_CentralPFJet30_BTagCSV0p54PF = 0;
+  HLT_IsoMu20 = 0;
+  HLT_IsoTkMu20 = 0;
+  HLT_IsoTkMu20_eta2p1 = 0;
+  HLT_IsoMu24_eta2p1 = 0;
+  HLT_IsoTkMu24_eta2p1 = 0;
+  HLT_IsoMu22 = 0;
+  HLT_IsoTkMu22 = 0;
+  HLT_IsoMu24 = 0;
+  HLT_IsoTkMu24 = 0;
+  HLT_IsoMu27 = 0;
+  HLT_IsoTkMu27 = 0;
+  HLT_Mu45_eta2p1 = 0;
+  HLT_Mu50 = 0;
+
+  //Single Electron Trigger
+  HLT_Ele8_CaloIdM_TrackIdM_PFJet30 = 0;
+  HLT_Ele12_CaloIdM_TrackIdM_PFJet30 = 0;
+  HLT_Ele17_CaloIdM_TrackIdM_PFJet30 = 0;
+  HLT_Ele18_CaloIdM_TrackIdM_PFJet30 = 0;
+  HLT_Ele23_CaloIdM_TrackIdM_PFJet30 = 0;
+  HLT_Ele33_CaloIdM_TrackIdM_PFJet30 = 0;
+  HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
+  HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
+  HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
+  HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
+  HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
+  HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
+  HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF = 0;
+  HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p54PF = 0;
+  HLT_Ele27_eta2p1_WP75_Gsf = 0;
+  HLT_Ele27_WP85_Gsf = 0;
+  HLT_Ele27_eta2p1_WPLoose_Gsf = 0;
+  HLT_Ele27_eta2p1_WPTight_Gsf = 0;
+  HLT_Ele32_eta2p1_WP75_Gsf = 0;
+  HLT_Ele32_eta2p1_WPLoose_Gsf = 0;
+  HLT_Ele32_eta2p1_WPTight_Gsf = 0;
+  HLT_Ele22_eta2p1_WPLoose_Gsf = 0;
+  HLT_Ele22_eta2p1_WPTight_Gsf = 0;
+  HLT_Ele25_eta2p1_WPTight_Gsf = 0;
+  HLT_Ele23_WPLoose_Gsf = 0;
+  HLT_Ele23_CaloIdL_TrackIdL_IsoVL = 0;
+  HLT_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
+
+  //MuEl Trigger
+  HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300 = 0;
+  HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
+  HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL = 0;
+
+  //Double Muon Trigger
+  HLT_DoubleMu8_Mass8_PFHT300 = 0;
+  HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL = 0;
+  HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL = 0;
+  HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ = 0;
+  HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ = 0;
+
+  //Double Electron Trigger
+  HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300 = 0;
+  HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ = 0;
+  HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
+  HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ = 0;
+  HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
 }
 
-//___________________________________________________________________________________________________________________________________________
-void babyMaker::InitLeptonBranches()
-{
-    //Leptons
-    p4 = LorentzVector(0, 0, 0, 0);
-    tag_p4 = LorentzVector(0, 0, 0, 0);
-    dilep_p4 = LorentzVector(0, 0, 0, 0);
-    mc_p4 = LorentzVector(0, 0, 0, 0);
-    mc_motherp4 = LorentzVector(0, 0, 0, 0);
-    mc_motherid = -1;
-    id = -1;
-    isPF = false;
-    idx = -1;
-    dxyPV = -1;
-    dZ = -1;
-    dxyPV_err = -1;
-    motherID = -1;
-    mc_id = -1;
-    RelIso03 = -1;
-    RelIso03EA = -1;
-    tag_RelIso03EA = -1;
-    RelIso03DB = -1;
-    pfChargedHadronIso = -1;
-    pfPhotonIso = -1;
-    pfNeutralHadronIso = -1;
-    tkIso = -1;
-    sumPUPt = -1;
-    passes_SS_tight_v3 = 0;
-    passes_SS_tight_noiso_v3 = 0;
-    passes_SS_fo_v3 = 0;
-    passes_SS_fo_noiso_v3 = 0;
-    passes_SS_fo_looseMVA_v3 = 0;
-    passes_SS_fo_looseMVA_noiso_v3 = 0;
-    passes_SS_veto_v3 = 0;
-    passes_SS_veto_noiso_v3 = 0;
-    passes_SS_tight_v4 = 0;
-    passes_SS_tight_noiso_v4 = 0;
-    passes_SS_fo_v4 = 0;
-    passes_SS_fo_noiso_v4 = 0;
-    passes_SS_fo_looseMVA_v4 = 0;
-    passes_SS_fo_looseMVA_noiso_v4 = 0;
-    passes_SS_veto_v4 = 0;
-    passes_SS_veto_noiso_v4 = 0;
-    passes_SS_tight_v5 = 0;
-    passes_SS_tight_noiso_v5 = 0;
-    passes_SS_fo_v5 = 0;
-    passes_SS_fo_noiso_v5 = 0;
-    passes_SS_fo_looseMVA_v5 = 0;
-    passes_SS_fo_looseMVA_noiso_v5 = 0;
-    passes_SS_veto_v5 = 0;
-    passes_SS_veto_noiso_v5 = 0;
-    passes_WW_medium_v2 = 0;
-    passes_WW_medium_noiso_v2 = 0;
-    passes_WW_fo_v2 = 0;
-    passes_WW_fo_noiso_v2 = 0;
-    passes_WW_veto_v2 = 0;
-    passes_WW_veto_noiso_v2 = 0;
-    passes_HAD_veto_v3 = 0;
-    passes_HAD_veto_noiso_v3 = 0;
-    passes_HAD_loose_v3 = 0;
-    passes_HAD_loose_noiso_v3 = 0;
-    passes_VVV_cutbased_veto_bak1 = 0;
-    passes_VVV_cutbased_veto_noiso_bak1 = 0;
-    passes_VVV_cutbased_veto_noiso_noip_bak1 = 0;
-    passes_VVV_cutbased_veto = 0;
-    passes_VVV_cutbased_veto_noiso = 0;
-    passes_VVV_cutbased_veto_noiso_noip = 0;
-    passes_VVV_cutbased_fo = 0;
-    passes_VVV_cutbased_fo_noiso = 0;
-    passes_VVV_baseline = 0;
-    passes_VVV_MVAbased_tight = 0;
-    passes_VVV_MVAbased_tight_noiso = 0;
-    passes_VVV_cutbased_tight = 0;
-    passes_VVV_cutbased_tight_noiso = 0;
-    passes_POG_vetoID = 0;
-    passes_POG_looseID = 0;
-    passes_POG_mediumID = 0;
-    passes_POG_tightID = 0;
-    type = -1;
-    ip3d = -1;
-    ip3derr = -1;
-    mt = -1;
-    ptrelv0 = -1;
-    ptrelv1 = -1;
-    miniiso = -1;
-    miniisoDB = -1;
-    reliso04 = -1;
-    annulus04 = -1;
-    AbsTrkIso = -1;
-    TrkAn04 = -1;
-    iso03sumPt = -1;
-    iso03emEt = -1;
-    iso03hadEt = -1;
-    jet_close_lep_idx = -1;
-    jet_close_lep = LorentzVector(0, 0, 0, 0);
-    jet_close_lep_undoJEC = -1;
-    jet_close_lep_area = -1;
-    jet_close_L1 = -1;
-    jet_close_L1nc = -1;
-    jet_close_L1ncmc = -1;
-    jet_close_L1L2L3 = -1;
-    jet_close_L2L3 = -1;
-    ptratio = -1;
-    dilep_mass = -1.;
-    isRandom = false;
-    //Tag variables
-    tag_charge = 0.;
-    tag_mc_motherid = 0.;
-    tag_eSeed = -1;
-    tag_eSCRaw = -1;
-    tag_eSC = -1;
-    tag_ecalEnergy = -1;
-    tag_HLT_Ele27_eta2p1_WPTight_Gsf = 0;
-    tag_HLT_Ele32_eta2p1_WPTight_Gsf = 0;
-    tag_HLT_IsoMu24 = 0;
-    tag_HLT_IsoTkMu24 = 0;
-    //Muons
-    pid_PFMuon = -1;
-    gfit_chi2 = -1;
-    // gfit_ndof = -1;
-    gfit_validSTAHits = -1;
-    numberOfMatchedStations = -1;
-    validPixelHits = -1;
-    nlayers = -1;
-    chi2LocalPosition = -99;
-    trkKink = -99;
-    validHits = -99;
-    lostHits = -99;
-    exp_outerlayers = -99;
-    segmCompatibility = -99;
-    //Electrons
-    sigmaIEtaIEta_full5x5 = -1;
-    sigmaIEtaIEta = -1;
-    etaSC = -1;
-    dEtaIn = -1;
-    dPhiIn = -99;
-    hOverE = -1;
-    eSeed = -1;
-    eSC = -1;
-    eSCRaw = -1;
-    scSeedEta = -1;
-    ecalEnergy = -1;
-    eOverPIn = -1;
-    conv_vtx_flag = 0;
-    exp_innerlayers = -1;
-    charge = 0;
-    sccharge = 0;
-    ckf_charge = 0;
-    trk_charge = 0;
-    threeChargeAgree_branch = 0;
-    mva = -999.;
-    mva_25ns = -999.;
-    tag_mva_25ns = -999.;
-    ecalIso = -1;
-    hcalIso = -1;
-    ecalPFClusterIso = -1;
-    hcalPFClusterIso = -1;
-    ckf_laywithmeas = -1;
-    sigmaIPhiIPhi_full5x5 = -1;
-    e1x5_full5x5 = -1;
-    e5x5_full5x5 = -1;
-    r9_full5x5 = -1;
-    tag_r9_full5x5 = -1;
-    etaSCwidth = -1;
-    phiSCwidth = -1;
-    eSCRaw = -1;
-    eSC = -1;
-    ecalEnergy = -1;
-    eSCPresh = -1;
-    ckf_chi2 = -1;
-    ckf_ndof = -1;
-    chi2 = -1;
-    ndof = -1;
-    fbrem = -1;
-    eOverPOut = -1;
-    dEtaOut = -1;
-    dPhiOut = -1;
-    gsf_validHits = -1;
-    conv_vtx_prob = -1;
-    //Single Muon Trigger
-    HLT_Mu8_TrkIsoVVL = 0;
-    HLT_Mu17_TrkIsoVVL = 0;
-    HLT_Mu8 = 0;
-    HLT_Mu17 = 0;
-    HLT_IsoMu24 = 0;
-    HLT_IsoTkMu24 = 0;
-    HLT_Mu50 = 0;
-    HLT_Mu55 = 0;
-    HLT_TkMu50 = 0;
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = 0;
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
-    HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
-    HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
-    HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
-    HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
-    HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
-    HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
-    HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = 0;
-    HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
-    HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
-    HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
-    HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
-    HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
-    HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = 0;
-    HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
-    HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = 0;
-    HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
-    HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = 0;
-    HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = 0;
-    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg = 0;
-    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg = 0;
-    HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg = 0;
-    HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg = 0;
-    HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg = 0;
-    HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg = 0;
-    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_TrailingLeg = 0;
-    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_LeadingLeg = 0;
-    HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_TrailingLeg = 0;
-    HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_LeadingLeg = 0;
-    // Di lepton triggers
-    HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
-    HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL = 0;
-    HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL = 0;
-    HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ = 0;
-    HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
-    HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL = 0;
-    HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ = 0;
-    HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ = 0;
-    HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ = 0;
-    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ = 0;
-    HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ = 0;
-    HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ = 0;
-    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL = 0;
-    HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL = 0;
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ = 0;
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ = 0;
-    //Single Electron Trigger
-    HLT_Ele8_CaloIdM_TrackIdM_PFJet30 = 0;
-    HLT_Ele12_CaloIdM_TrackIdM_PFJet30 = 0;
-    HLT_Ele17_CaloIdM_TrackIdM_PFJet30 = 0;
-    HLT_Ele23_CaloIdM_TrackIdM_PFJet30 = 0;
-    HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
-    HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
-    HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
-    HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30 = 0;
-    HLT_Ele27_eta2p1_WPTight_Gsf = 0;
-    HLT_Ele32_eta2p1_WPTight_Gsf = 0;
-    HLT_Ele105_CaloIdVT_GsfTrkIdT = 0;
-    HLT_Ele115_CaloIdVT_GsfTrkIdT = 0;
-    //Double Electron Trigger
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1 = 0;
-    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL = 0;
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1 = 0;
-    //MuEl Trigger
-    HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300 = 0;
-    //Double Muon Trigger
-    HLT_DoubleMu8_Mass8_PFHT300 = 0;
-}
+bool babyMaker::checkMuonTag(unsigned int i, bool oldTag){
+  for (unsigned int j = 0; j < tas::mus_p4().size(); j++){
+    if (i == j) continue;
+    if (tas::mus_p4().at(j).pt() < 20.0) continue;
+    if (fabs(tas::mus_p4().at(j).eta()) > 2.4) continue;
+    if (fabs(tas::mus_dxyPV().at(j)) > 0.02) continue;
+    if (fabs(tas::mus_dzPV().at(j)) > 0.05) continue;
+    if (fabs(tas::mus_ip3d().at(j) / tas::mus_ip3derr().at(j)) > 4) continue;
+    if (!isTightMuonPOG(j)) continue; 
+    if (muRelIso03EA(j) > 0.2) continue;
+    tag_p4 = tas::mus_p4().at(j);
+    tag_charge = tas::mus_charge().at(j);
+    tag_HLTLeadingLeg = false;
+    tag_RelIso03EA = muRelIso03EA(j);
+    if (!evt_isRealData) tag_mc_motherid = tas::mus_mc_motherid().at(j);
 
-//___________________________________________________________________________________________________________________________________________
-bool babyMaker::checkMuonTag(unsigned int i, bool oldTag)
-{
-    for (unsigned int j = 0; j < tas::mus_p4().size(); j++)
-    {
-        // Tag muon selection
-        if (i == j)  { continue; }
-        if (tas::mus_p4().at(j).pt() < 20.0)  { continue; }
-        if (fabs(tas::mus_p4().at(j).eta()) > 2.4)  { continue; }
-        if (fabs(tas::mus_dxyPV().at(j)) > 0.02)  { continue; }
-        if (fabs(tas::mus_dzPV().at(j)) > 0.05)  { continue; }
-        if (fabs(tas::mus_ip3d().at(j)
-                    / tas::mus_ip3derr().at(j)) > 4)  { continue; }
-        if (!isTightMuonPOG(j))  { continue; }
-        if (muRelIso03EA(j) > 0.2)  { continue; }
-        // Retrieve tag muon information
-        tag_p4 = tas::mus_p4().at(j);
-        tag_charge = tas::mus_charge().at(j);
-        tag_RelIso03EA = muRelIso03EA(j);
-        // If MC, get the motherID of the tag
-        if (!evt_isRealData) { tag_mc_motherid = tas::mus_mc_motherid().at(j); }
-        // Set the branch of the tag muons single lepton trigger bit
-        setHLTBranch("HLT_IsoMu24_v", (j >= 0 ? tas::mus_HLT_IsoMu24().at(j) : 0), tag_HLT_IsoMu24);
-        setHLTBranch("HLT_IsoTkMu24_v", (j >= 0 ? tas::mus_HLT_IsoTkMu24().at(j) : 0), tag_HLT_IsoTkMu24);
-        //Randomize if needed
-        if (usedMu == false && ((rndm < 0.5 && tag_charge < 0) || (rndm >= 0.5 && tag_charge > 0)))
-        {
-            isRandom = true;
-            usedMu = true;
-        }
-        else
-        {
-            isRandom = false;
-        }
-        // Exit with true when tag muon found
-        return true;
+    // //both data and MC - works with new data and MC
+    // if (!oldTag) {
+    //   tag_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg().at(j);
+    //   tag_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg  = tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg().at(j);
+    //   tag_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg   = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg().at(j);
+    //   tag_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg    = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg().at(j);
+    // }
+
+    setHLTBranch("HLT_IsoMu20_v"         ,  true, tag_HLT_IsoMu20         );
+    setHLTBranch("HLT_IsoTkMu20_v"       ,  true, tag_HLT_IsoTkMu20       );
+    setHLTBranch("HLT_IsoTkMu20_eta2p1_v",  true, tag_HLT_IsoTkMu20_eta2p1);
+    setHLTBranch("HLT_IsoMu24_eta2p1_v"  ,  true, tag_HLT_IsoMu24_eta2p1  );
+    setHLTBranch("HLT_IsoTkMu24_eta2p1_v",  true, tag_HLT_IsoTkMu24_eta2p1);
+    setHLTBranch("HLT_IsoMu22_v"         ,  true, tag_HLT_IsoMu22         );
+    setHLTBranch("HLT_IsoTkMu22_v"       ,  true, tag_HLT_IsoTkMu22       );
+    setHLTBranch("HLT_IsoMu24_v"         ,  true, tag_HLT_IsoMu24         );
+    setHLTBranch("HLT_IsoTkMu24_v"       ,  true, tag_HLT_IsoTkMu24       );
+    setHLTBranch("HLT_IsoMu27_v"         ,  true, tag_HLT_IsoMu27         );
+    setHLTBranch("HLT_IsoTkMu27_v"       ,  true, tag_HLT_IsoTkMu27       );
+    setHLTBranch("HLT_Mu8_TrkIsoVVL_v"   ,  true, tag_HLT_Mu8_TrkIsoVVL   );
+    setHLTBranch("HLT_Mu17_TrkIsoVVL_v"  ,  true, tag_HLT_Mu17_TrkIsoVVL  );
+    setHLTBranch("HLT_Mu8_v"             ,  true, tag_HLT_Mu8             );
+    setHLTBranch("HLT_Mu17_v"            ,  true, tag_HLT_Mu17            );
+
+    //Randomize if needed
+    if (usedMu == false && ((rndm < 0.5 && tag_charge < 0) || (rndm >= 0.5 && tag_charge > 0))){
+      isRandom = true;
+      usedMu = true;
     }
-    return false;
+    else isRandom = false;
+    return true;
+
+  }
+  return false;
 }
 
-//___________________________________________________________________________________________________________________________________________
-bool babyMaker::checkElectronTag(unsigned int i, readMVA* v25nsMVAreader)
-{
-    for (unsigned int j = 0; j < tas::els_p4().size(); j++)
-    {
-        // Tag electron selection
-        if (i == j)  { continue; }
-        if (tas::els_p4().at(j).pt() < 20.0)  { continue; }
-        if (fabs(tas::els_etaSC().at(j)) > 2.5)  { continue; }
-        if (!tas::els_passMediumId().at(j))  { continue; }
-        if (fabs(tas::els_ip3d().at(j)
-                    / tas::els_ip3derr().at(j)) > 4)  { continue; }
-        // Retreive tag electron information
-        tag_p4 = tas::els_p4().at(j);
-        tag_charge = tas::els_charge().at(j);
-        tag_eSeed = tas::els_eSeed().at(j);
-        tag_eSCRaw = tas::els_eSCRaw().at(j);
-        tag_eSC = tas::els_eSC().at(j);
-        tag_ecalEnergy = tas::els_ecalEnergy().at(j);
-        tag_r9_full5x5 = tas::els_r9_full5x5().at(j);
-        if (v25nsMVAreader != 0)  { tag_mva_25ns = v25nsMVAreader->MVA(j); }
-        tag_RelIso03EA = eleRelIso03EA(j);
-        // If MC, get the motherID of the tag
-        if (!evt_isRealData)
-        { tag_mc_motherid = tas::els_mc_motherid().at(j); }
-        // Set the branch of the tag electrons single lepton trigger bit
-        setHLTBranch("HLT_Ele27_eta2p1_WPTight_Gsf_v", (j >= 0 ? tas::els_HLT_Ele27_eta2p1_WPTight_Gsf().at(j) : 0), tag_HLT_Ele27_eta2p1_WPTight_Gsf);
-        setHLTBranch("HLT_Ele32_eta2p1_WPTight_Gsf_v", (j >= 0 ? tas::els_HLT_Ele32_eta2p1_WPTight_Gsf().at(j) : 0), tag_HLT_Ele32_eta2p1_WPTight_Gsf);
-        // Randomize if needed
-        if (usedEl == false && ((rndm < 0.5 && tag_charge < 0) || (rndm >= 0.5 && tag_charge > 0)))
-        {
-            isRandom = true;
-            usedEl = true;
-        }
-        else
-        {
-            isRandom = false;
-        }
-        // Return true when tag electron found
-        return true;
+bool babyMaker::checkElectronTag(unsigned int i, readMVA* v25nsMVAreader){
+  for(unsigned int j = 0; j < tas::els_p4().size(); j++){
+    if (i == j) continue;
+    if (tas::els_p4().at(j).pt() < 20.0) continue;
+    if (fabs(tas::els_etaSC().at(j)) > 2.5) continue;
+    // if (!tas::els_passMediumId().at(j)) continue;
+    if (!isMediumElectronPOG(j)) continue;
+    if (fabs(tas::els_ip3d().at(j) / tas::els_ip3derr().at(j)) > 4) continue;
+    tag_p4 = tas::els_p4().at(j);
+    if (verbose) cout << "Found a tag: pt/eta/phi "<<tag_p4.pt()<<"/"<<tag_p4.eta()<<"/"<<tag_p4.phi() << endl;
+    tag_charge = tas::els_charge().at(j); 
+    tag_eSeed = tas::els_eSeed().at(j); 
+    tag_eSCRaw = tas::els_eSCRaw().at(j);      
+    tag_eSC = tas::els_eSC().at(j);      
+    tag_ecalEnergy = tas::els_ecalEnergy().at(j);      
+    tag_r9_full5x5 = tas::els_r9_full5x5().at(j);
+    if (v25nsMVAreader != 0) tag_mva_25ns = v25nsMVAreader->MVA(j);
+    tag_RelIso03EA = eleRelIso03EA(j);
+    // tag_HLTLeadingLeg = (tas::els_HLT_Ele17_Ele8_Mass50_LeadingLeg().at(j) > 0 || tas::els_HLT_Ele20_SC4_Mass50_LeadingLeg().at(j) > 0);
+    if (!evt_isRealData) tag_mc_motherid = tas::els_mc_motherid().at(j);
+
+    //both data and MC triggers
+    // tag_HLT_Ele25WP60_Ele8_Mass55_LeadingLeg = tas::els_HLT_Ele25WP60_Ele8_Mass55_LeadingLeg().at(j);
+    // tag_HLT_Ele25WP60_SC4_Mass55_LeadingLeg  = tas::els_HLT_Ele25WP60_SC4_Mass55_LeadingLeg().at(j);
+    setHLTBranch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_v",  true, tag_HLT_Ele23_CaloIdL_TrackIdL_IsoVL);
+    setHLTBranch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_v",  true, tag_HLT_Ele12_CaloIdL_TrackIdL_IsoVL);
+    // tag_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg().at(j);
+
+    //only data triggers
+    if (tas::evt_isRealData()){
+
+      // tag_HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg = tas::els_HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(j);      
+      // tag_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg = tas::els_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(j);
+      // tag_HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg = tas::els_HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(j);
+      // tag_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg = tas::els_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(j);
+      // tag_HLT_Ele33_CaloIdM_TrackIdM_PFJet30_ElectronLeg = tas::els_HLT_Ele33_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(j);
+      // tag_HLT_Ele23_CaloIdM_TrackIdM_PFJet30_ElectronLeg = tas::els_HLT_Ele23_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(j);
+      // tag_HLT_Ele18_CaloIdM_TrackIdM_PFJet30_ElectronLeg = tas::els_HLT_Ele18_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(j);
+      // tag_HLT_Ele12_CaloIdM_TrackIdM_PFJet30_ElectronLeg = tas::els_HLT_Ele12_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(j);
+      // tag_HLT_Ele8_CaloIdM_TrackIdM_PFJet30_ElectronLeg = tas::els_HLT_Ele8_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(j);
+
+      setHLTBranch("HLT_Ele27_eta2p1_WPLoose_Gsf_v",  true, tag_HLT_Ele27_eta2p1_WPLoose_Gsf);
+      setHLTBranch("HLT_Ele27_eta2p1_WPTight_Gsf_v",  true, tag_HLT_Ele27_eta2p1_WPTight_Gsf);
+      setHLTBranch("HLT_Ele32_eta2p1_WPLoose_Gsf_v",  true, tag_HLT_Ele32_eta2p1_WPLoose_Gsf);
+      setHLTBranch("HLT_Ele32_eta2p1_WPTight_Gsf_v",  true, tag_HLT_Ele32_eta2p1_WPTight_Gsf);
+      setHLTBranch("HLT_Ele22_eta2p1_WPLoose_Gsf_v",  true, tag_HLT_Ele22_eta2p1_WPLoose_Gsf);
+      setHLTBranch("HLT_Ele22_eta2p1_WPTight_Gsf_v",  true, tag_HLT_Ele22_eta2p1_WPTight_Gsf);
+      setHLTBranch("HLT_Ele25_eta2p1_WPTight_Gsf_v",  true, tag_HLT_Ele25_eta2p1_WPTight_Gsf);
+      setHLTBranch("HLT_Ele23_WPLoose_Gsf_v",  true, tag_HLT_Ele23_WPLoose_Gsf);	
+    }    
+
+    //only MC triggers
+    if(!(tas::evt_isRealData())){
+      setHLTBranch("HLT_Ele27_eta2p1_WP75_Gsf_v",  true, tag_HLT_Ele27_eta2p1_WP75_Gsf);
+      setHLTBranch("HLT_Ele27_WP85_Gsf_v"       ,  true, tag_HLT_Ele27_WP85_Gsf       );
+      setHLTBranch("HLT_Ele32_eta2p1_WP75_Gsf_v",  true, tag_HLT_Ele32_eta2p1_WP75_Gsf);
     }
-    return false;
-}
 
-//___________________________________________________________________________________________________________________________________________
-// To check whether a muon is a PF cand, match the candidate to a PF via deltaR matching
-int babyMaker::isPFmuon(vector<LorentzVector> &pfP4, vector<bool> &pfmuIsReco, int idx)
-{
-    for (size_t i = 0; i < pfP4.size(); i++)
-    {
-        float dR2 = ROOT::Math::VectorUtil::DeltaR2(pfP4[i], tas::mus_p4().at(idx));
-        if (dR2 < 0.0025)
-        {
-            pfmuIsReco[i] = true;
-            return i;
-        }
+    // Randomize if needed
+    if (usedEl == false && ((rndm < 0.5 && tag_charge < 0) || (rndm >= 0.5 && tag_charge > 0))){
+      isRandom = true;
+      usedEl = true;
     }
-    return -1;
+    else isRandom = false;
+    return true;
+  }
+  return false;
 }
 
-//___________________________________________________________________________________________________________________________________________
-// To check whether a muon is a PF cand, match the candidate to a PF via deltaR matching
-int babyMaker::isPFelectron(vector<LorentzVector> &pfP4, vector<bool> &pfelIsReco, int idx)
-{
-    for (size_t i = 0; i < pfP4.size(); i++)
-    {
-        float dR2 = ROOT::Math::VectorUtil::DeltaR2(pfP4[i], tas::els_p4().at(idx));
-        if (dR2 < 0.0025)
-        {
-            pfelIsReco[i] = true;
-            return i;
-        }
+int babyMaker::isPFmuon(vector<LorentzVector> &pfP4, vector<bool> &pfmuIsReco, int idx){
+  for(size_t i = 0; i < pfP4.size(); i++) {
+    float dR2 = ROOT::Math::VectorUtil::DeltaR2(pfP4[i], tas::mus_p4().at(idx));
+    if (dR2 < 0.0025) {
+      pfmuIsReco[i] = true;
+      return i;
     }
-    return -1;
+  }
+  return -1;
 }
 
-//___________________________________________________________________________________________________________________________________________
+int babyMaker::isPFelectron(vector<LorentzVector> &pfP4, vector<bool> &pfelIsReco, int idx){
+  for(size_t i = 0; i < pfP4.size(); i++){
+    float dR2 = ROOT::Math::VectorUtil::DeltaR2(pfP4[i], tas::els_p4().at(idx));
+    if (dR2 < 0.0025){
+      pfelIsReco[i] = true;
+      return i;
+    }
+  }
+  return -1;
+}
+
 // NJA June 6, 2016: some triggers matching p4 to last path will match jet and not lepton, so explicitly check match here
-void babyMaker::alternativeFilterMatch(LorentzVector &p4, const char* trigName, const char* filtName, int& HLTbranch)
-{
-    if (abs(HLTbranch) == 0) { return; } // if we didn't previously see that we fired the trigger (1 or -1), give up and go home
+void babyMaker::alternativeFilterMatch(LorentzVector &p4, const char* trigName, const char* filtName, int& HLTbranch) {
+    if(abs(HLTbranch) == 0) return; // if we didn't previously see that we fired the trigger (1 or -1), give up and go home
     float test = 0;
     HLTbranch = matchToHLTFilter(trigName, filtName, p4, 0.2, &test);
 }
 
-//___________________________________________________________________________________________________________________________________________
-void babyMaker::fillElectronTriggerBranches(LorentzVector &p4, int idx, bool oldTag)
-{
-    if (idx == -1) { return; }
-    //Single Electron Trigger with Jet
-    setHLTBranch("HLT_Ele8_CaloIdM_TrackIdM_PFJet30_v", tas::els_HLT_Ele8_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx), HLT_Ele8_CaloIdM_TrackIdM_PFJet30);
-    setHLTBranch("HLT_Ele12_CaloIdM_TrackIdM_PFJet30_v", tas::els_HLT_Ele12_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx), HLT_Ele12_CaloIdM_TrackIdM_PFJet30);
-    setHLTBranch("HLT_Ele17_CaloIdM_TrackIdM_PFJet30_v", tas::els_HLT_Ele17_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx), HLT_Ele17_CaloIdM_TrackIdM_PFJet30);
-    setHLTBranch("HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v", tas::els_HLT_Ele23_CaloIdM_TrackIdM_PFJet30_ElectronLeg().at(idx), HLT_Ele23_CaloIdM_TrackIdM_PFJet30);
-    setHLTBranch("HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v", tas::els_HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx), HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    setHLTBranch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v", tas::els_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx), HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    setHLTBranch("HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_v", tas::els_HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx), HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    setHLTBranch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v", tas::els_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_ElectronLeg().at(idx), HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30);
-    //Single Electron Trigger
-    setHLTBranch("HLT_Ele27_eta2p1_WPTight_Gsf_v", tas::els_HLT_Ele27_eta2p1_WPTight_Gsf().at(idx), HLT_Ele27_eta2p1_WPTight_Gsf);
-    setHLTBranch("HLT_Ele32_eta2p1_WPTight_Gsf_v", tas::els_HLT_Ele32_eta2p1_WPTight_Gsf().at(idx), HLT_Ele32_eta2p1_WPTight_Gsf);
-    setHLTBranch("HLT_Ele105_CaloIdVT_GsfTrkIdT_v", tas::els_HLT_Ele105_CaloIdVT_GsfTrkIdT().at(idx), HLT_Ele105_CaloIdVT_GsfTrkIdT);
-    setHLTBranch("HLT_Ele115_CaloIdVT_GsfTrkIdT_v", tas::els_HLT_Ele115_CaloIdVT_GsfTrkIdT().at(idx), HLT_Ele115_CaloIdVT_GsfTrkIdT);
-    setHLTBranch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_v", tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL().at(idx), HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL);
-//    setHLTBranch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ().at(idx), HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
-//    setHLTBranch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ().at(idx), HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg().at(idx);
-    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg = tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg().at(idx);
-//    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg().at(idx);
-//    HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg().at(idx);
-//    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg = tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_TrailingLeg().at(idx);
-//    HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg = tas::els_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_LeadingLeg().at(idx);
+void babyMaker::fillElectronTriggerBranches(LorentzVector &p4, int idx, bool oldTag){
+
+  if (oldTag) idx=-1;
+
+  //Single Electron Trigger
+  setHLTBranch("HLT_Ele8_CaloIdM_TrackIdM_PFJet30_v" ,  true, HLT_Ele8_CaloIdM_TrackIdM_PFJet30 );
+  setHLTBranch("HLT_Ele12_CaloIdM_TrackIdM_PFJet30_v",  true, HLT_Ele12_CaloIdM_TrackIdM_PFJet30);
+  setHLTBranch("HLT_Ele17_CaloIdM_TrackIdM_PFJet30_v",  true, HLT_Ele17_CaloIdM_TrackIdM_PFJet30);
+  setHLTBranch("HLT_Ele18_CaloIdM_TrackIdM_PFJet30_v",  true, HLT_Ele18_CaloIdM_TrackIdM_PFJet30);
+  setHLTBranch("HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v",  true, HLT_Ele23_CaloIdM_TrackIdM_PFJet30);
+  setHLTBranch("HLT_Ele33_CaloIdM_TrackIdM_PFJet30_v",  true, HLT_Ele33_CaloIdM_TrackIdM_PFJet30);
+  setHLTBranch("HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  true, HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  setHLTBranch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  true, HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  setHLTBranch("HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_v", true, HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  setHLTBranch("HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  true, HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  setHLTBranch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  true, HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  setHLTBranch("HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30_v",  true, HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30);
+
+    // // FIXME only because prescales are broken right now
+  // setHLTBranch("HLT_Ele8_CaloIdM_TrackIdM_PFJet30_v"        , true  , HLT_Ele8_CaloIdM_TrackIdM_PFJet30 );
+  // setHLTBranch("HLT_Ele12_CaloIdM_TrackIdM_PFJet30_v"       , true , HLT_Ele12_CaloIdM_TrackIdM_PFJet30);
+  // setHLTBranch("HLT_Ele17_CaloIdM_TrackIdM_PFJet30_v"       , true , HLT_Ele17_CaloIdM_TrackIdM_PFJet30);
+  // setHLTBranch("HLT_Ele18_CaloIdM_TrackIdM_PFJet30_v"       , true , HLT_Ele18_CaloIdM_TrackIdM_PFJet30);
+  // setHLTBranch("HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v"       , true , HLT_Ele23_CaloIdM_TrackIdM_PFJet30);
+  // setHLTBranch("HLT_Ele33_CaloIdM_TrackIdM_PFJet30_v"       , true , HLT_Ele33_CaloIdM_TrackIdM_PFJet30);
+  // setHLTBranch("HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v"  , true , HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  // setHLTBranch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v" , true , HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  // setHLTBranch("HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_v" , true , HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  // setHLTBranch("HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30_v" , true , HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  // setHLTBranch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v" , true , HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30);
+  // setHLTBranch("HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30_v" , true , HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30);
+
+  if (tas::evt_isRealData()) setHLTBranch("HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p54PF_v",  true, HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p54PF);
+  else setHLTBranch("HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF_v",  true, HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF);
+  if (!(tas::evt_isRealData())) setHLTBranch("HLT_Ele27_eta2p1_WP75_Gsf_v",  true, HLT_Ele27_eta2p1_WP75_Gsf);
+  if (!(tas::evt_isRealData())) setHLTBranch("HLT_Ele27_WP85_Gsf_v",  true, HLT_Ele27_WP85_Gsf);
+  if (tas::evt_isRealData()) setHLTBranch("HLT_Ele27_eta2p1_WPLoose_Gsf_v",  true, HLT_Ele27_eta2p1_WPLoose_Gsf);
+  if (tas::evt_isRealData()) setHLTBranch("HLT_Ele27_eta2p1_WPTight_Gsf_v",  true, HLT_Ele27_eta2p1_WPTight_Gsf);
+  if (!(tas::evt_isRealData())) setHLTBranch("HLT_Ele32_eta2p1_WP75_Gsf_v",  true, HLT_Ele32_eta2p1_WP75_Gsf);
+  if (tas::evt_isRealData()) setHLTBranch("HLT_Ele32_eta2p1_WPLoose_Gsf_v",  true, HLT_Ele32_eta2p1_WPLoose_Gsf);
+  if (tas::evt_isRealData()) setHLTBranch("HLT_Ele32_eta2p1_WPTight_Gsf_v",  true, HLT_Ele32_eta2p1_WPTight_Gsf);
+  if (tas::evt_isRealData()) setHLTBranch("HLT_Ele22_eta2p1_WPLoose_Gsf_v",  true, HLT_Ele22_eta2p1_WPLoose_Gsf);
+  if (tas::evt_isRealData()) setHLTBranch("HLT_Ele22_eta2p1_WPTight_Gsf_v",  true, HLT_Ele22_eta2p1_WPTight_Gsf);
+  if (tas::evt_isRealData()) setHLTBranch("HLT_Ele25_eta2p1_WPTight_Gsf_v",  true, HLT_Ele25_eta2p1_WPTight_Gsf);
+  if (tas::evt_isRealData()) setHLTBranch("HLT_Ele23_WPLoose_Gsf_v",  true, HLT_Ele23_WPLoose_Gsf);
+  setHLTBranch("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_v",  true, HLT_Ele23_CaloIdL_TrackIdL_IsoVL);
+  setHLTBranch("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_v",  true, HLT_Ele12_CaloIdL_TrackIdL_IsoVL);
+  // probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg =  (idx>=0 ? tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg().at(idx) : 0);
+  // probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg =  (idx>=0 ? tas::els_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg().at(idx) : 0);
+
+  // probe_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG2210 = matchToHLTFilter("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", "hltL1sL1DoubleEG2210", p4, 0.6, &probe_L1EG2210_pt);
+  // probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG1510 = matchToHLTFilter("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", "hltL1sL1DoubleEG1510", p4, 0.6, &probe_L1EG1510_pt);
+  // probe_HLT_Ele23_CaloIdL_TrackIdL_IsoVL_L1EG20 = matchToHLTFilter("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_v", "hltL1sL1SingleEG20", p4, 0.6, &probe_L1EG20_pt);
+  // probe_HLT_Ele12_CaloIdL_TrackIdL_IsoVL_L1EG10 = matchToHLTFilter("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_v", "hltL1sL1SingleEG10", p4, 0.6, &probe_L1EG10_pt);
+
+  //MuElectron Triggers
+  setHLTBranch("HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300_v",     true    , HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300);
+  setHLTBranch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v", true, HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL);
+  setHLTBranch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v",  true , HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL);
+
+  //Double Electron Trigger
+  setHLTBranch("HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300_v",  true, HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300);
+  setHLTBranch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",  true, HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
+  setHLTBranch("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v",  true, HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL);
+  setHLTBranch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",  true, HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ);
+  setHLTBranch("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_v",     true, HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL);
+  // if (HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ != 0) {
+  //   float test = 0;
+  //   // probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_LeadingLeg  = matchToHLTFilter("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", "hltEle17Ele12CaloIdLTrackIdLIsoVLTrackIsoLeg1Filter", p4, 0.1, &test);
+  //   // probe_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_TrailingLeg = matchToHLTFilter("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", "hltEle17Ele12CaloIdLTrackIdLIsoVLTrackIsoLeg2Filter", p4, 0.1, &test);
+  // }
+
+
+
 }
 
-//___________________________________________________________________________________________________________________________________________
-void babyMaker::fillMuonTriggerBranches(LorentzVector &p4, int idx, bool oldTag)
-{
-    //temporary until we run on mc with the new tag
-    if (oldTag) { idx = -1; }
-    if (idx == -1) { return; }
-    //Single Muon Triggers
-    setHLTBranch("HLT_Mu8_v", tas::mus_HLT_Mu8().at(idx), HLT_Mu8);
-    setHLTBranch("HLT_Mu17_v", tas::mus_HLT_Mu17().at(idx), HLT_Mu17);
-    setHLTBranch("HLT_Mu8_TrkIsoVVL_v", tas::mus_HLT_Mu8_TrkIsoVVL().at(idx), HLT_Mu8_TrkIsoVVL);
-    setHLTBranch("HLT_Mu17_TrkIsoVVL_v", tas::mus_HLT_Mu17_TrkIsoVVL().at(idx), HLT_Mu17_TrkIsoVVL);
-    setHLTBranch("HLT_IsoMu24_v", tas::mus_HLT_IsoMu24().at(idx), HLT_IsoMu24);
-    setHLTBranch("HLT_IsoTkMu24_v", tas::mus_HLT_IsoTkMu24().at(idx), HLT_IsoTkMu24);
-    setHLTBranch("HLT_Mu50_v", tas::mus_HLT_Mu50().at(idx), HLT_Mu50);
-    setHLTBranch("HLT_Mu55_v", tas::mus_HLT_Mu55().at(idx), HLT_Mu55);
-    setHLTBranch("HLT_TkMu50_v", tas::mus_HLT_TkMu50().at(idx), HLT_TkMu50);
-    setHLTBranch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v", tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ().at(idx), HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ);
-    setHLTBranch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v", tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ().at(idx), HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ);
-    setHLTBranch("HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v", tas::mus_HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ().at(idx), HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ);
-    setHLTBranch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v", tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL().at(idx), HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL);
-    setHLTBranch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v", tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL().at(idx), HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL);
-    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg().at(idx);
-    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg().at(idx);
-    HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg().at(idx);
-    HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg().at(idx);
-    HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg = tas::mus_HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg().at(idx); // ALways turned off?
-    HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg = tas::mus_HLT_TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg().at(idx); // ALways turned off?
-    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_TrailingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_TrailingLeg().at(idx);
-    HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_LeadingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_LeadingLeg().at(idx);
-    HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_TrailingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_TrailingLeg().at(idx);
-    HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_LeadingLeg = tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_LeadingLeg().at(idx);
+void babyMaker::fillMuonTriggerBranches(LorentzVector &p4, int idx, bool oldTag) {
+
+  //temporary until we run on mc with the new tag
+  if (oldTag) idx = -1;
+
+  //Single Muon Triggers
+  setHLTBranch("HLT_Mu8_v"             , true, HLT_Mu8             );
+  setHLTBranch("HLT_Mu17_v"            , true, HLT_Mu17            );
+  setHLTBranch("HLT_Mu24_v"            , true, HLT_Mu24            );
+  setHLTBranch("HLT_Mu34_v"            , true, HLT_Mu34            );
+  setHLTBranch("HLT_Mu8_TrkIsoVVL_v"   , true, HLT_Mu8_TrkIsoVVL   );
+  setHLTBranch("HLT_Mu17_TrkIsoVVL_v"  , true, HLT_Mu17_TrkIsoVVL  );
+  setHLTBranch("HLT_Mu24_TrkIsoVVL_v"  , true, HLT_Mu24_TrkIsoVVL  );
+  setHLTBranch("HLT_Mu34_TrkIsoVVL_v"  , true, HLT_Mu34_TrkIsoVVL  );
+  setHLTBranch("HLT_IsoMu20_v"         , true, HLT_IsoMu20         );
+  setHLTBranch("HLT_IsoTkMu20_v"       , true, HLT_IsoTkMu20       );
+  setHLTBranch("HLT_IsoTkMu20_eta2p1_v", true, HLT_IsoTkMu20_eta2p1);
+  setHLTBranch("HLT_IsoMu24_eta2p1_v"  , true, HLT_IsoMu24_eta2p1  );
+  setHLTBranch("HLT_IsoTkMu24_eta2p1_v", true, HLT_IsoTkMu24_eta2p1);
+  setHLTBranch("HLT_IsoMu22_v"         , true, HLT_IsoMu22         );
+  setHLTBranch("HLT_IsoTkMu22_v"       , true, HLT_IsoTkMu22       );
+  setHLTBranch("HLT_IsoMu24_v"         , true, HLT_IsoMu24         );
+  setHLTBranch("HLT_IsoTkMu24_v"       , true, HLT_IsoTkMu24       );
+  setHLTBranch("HLT_IsoMu27_v"         , true, HLT_IsoMu27         );
+  setHLTBranch("HLT_IsoTkMu27_v"       , true, HLT_IsoTkMu27       );
+  setHLTBranch("HLT_Mu45_eta2p1_v"     , true, HLT_Mu45_eta2p1     );
+  setHLTBranch("HLT_Mu50_v"            , true, HLT_Mu50            );
+  if (tas::evt_isRealData()) setHLTBranch("HLT_Mu10_CentralPFJet30_BTagCSV0p54PF_v", true, HLT_Mu10_CentralPFJet30_BTagCSV0p54PF);
+  else setHLTBranch("HLT_Mu10_CentralPFJet30_BTagCSV0p5PF_v", true, HLT_Mu10_CentralPFJet30_BTagCSV0p5PF);
+
+  //MuElectron Trigger
+  setHLTBranch("HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300_v"    , true, HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300);
+  setHLTBranch("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v", true, HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL);
+  setHLTBranch("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v" , true, HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL);
+
+  //Double Muon Trigger
+  setHLTBranch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v"     , true, HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL     );
+  setHLTBranch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v"   , true, HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL   );
+  setHLTBranch("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"  , true, HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ  );
+  setHLTBranch("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v", true, HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ);
+  setHLTBranch("HLT_DoubleMu8_Mass8_PFHT300_v",  true, HLT_DoubleMu8_Mass8_PFHT300);
+
 }
 
-//___________________________________________________________________________________________________________________________________________
-int babyMaker::pfLepMotherID(int pfidx)
-{
-    for (unsigned int j = 0; j < tas::genps_id().size(); j++)
-    {
-        if (tas::genps_id().at(j) != tas::pfcands_particleId().at(pfidx)) { continue; }
-        if (tas::genps_p4().at(j).pt() < 2) { continue; }
-        if (!tas::genps_isPromptFinalState().at(j)) { continue; }
-        if (ROOT::Math::VectorUtil::DeltaR(tas::pfcands_p4().at(pfidx), tas::genps_p4().at(j)) > 0.1) { continue; }
-        // Found good match
-        return 1;
+
+int babyMaker::pfLepMotherID(int pfidx) {
+  
+  for (unsigned int j = 0; j < tas::genps_id().size(); j++) {
+    if ( tas::genps_id().at(j) != tas::pfcands_particleId().at(pfidx) ) continue;
+    if ( tas::genps_p4().at(j).pt() < 2 ) continue;
+    if ( !tas::genps_isPromptFinalState().at(j) ) continue;
+    if (ROOT::Math::VectorUtil::DeltaR(tas::pfcands_p4().at(pfidx), tas::genps_p4().at(j)) > 0.1) continue;
+    // Found good match
+    return 1;
+  }
+  return 0;
+}
+
+
+
+//Main function
+int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
+
+  //Print warning!
+  cout << "Careful!! Path is " << path << endl;
+
+  //Create and init MVA
+  createAndInitMVA("./CORE", true, true, 80); // Moriond
+
+  readMVA* v25nsMVAreader = new readMVA();
+  v25nsMVAreader->InitMVA("CORE",true); 
+  
+  //Add good run list
+  set_goodrun_file("goodRunList/Cert_294927-306462_13TeV_PromptReco_Collisions17_snt.txt");
+
+  //Make Baby Ntuple  
+  MakeBabyNtuple( Form("%s", output_name) );
+
+  //Initialize Baby Ntuple
+  InitBabyNtuple();
+
+
+  //JEC files -- 25 ns MC
+  std::vector<std::string> jetcorr_filenames_25ns_MC_pfL1;
+  std::vector<std::string> jetcorr_filenames_25ns_MC_pfL1L2L3;
+  std::vector<std::string> jetcorr_filenames_25ns_MC_pfL2L3;
+  jetcorr_filenames_25ns_MC_pfL1.push_back      ("CORE/Tools/jetcorr/data/run2_25ns/Fall17_17Nov2017_V6_MC/Fall17_17Nov2017_V6_MC_L1FastJet_AK4PFchs.txt");
+  jetcorr_filenames_25ns_MC_pfL1L2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/Fall17_17Nov2017_V6_MC/Fall17_17Nov2017_V6_MC_L1FastJet_AK4PFchs.txt");
+  jetcorr_filenames_25ns_MC_pfL1L2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/Fall17_17Nov2017_V6_MC/Fall17_17Nov2017_V6_MC_L2Relative_AK4PFchs.txt");
+  jetcorr_filenames_25ns_MC_pfL1L2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/Fall17_17Nov2017_V6_MC/Fall17_17Nov2017_V6_MC_L3Absolute_AK4PFchs.txt");
+  jetcorr_filenames_25ns_MC_pfL2L3.push_back    ("CORE/Tools/jetcorr/data/run2_25ns/Fall17_17Nov2017_V6_MC/Fall17_17Nov2017_V6_MC_L2Relative_AK4PFchs.txt");
+  jetcorr_filenames_25ns_MC_pfL2L3.push_back    ("CORE/Tools/jetcorr/data/run2_25ns/Fall17_17Nov2017_V6_MC/Fall17_17Nov2017_V6_MC_L3Absolute_AK4PFchs.txt");
+  jetcorr_filenames_25ns_MC_pfL2L3.push_back    ("CORE/Tools/jetcorr/data/run2_25ns/Fall17_17Nov2017_V6_MC/Fall17_17Nov2017_V6_MC_L2L3Residual_AK4PFchs.txt");
+
+  std::string jecEra = "Fall17_17Nov2017F_V6";
+  TString firstfilename = TString(((TFile*)chain->GetListOfFiles()->At(0))->GetTitle());
+       if (firstfilename.Contains("Run2017B")) jecEra = "Fall17_17Nov2017B_V6";
+  else if (firstfilename.Contains("Run2017C")) jecEra = "Fall17_17Nov2017C_V6";
+  else if (firstfilename.Contains("Run2017D")) jecEra = "Fall17_17Nov2017D_V6";
+  else if (firstfilename.Contains("Run2017E")) jecEra = "Fall17_17Nov2017E_V6";
+  else if (firstfilename.Contains("Run2017F")) jecEra = "Fall17_17Nov2017F_V6";
+  std::cout <<  " jecEra: " << jecEra <<  std::endl;
+
+  //JEC files -- 25 ns DATA
+  std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL1;
+  std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL1L2L3;
+  std::vector<std::string> jetcorr_filenames_25ns_DATA_pfL2L3;
+  jetcorr_filenames_25ns_DATA_pfL1.push_back    ("CORE/Tools/jetcorr/data/run2_25ns/"+jecEra+"_DATA/"+jecEra+"_DATA_L1FastJet_AK4PFchs.txt");
+  jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/"+jecEra+"_DATA/"+jecEra+"_DATA_L1FastJet_AK4PFchs.txt");
+  jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/"+jecEra+"_DATA/"+jecEra+"_DATA_L2Relative_AK4PFchs.txt");
+  jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/"+jecEra+"_DATA/"+jecEra+"_DATA_L3Absolute_AK4PFchs.txt");
+  jetcorr_filenames_25ns_DATA_pfL1L2L3.push_back("CORE/Tools/jetcorr/data/run2_25ns/"+jecEra+"_DATA/"+jecEra+"_DATA_L2L3Residual_AK4PFchs.txt");
+  jetcorr_filenames_25ns_DATA_pfL2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/"+jecEra+"_DATA/"+jecEra+"_DATA_L2Relative_AK4PFchs.txt");
+  jetcorr_filenames_25ns_DATA_pfL2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/"+jecEra+"_DATA/"+jecEra+"_DATA_L3Absolute_AK4PFchs.txt");
+  jetcorr_filenames_25ns_DATA_pfL2L3.push_back  ("CORE/Tools/jetcorr/data/run2_25ns/"+jecEra+"_DATA/"+jecEra+"_DATA_L2L3Residual_AK4PFchs.txt");
+  FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL1; 
+  FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL1L2L3; 
+  FactorizedJetCorrector *jet_corrector_25ns_DATA_pfL2L3; 
+  jet_corrector_25ns_DATA_pfL1 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL1); 
+  jet_corrector_25ns_DATA_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL1L2L3); 
+  jet_corrector_25ns_DATA_pfL2L3 = makeJetCorrector(jetcorr_filenames_25ns_DATA_pfL2L3); 
+
+  //Make JEC for each of these
+  FactorizedJetCorrector *jet_corrector_25ns_MC_pfL1; 
+  FactorizedJetCorrector *jet_corrector_25ns_MC_pfL1L2L3; 
+  FactorizedJetCorrector *jet_corrector_25ns_MC_pfL2L3; 
+
+  //Fill the JEC
+  jet_corrector_25ns_MC_pfL1 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL1); 
+  jet_corrector_25ns_MC_pfL1L2L3 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL1L2L3); 
+  jet_corrector_25ns_MC_pfL2L3 = makeJetCorrector(jetcorr_filenames_25ns_MC_pfL2L3); 
+
+  //JECs
+  FactorizedJetCorrector *jet_corrector_pfL1 = 0;
+  FactorizedJetCorrector *jet_corrector_pfL1MC = 0;
+  FactorizedJetCorrector *jet_corrector_pfL1L2L3 = 0;
+  FactorizedJetCorrector *jet_corrector_pfL2L3 = 0;
+
+  //Record filenames
+  std::vector <string> jetcorr_filenames_pfL1;
+  std::vector <string> jetcorr_filenames_pfL1L2L3;
+  std::vector <string> jetcorr_filenames_pfL2L3;
+
+  //Set up loop over chain
+  unsigned int nEventsDone = 0;
+  unsigned int nEventsToDo = chain->GetEntries();
+  if(nEvents > 0) nEventsToDo = nEvents;
+  TObjArray *listOfFiles = chain->GetListOfFiles();
+  TIter fileIter(listOfFiles);
+  TFile *currentFile = 0;
+
+  // File Loop
+  while ( (currentFile = (TFile*)fileIter.Next()) ) { 
+
+    bool isPromptReco = TString(currentFile->GetTitle()).Contains("PromptReco");
+    bool isDataFromFileName = TString(currentFile->GetTitle()).Contains("Run201");
+    if (isPromptReco) { isDataFromFileName = true; }
+    else if (TString(currentFile->GetTitle()).Contains("DoubleMuon")) { isDataFromFileName = true; }
+    else if (TString(currentFile->GetTitle()).Contains("DoubleEG")) { isDataFromFileName = true; }
+
+    // ----------------------------------
+    // retrieve JEC from files, if using
+    // ----------------------------------
+
+
+    //// files for RunIISpring15 MC
+    if (isDataFromFileName){
+      jet_corrector_pfL1 = jet_corrector_25ns_DATA_pfL1;
+      jet_corrector_pfL1MC = jet_corrector_25ns_MC_pfL1;
+      jet_corrector_pfL1L2L3 = jet_corrector_25ns_DATA_pfL1L2L3;
+      jet_corrector_pfL2L3 = jet_corrector_25ns_DATA_pfL2L3;
+      jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_DATA_pfL1;
+      jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_DATA_pfL1L2L3;
+    } else {
+      jet_corrector_pfL1 = jet_corrector_25ns_MC_pfL1;
+      jet_corrector_pfL1MC = jet_corrector_25ns_MC_pfL1;
+      jet_corrector_pfL1L2L3 = jet_corrector_25ns_MC_pfL1L2L3;
+      jet_corrector_pfL2L3 = jet_corrector_25ns_MC_pfL2L3;
+      jetcorr_filenames_pfL1 = jetcorr_filenames_25ns_MC_pfL1;
+      jetcorr_filenames_pfL1L2L3 = jetcorr_filenames_25ns_MC_pfL1L2L3;
     }
-    return 0;
+    //cout << "applying JEC from the following files:" << endl;
+    //for (unsigned int ifile = 0; ifile < jetcorr_filenames_pfL1L2L3.size(); ++ifile) {
+    //cout << "   " << jetcorr_filenames_pfL1L2L3.at(ifile) << endl;
+    //}
+
+    // Get File Content
+    if(nEventsDone >= nEventsToDo) continue;
+    TFile *file = TFile::Open( currentFile->GetTitle() );
+    TTree *tree = (TTree*)file->Get("Events");
+    cms3.Init(tree);
+  
+    // Loop over Events in current file
+    unsigned int nEventsTree = tree->GetEntriesFast();
+    for(unsigned int evt = 0; evt < nEventsTree; evt++){
+
+      //if (verbose) cout << "Event "<<evt<<endl;
+      // Get Event Content
+      if(nEventsDone >= nEventsToDo) continue;   
+      cms3.GetEntry(evt);
+      nEventsDone++;
+
+      //if (verbose) cout << "Check prompt reco (Data)"<<endl;
+      if (tas::evt_isRealData() && isPromptReco && tas::evt_run() <= 251562) continue;
+
+      //If data, check good run list
+      //if (verbose) cout << "Check good run (Data)"<<endl;
+      if (applyJson && tas::evt_isRealData() && !goodrun(tas::evt_run(), tas::evt_lumiBlock())) continue; 
+
+      //Initialize variables
+      //if (verbose) cout << "InitBabyNtuple"<<endl;
+      InitBabyNtuple();
+
+      // Progress
+      CMS3::progress(nEventsDone, nEventsToDo);
+
+      //Debug mode
+      if (verbose && tas::evt_event() != evt_cut && evt_cut != 0) continue;
+      if (verbose) cout << "file name is " << file->GetName() << endl;
+
+      //Preliminary stuff
+      if (tas::mus_dxyPV().size() != tas::mus_dzPV().size()) continue;  
+
+      if (tas::evt_isRealData()) filt_json = goodrun(tas::evt_run(), tas::evt_lumiBlock());
+
+      //MET variables
+      // metStruct trackMetStruct =  trackerMET(0.2);
+      pair<float,float> corrMETPair = getT1CHSMET_fromMINIAOD(jet_corrector_pfL1L2L3);
+
+      //Fill Easy Variables
+      evt_pfmet      = cms3.evt_pfmet();
+      evt_pfmetPhi   = cms3.evt_pfmetPhi();
+      // evt_trackmet   = trackMetStruct.met;
+      // evt_trackmetPhi= trackMetStruct.metphi;
+      evt_corrMET    = corrMETPair.first;
+      evt_corrMETPhi = corrMETPair.second;
+      evt_pfsumet    = cms3.evt_pfsumet();
+      evt_pfmetSig   = cms3.evt_pfmetSig();
+      evt_event      = tas::evt_event();
+      evt_lumiBlock  = tas::evt_lumiBlock();
+      evt_run        = tas::evt_run();
+      evt_isRealData = tas::evt_isRealData();
+      sample         = Form("%s", file->GetName());
+      if (!evt_isRealData){
+        evt_xsec_incl = tas::evt_xsec_incl();
+        evt_kfactor   = tas::evt_kfactor();
+        gen_met       = tas::gen_met();
+        gen_metPhi    = tas::gen_metPhi();
+        trueNumInt = tas::puInfo_trueNumInteractions()[0];
+
+        // puweight = getTruePUw(trueNumInt);
+
+        // Hack
+        puweight = 0.;
+        if (trueNumInt>=0 && trueNumInt<1) puweight =  0.02186;
+        if (trueNumInt>=1 && trueNumInt<2) puweight =  0.09931;
+        if (trueNumInt>=2 && trueNumInt<3) puweight =  0.12351;
+        if (trueNumInt>=3 && trueNumInt<4) puweight =  0.19727;
+        if (trueNumInt>=4 && trueNumInt<5) puweight =  0.39874;
+        if (trueNumInt>=5 && trueNumInt<6) puweight =  0.63179;
+        if (trueNumInt>=6 && trueNumInt<7) puweight =  0.43171;
+        if (trueNumInt>=7 && trueNumInt<8) puweight =  0.16322;
+        if (trueNumInt>=8 && trueNumInt<9) puweight =  0.15364;
+        if (trueNumInt>=9 && trueNumInt<10) puweight =  0.21103;
+        if (trueNumInt>=10 && trueNumInt<11) puweight =  0.20759;
+        if (trueNumInt>=11 && trueNumInt<12) puweight =  0.22070;
+        if (trueNumInt>=12 && trueNumInt<13) puweight =  0.22136;
+        if (trueNumInt>=13 && trueNumInt<14) puweight =  0.22992;
+        if (trueNumInt>=14 && trueNumInt<15) puweight =  0.24993;
+        if (trueNumInt>=15 && trueNumInt<16) puweight =  0.27776;
+        if (trueNumInt>=16 && trueNumInt<17) puweight =  0.32593;
+        if (trueNumInt>=17 && trueNumInt<18) puweight =  0.38540;
+        if (trueNumInt>=18 && trueNumInt<19) puweight =  0.43773;
+        if (trueNumInt>=19 && trueNumInt<20) puweight =  0.48359;
+        if (trueNumInt>=20 && trueNumInt<21) puweight =  0.52463;
+        if (trueNumInt>=21 && trueNumInt<22) puweight =  0.56180;
+        if (trueNumInt>=22 && trueNumInt<23) puweight =  0.60548;
+        if (trueNumInt>=23 && trueNumInt<24) puweight =  0.65500;
+        if (trueNumInt>=24 && trueNumInt<25) puweight =  0.71414;
+        if (trueNumInt>=25 && trueNumInt<26) puweight =  0.79602;
+        if (trueNumInt>=26 && trueNumInt<27) puweight =  0.89716;
+        if (trueNumInt>=27 && trueNumInt<28) puweight =  1.00805;
+        if (trueNumInt>=28 && trueNumInt<29) puweight =  1.13680;
+        if (trueNumInt>=29 && trueNumInt<30) puweight =  1.27281;
+        if (trueNumInt>=30 && trueNumInt<31) puweight =  1.39653;
+        if (trueNumInt>=31 && trueNumInt<32) puweight =  1.52798;
+        if (trueNumInt>=32 && trueNumInt<33) puweight =  1.64814;
+        if (trueNumInt>=33 && trueNumInt<34) puweight =  1.76011;
+        if (trueNumInt>=34 && trueNumInt<35) puweight =  1.85094;
+        if (trueNumInt>=35 && trueNumInt<36) puweight =  1.91511;
+        if (trueNumInt>=36 && trueNumInt<37) puweight =  1.94036;
+        if (trueNumInt>=37 && trueNumInt<38) puweight =  1.95375;
+        if (trueNumInt>=38 && trueNumInt<39) puweight =  1.95133;
+        if (trueNumInt>=39 && trueNumInt<40) puweight =  1.98818;
+        if (trueNumInt>=40 && trueNumInt<41) puweight =  2.00750;
+        if (trueNumInt>=41 && trueNumInt<42) puweight =  2.06901;
+        if (trueNumInt>=42 && trueNumInt<43) puweight =  2.21808;
+        if (trueNumInt>=43 && trueNumInt<44) puweight =  2.48225;
+        if (trueNumInt>=44 && trueNumInt<45) puweight =  2.90043;
+        if (trueNumInt>=45 && trueNumInt<46) puweight =  3.42508;
+        if (trueNumInt>=46 && trueNumInt<47) puweight =  4.00413;
+        if (trueNumInt>=47 && trueNumInt<48) puweight =  4.74829;
+        if (trueNumInt>=48 && trueNumInt<49) puweight =  5.64297;
+        if (trueNumInt>=49 && trueNumInt<50) puweight =  6.62023;
+        if (trueNumInt>=50 && trueNumInt<51) puweight =  7.47404;
+        if (trueNumInt>=51 && trueNumInt<52) puweight =  8.60453;
+        if (trueNumInt>=52 && trueNumInt<53) puweight =  9.28333;
+        if (trueNumInt>=53 && trueNumInt<54) puweight =  9.23537;
+        if (trueNumInt>=54 && trueNumInt<55) puweight =  10.45411;
+        if (trueNumInt>=55 && trueNumInt<56) puweight =  12.20381;
+        if (trueNumInt>=56 && trueNumInt<57) puweight =  13.07027;
+        if (trueNumInt>=57 && trueNumInt<58) puweight =  12.53393;
+        if (trueNumInt>=58 && trueNumInt<59) puweight =  10.49204;
+        if (trueNumInt>=59 && trueNumInt<60) puweight =  11.74119;
+        if (trueNumInt>=60 && trueNumInt<61) puweight =  9.95310;
+        if (trueNumInt>=61 && trueNumInt<62) puweight =  10.02085;
+        if (trueNumInt>=62 && trueNumInt<63) puweight =  7.37381;
+        if (trueNumInt>=63 && trueNumInt<64) puweight =  2.10582;
+        if (trueNumInt>=64 && trueNumInt<65) puweight =  1.94342;
+        if (trueNumInt>=65 && trueNumInt<66) puweight =  1.57364;
+        if (trueNumInt>=66 && trueNumInt<67) puweight =  2.36170;
+        if (trueNumInt>=67 && trueNumInt<68) puweight =  1.40250;
+        if (trueNumInt>=68 && trueNumInt<69) puweight =  0.99968;
+        if (trueNumInt>=69 && trueNumInt<70) puweight =  0.37170;
+        if (trueNumInt>=70 && trueNumInt<71) puweight =  0.41035;
+        if (trueNumInt>=71 && trueNumInt<72) puweight =  0.25508;
+        if (trueNumInt>=72 && trueNumInt<73) puweight =  0.18057;
+        if (trueNumInt>=73 && trueNumInt<74) puweight =  0.11856;
+        if (trueNumInt>=74 && trueNumInt<75) puweight =  0.07928;
+        if (trueNumInt>=75 && trueNumInt<76) puweight =  0.00000;
+        if (trueNumInt>=76 && trueNumInt<77) puweight =  0.00000;
+        if (trueNumInt>=77 && trueNumInt<78) puweight =  0.00000;
+        if (trueNumInt>=78 && trueNumInt<79) puweight =  0.00000;
+        if (trueNumInt>=79 && trueNumInt<80) puweight =  0.00000;
+        if (trueNumInt>=80 && trueNumInt<81) puweight =  0.00000;
+        if (trueNumInt>=81 && trueNumInt<82) puweight =  0.00000;
+        if (trueNumInt>=82 && trueNumInt<83) puweight =  0.00000;
+        if (trueNumInt>=83 && trueNumInt<84) puweight =  0.00000;
+        if (trueNumInt>=84 && trueNumInt<85) puweight =  0.00000;
+        if (trueNumInt>=85 && trueNumInt<86) puweight =  0.00000;
+        if (trueNumInt>=86 && trueNumInt<87) puweight =  0.00000;
+        if (trueNumInt>=87 && trueNumInt<88) puweight =  0.00000;
+        if (trueNumInt>=88 && trueNumInt<89) puweight =  0.00000;
+        if (trueNumInt>=89 && trueNumInt<90) puweight =  0.00000;
+
+      }
+
+      // Vertex selection:
+      nvtx = 0;
+      for(unsigned int ivtx=0; ivtx < tas::evt_nvtxs(); ivtx++){
+        if (!isGoodVertex(ivtx)) continue;
+        nvtx++;
+      }
+      
+      rho = tas::evt_fixgridfastjet_all_rho();
+      rho_neut_centr = tas::evt_fixgridfastjet_centralneutral_rho();
+      rho_calo = tas::evt_fixgridfastjet_allcalo_rho();
+      rho_calo_centr = tas::evt_fixgridfastjet_centralcalo_rho();
+
+      //Fill data vs. mc variables
+      passes_met_filters = evt_isRealData ? passesMETfiltersMoriond17(isDataFromFileName)           : 1;
+      filt_csc           = evt_isRealData ? tas::evt_cscTightHaloId()   : 1;
+      filt_hcallaser     = evt_isRealData ? tas::filt_hcalLaser()       : 1;
+      filt_ecaltp        = evt_isRealData ? tas::filt_ecalTP()          : 1;
+      filt_trkfail       = evt_isRealData ? tas::filt_trackingFailure() : 1;
+      filt_eebadsc       = evt_isRealData ? tas::filt_eeBadSc()         : 1;
+
+      if (evt_isRealData) scale1fb = 1;
+      else {
+          float sgnMCweight = ((tas::genps_weight() > 0) - (tas::genps_weight() < 0));
+          scale1fb = sgnMCweight*df.getScale1fbFromFile(tas::evt_dataset()[0].Data(),tas::evt_CMS3tag()[0].Data());
+      }
+
+      //Determine and save jet variables
+      ht = 0;
+      ht_SS = 0;
+      for (unsigned int i = 0; i < tas::pfjets_p4().size(); i++){
+
+	LorentzVector raw_jet = tas::pfjets_p4().at(i)*tas::pfjets_undoJEC().at(i);
+
+        //Require loose jet ID
+        if (!isLoosePFJet_50nsV1(i)) continue;
+	
+	float jet_L1L2L3 = 1.;
+	if (jetcorr_filenames_pfL1L2L3.size()>0) { 
+	  //L1L2L3
+	  jet_corrector_pfL1L2L3->setJetEta(raw_jet.eta());
+	  jet_corrector_pfL1L2L3->setJetPt(raw_jet.pt());
+	  jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(i));
+	  jet_corrector_pfL1L2L3->setRho(rho);
+	  jet_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
+	}
+
+        LorentzVector jet = raw_jet*jet_L1L2L3;
+
+        //Kinematic jet cuts
+        if (jet.pt() < 25) continue;
+
+        //Verbose
+        if (verbose) cout << "Possible jet with pT: " << jet.pt() << endl;
+
+        //Save jets that make it this far
+        jets.push_back(jet);
+
+        //HT is sum of jets with pT > 40
+        if(jet.pt() > 40) ht += jet.pt();
+
+        if(jet.pt() > 40 && fabs(jet.eta())<2.4) {
+	  bool jetClean = true;
+	  for(size_t j = 0; j < tas::mus_p4().size(); j++){
+	    if(muonID(j, SS_fo_v5) && tas::mus_p4().at(j).pt()>5.  && (ROOT::Math::VectorUtil::DeltaR(jet, tas::mus_p4().at(j)) < 0.4) ) {
+	    // if(muonID(j, SS_fo_v6) && tas::mus_p4().at(j).pt()>5.  && (ROOT::Math::VectorUtil::DeltaR(jet, tas::mus_p4().at(j)) < 0.4) ) {
+	      jetClean = false;
+	      if (verbose) cout << "jet cleaned by muon p4: " << tas::mus_p4().at(j) << " pt=" << tas::mus_p4().at(j).pt() << endl;
+	    }
+	  }
+	  for(size_t j = 0; j < tas::els_p4().size(); j++){
+	    if(electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt()>7. && (ROOT::Math::VectorUtil::DeltaR(jet,tas::els_p4().at(j)) < 0.4) ) {
+	    // if(electronID(j, SS_fo_looseMVA_v6) && tas::els_p4().at(j).pt()>7. && (ROOT::Math::VectorUtil::DeltaR(jet,tas::els_p4().at(j)) < 0.4) ) {
+	      jetClean = false;
+	      if (verbose) cout << "jet cleaned by electron p4: " << tas::els_p4().at(j) << " pt=" << tas::els_p4().at(j).pt() << endl;
+	    }
+	  }
+	  if (jetClean) ht_SS += jet.pt();
+	}
+
+        //Save b-tags
+        float disc = tas::pfjets_pfCombinedInclusiveSecondaryVertexV2BJetTag().at(i);  
+        jets_disc.push_back(disc);
+
+        jets_area.push_back(tas::pfjets_area().at(i));
+        jets_undoJEC.push_back(tas::pfjets_undoJEC().at(i));
+
+      }
+      njets = jets.size();
+
+      //Verbose for jets
+      if (verbose){
+        cout << "njets: " << njets << endl;
+        for (unsigned int i = 0; i < jets.size(); i++) cout << i << " " << jets[i].pt() << " " << jets[i].eta() << endl;
+      } 
+
+      //Calculate number of fakeable objects
+      if (verbose) cout << "Calculate number of fakeable objects" <<endl;
+      nFOs_SS = 0; 
+      for(size_t j = 0; j < tas::mus_p4().size(); j++){
+        if(muonID(j, SS_fo_v5) && tas::mus_p4().at(j).pt() > 10) nFOs_SS++;
+        // if(muonID(j, SS_fo_v6) && tas::mus_p4().at(j).pt() > 10) nFOs_SS++;
+      }
+      for(size_t j = 0; j < tas::els_p4().size(); j++){
+        if( electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt() > 10) nFOs_SS++;
+        // if( electronID(j, SS_fo_looseMVA_v6) && tas::els_p4().at(j).pt() > 10) nFOs_SS++;
+      }
+
+    if (skipEventsMoreFO && nFOs_SS > 1) continue;
+
+      //These variables are persistent through the event, used for PFlepton saving
+      bool foundMuTag = false;
+      bool foundElTag = false;
+
+      // Variables to keep track of PFElectrons and PFMuons
+      if (verbose) cout << "Variables to keep track of PFElectrons and PFMuons" <<endl;
+      // We would like to save PFleptons if they don't overlap with something we've already saved.
+      // If they do overlap, we want to save the fact that they overlap
+      // Load the pflepton p4s in memory, we'll have to check them on each lepton
+      vector<LorentzVector> savedMuP4s; savedMuP4s.clear();
+      vector<LorentzVector> savedElP4s; savedElP4s.clear();
+      vector<int> pfelidx; pfelidx.clear();
+      vector<int> pfmuidx; pfmuidx.clear();
+      vector<bool> pfelIsReco; pfelIsReco.clear();
+      vector<bool> pfmuIsReco; pfmuIsReco.clear();
+      vector<LorentzVector> pfelP4; pfelP4.clear();
+      vector<LorentzVector> pfmuP4; pfmuP4.clear();
+      vector<float> pfelAbsTrkIso; pfelAbsTrkIso.clear();
+      vector<float> pfmuAbsTrkIso; pfmuAbsTrkIso.clear();
+      vector<float> pfelTrkAn04; pfelTrkAn04.clear();
+      vector<float> pfmuTrkAn04; pfmuTrkAn04.clear();
+      for(unsigned int i=0; i<tas::pfcands_p4().size(); i++){
+        if (fabs(tas::pfcands_particleId().at(i)) != 11 && fabs(tas::pfcands_particleId().at(i)) != 13 ) continue;
+	if (tas::pfcands_p4().at(i).pt() < 5) continue;
+	if(fabs(tas::pfcands_dz().at(i)) > 0.1) continue;
+	if (fabs(tas::pfcands_p4().at(i).eta()) > 2.5) continue;
+        if (fabs(tas::pfcands_particleId().at(i)) == 11){
+          pfelidx.push_back(i);
+          pfelP4.push_back(tas::pfcands_p4().at(i));
+          pfelIsReco.push_back(false); 
+	if (addPFCandidates || checkIsPFTrueFalse) {
+	  pfelAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
+	  pfelTrkAn04.push_back(PFCandRelIsoAn04(i));
+    }
+        }
+        else if (fabs(tas::pfcands_particleId().at(i)) == 13){
+          pfmuidx.push_back(i);
+          pfmuP4.push_back(tas::pfcands_p4().at(i));
+          pfmuIsReco.push_back(false); 
+	if (addPFCandidates || checkIsPFTrueFalse) {
+	  pfmuAbsTrkIso.push_back(TrackIso(i, 0.3, 0.0, true, false));
+	  pfmuTrkAn04.push_back(PFCandRelIsoAn04(i));
+    }
+        }
+        continue;
+      }
+      usedMu = false;
+      usedEl = false;
+      TRandom r;
+      rndm = r.Rndm();
+      //Muon Loop -- we loop over the probes
+      if (verbose) cout << "Muon Loop -- we loop over the probes" <<endl;
+      for(unsigned int i=0; i<tas::mus_p4().size(); i++){
+        InitLeptonBranches(); 
+
+        //Check for a tag
+        bool foundTag = checkMuonTag(i, false);
+        if (foundTag) foundMuTag = true; 
+
+        // Require pT > 10 GeV
+	float maxPt = 10.;
+	if (recoLeptonsDownTo5GeV) maxPt = 5.;
+	if (recoLeptonsDownTo20GeV) maxPt = 20.;
+	if (tas::mus_p4().at(i).pt()<=maxPt) continue;
+
+        //Save the muon if we have a tag OR if it passes loose ID 
+        if(muonID(i, SS_veto_noiso_v5)==0 && muonID(i, HAD_loose_v3)==0 && foundTag==false) continue; 
+        // if(muonID(i, SS_veto_noiso_v6)==0 && muonID(i, HAD_loose_v3)==0 && foundTag==false) continue; 
+	if (onlySaveTagProbePairs && foundTag==false) continue; 
+
+        // //check to which leg a match has been found
+	// probe_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg       = tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_TrailingLeg().at(i);
+	// probe_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg        = tas::mus_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_LeadingLeg().at(i);
+	// probe_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg         = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_TrailingLeg().at(i);
+	// probe_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg          = tas::mus_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg().at(i);
+
+	if (verbose) cout << "Saving this muon." << endl;
+        //ID & Index for muons
+        id = -13.0*tas::mus_charge().at(i);
+        idx = i;  
+
+        //p4 for muon
+        p4 = tas::mus_p4().at(i); 
+        savedMuP4s.push_back(p4);
+
+        //Dilepton stuff
+        if (foundTag) {
+          dilep_p4 = p4 + tag_p4;
+          dilep_mass = dilep_p4.M();
+        }
+
+        //MC stuff
+        if (!evt_isRealData){
+          motherID = lepMotherID(Lep(id, idx));
+          mc_motherp4 = tas::mus_mc_motherp4().at(i);
+          mc_p4 = tas::mus_mc_p4().at(i);
+          mc_motherid = tas::mus_mc_motherid().at(i);
+          mc_id = tas::mus_mc_id().at(i);
+        }
+
+        //Impact parameter
+        dxyPV = abs(id) == 11 ? tas::els_dxyPV().at(i) : tas::mus_dxyPV().at(i); 
+        dxyPV_err = abs(id) == 11 ? tas::els_d0Err().at(i) : tas::mus_d0Err().at(i); 
+        dZ = abs(id) == 11 ? tas::els_dzPV().at(i) : tas::mus_dzPV().at(i);
+        ip3d = tas::mus_ip3d().at(i);
+        ip3derr = tas::mus_ip3derr().at(i);
+
+        //Isolation et al
+        RelIso03 = (tas::mus_isoR03_pf_ChargedHadronPt().at(i)+tas::mus_isoR03_pf_NeutralHadronEt().at(i)+tas::mus_isoR03_pf_PhotonEt().at(i))/tas::mus_p4().at(i).pt();
+        RelIso03EA = muRelIso03EA(i);
+        RelIso03DB = muRelIso03DB(i);
+        pfChargedHadronIso = tas::mus_isoR03_pf_ChargedHadronPt().at(i);
+        pfPhotonIso = tas::mus_isoR03_pf_PhotonEt().at(i);
+        pfNeutralHadronIso = tas::mus_isoR03_pf_NeutralHadronEt().at(i);
+        tkIso = tas::mus_iso03_sumPt().at(i);
+        sumPUPt = tas::mus_isoR03_pf_PUPt().at(i);
+        iso03sumPt = tas::mus_iso03_sumPt().at(i);
+        iso03emEt  = tas::mus_iso03_emEt().at(i);
+        iso03hadEt = tas::mus_iso03_hadEt().at(i);
+        ptrelv0 = getPtRel(id, idx, false, ssWhichCorr);
+        ptrelv1 = getPtRel(id, idx, true, ssWhichCorr);
+        miniiso = muMiniRelIsoCMS3_EA(idx,ssEAversion);
+        miniisoDB = muMiniRelIsoCMS3_DB(idx);
+	int closeJetIdx = closestJetIdx(p4,0.4,3.0);
+	if (closeJetIdx>=0) {
+	  jet_close_lep_idx = closeJetIdx;
+	  jet_close_lep = tas::pfjets_p4().at(closeJetIdx);
+	  jet_close_lep_undoJEC = tas::pfjets_undoJEC().at(closeJetIdx);
+	  jet_close_lep_area = tas::pfjets_area().at(closeJetIdx);
+	  if (jetcorr_filenames_pfL1L2L3.size()>0) { 
+	    //L1
+	    jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
+	    jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+	    jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
+	    jet_corrector_pfL1->setRho(rho);
+	    jet_close_L1 = jet_corrector_pfL1->getCorrection();
+	    // //L1, redo it with a different rho
+	    // jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
+	    // jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+	    // jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
+	    // jet_corrector_pfL1->setRho(rho_neut_centr);
+	    // jet_close_L1nc = jet_corrector_pfL1->getCorrection();
+	    // //L1, redo it with a different rho and MC correction file
+	    // jet_corrector_pfL1MC->setJetEta(jet_close_lep.eta());
+	    // jet_corrector_pfL1MC->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+	    // jet_corrector_pfL1MC->setJetA(tas::pfjets_area().at(closeJetIdx));
+	    // jet_corrector_pfL1MC->setRho(rho_neut_centr);
+	    // jet_close_L1ncmc = jet_corrector_pfL1MC->getCorrection();
+	    // //L1L2L3
+	    // jet_corrector_pfL1L2L3->setJetEta(jet_close_lep.eta());
+	    // jet_corrector_pfL1L2L3->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+	    // jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
+	    // jet_corrector_pfL1L2L3->setRho(rho);
+	    // jet_close_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
+	    //L2L3
+	    LorentzVector raw_jet = jet_close_lep*tas::pfjets_undoJEC().at(closeJetIdx);
+	    jet_corrector_pfL2L3->setJetEta(raw_jet.eta());
+	    jet_corrector_pfL2L3->setJetPt(raw_jet.pt());
+	    jet_corrector_pfL2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
+	    jet_corrector_pfL2L3->setRho(rho);
+	    jet_close_L2L3 = jet_corrector_pfL2L3->getCorrection();
+	  }
+	}
+        ptratio = jet_close_lep.pt() > 0 ? p4.pt()/jet_close_lep.pt() : 1; 
+	
+        //MT
+        mt = MT(p4.pt(), p4.phi(), evt_pfmet, evt_pfmetPhi);
+
+        //Other muon Id
+        pid_PFMuon = tas::mus_pid_PFMuon().at(i);
+        gfit_chi2 = tas::mus_gfit_chi2().at(i);
+        // gfit_ndof = tas::mus_gfit_ndof().at(i);
+        gfit_validSTAHits = tas::mus_gfit_validSTAHits().at(i);
+        numberOfMatchedStations = tas::mus_numberOfMatchedStations().at(i);
+        validPixelHits = tas::mus_validPixelHits().at(i);
+        nlayers = tas::mus_nlayers().at(i);
+        type = tas::mus_type().at(i);
+        chi2LocalPosition = tas::mus_chi2LocalPosition().at(i);
+        trkKink = tas::mus_trkKink().at(i);
+        validHits = tas::mus_validHits().at(i);
+        lostHits = tas::mus_lostHits().at(i);
+        exp_innerlayers = tas::mus_exp_innerlayers().at(i);
+        exp_outerlayers = tas::mus_exp_outerlayers().at(i);
+        segmCompatibility = tas::mus_segmCompatibility().at(i);
+        if (addAnnulus){
+          reliso04 = muRelIsoCustomCone(i, 0.4, true, 0.5, false, true);
+          annulus04 = reliso04 - miniiso;
+	}
+	if (addPFCandidates || checkIsPFTrueFalse) {
+	  int pfidx =  isPFmuon(pfmuP4, pfmuIsReco, i);
+	  if (pfidx != -1) {
+	    isPF = true;		  
+	    AbsTrkIso = pfmuAbsTrkIso[pfidx]; // For this electron, save track iso produced earlier for PFmuon
+	    TrkAn04 = pfmuTrkAn04[pfidx];
+	  }
+        }
+        muID::setCache(idx,miniiso,ptratio,ptrelv1);
+
+        //Save SS ID bools
+        if(muonID(i, SS_tight_v3))              passes_SS_tight_v3 = true;
+        if(muonID(i, SS_tight_noiso_v3))        passes_SS_tight_noiso_v3 = true;
+        if(muonID(i, SS_fo_v3))                 passes_SS_fo_v3 = true;
+        if(muonID(i, SS_fo_noiso_v3))           passes_SS_fo_noiso_v3 = true;
+        if(muonID(i, SS_veto_v3))               passes_SS_veto_v3 = true;
+        if(muonID(i, SS_veto_noiso_v3))         passes_SS_veto_noiso_v3 = true;
+	LorentzVector close_jet_v4 = closestJet(p4, 0.4, 3.0, 1);  
+	float ptrel_v4 = ptRel(p4, close_jet_v4, true);
+	float ptratio_v4 = close_jet_v4.pt() > 0 ? p4.pt()/close_jet_v4.pt() : 1;
+        muID::unsetCache();
+        muID::setCache(idx,miniiso,ptratio_v4,ptrel_v4);
+        if(muonID(i, SS_tight_v4))              passes_SS_tight_v4 = true;
+        if(muonID(i, SS_tight_noiso_v4))        passes_SS_tight_noiso_v4 = true;
+        if(muonID(i, SS_fo_v4))                 passes_SS_fo_v4 = true;
+        if(muonID(i, SS_fo_noiso_v4))           passes_SS_fo_noiso_v4 = true;
+        if(muonID(i, SS_veto_v4))               passes_SS_veto_v4 = true;
+        if(muonID(i, SS_veto_noiso_v4))         passes_SS_veto_noiso_v4 = true;
+	LorentzVector close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);  
+	float ptrel_v5 = ptRel(p4, close_jet_v5, true);
+	float ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt()/close_jet_v5.pt() : 1;
+        muID::unsetCache();
+        muID::setCache(idx,miniiso,ptratio_v5,ptrel_v5);
+        if(muonID(i, SS_tight_v5))              passes_SS_tight_v5 = true;
+        if(muonID(i, SS_tight_noiso_v5))        passes_SS_tight_noiso_v5 = true;
+        if(muonID(i, SS_fo_v5))                 passes_SS_fo_v5 = true;
+        if(muonID(i, SS_fo_noiso_v5))           passes_SS_fo_noiso_v5 = true;
+        if(muonID(i, SS_veto_v5))               passes_SS_veto_v5 = true;
+        if(muonID(i, SS_veto_noiso_v5))         passes_SS_veto_noiso_v5 = true;
+
+        // XXX Note that v6 IDs are same as v5 IDs for muons
+        // if(muonID(i, SS_tight_v6))              passes_SS_tight_v6 = true;
+        // if(muonID(i, SS_tight_noiso_v6))        passes_SS_tight_noiso_v6 = true;
+        // if(muonID(i, SS_fo_v6))                 passes_SS_fo_v6 = true;
+        // if(muonID(i, SS_fo_noiso_v6))           passes_SS_fo_noiso_v6 = true;
+        // if(muonID(i, SS_veto_v6))               passes_SS_veto_v6 = true;
+        // if(muonID(i, SS_veto_noiso_v6))         passes_SS_veto_noiso_v6 = true;
+        if(muonID(i, SS_tight_v5))              passes_SS_tight_v6 = true;
+        if(muonID(i, SS_tight_noiso_v5))        passes_SS_tight_noiso_v6 = true;
+        if(muonID(i, SS_fo_v5))                 passes_SS_fo_v6 = true;
+        if(muonID(i, SS_fo_noiso_v5))           passes_SS_fo_noiso_v6 = true;
+        if(muonID(i, SS_veto_v5))               passes_SS_veto_v6 = true;
+        if(muonID(i, SS_veto_noiso_v5))         passes_SS_veto_noiso_v6 = true;
+
+        muID::unsetCache();
+        muID::setCache(idx,miniiso,ptratio,ptrelv1);
+
+        //Save WW ID bools
+        if(muonID(i, WW_medium_v2))             passes_WW_medium_v2 = true;
+        if(muonID(i, WW_medium_noiso_v2))       passes_WW_medium_noiso_v2 = true;
+        if(muonID(i, WW_fo_v2))                 passes_WW_fo_v2 = true;
+        if(muonID(i, WW_fo_noiso_v2))           passes_WW_fo_noiso_v2 = true;
+        if(muonID(i, WW_veto_v2))               passes_WW_veto_v2 = true;
+        if(muonID(i, WW_veto_noiso_v2))         passes_WW_veto_noiso_v2 = true;
+
+        //Save HAD ID bools
+        if(muonID(i, HAD_loose_v3))              passes_HAD_loose_v3 = true;
+        if(muonID(i, HAD_loose_noiso_v3))        passes_HAD_loose_noiso_v3 = true;
+
+        //Save POG ID bools
+        if( isLooseMuonPOG(i) )                  passes_POG_looseID = true;
+        if( isMediumMuonPOG(i) )                 passes_POG_mediumID = true;
+        if( isTightMuonPOG(i) )                  passes_POG_tightID = true;
+
+        muID::unsetCache();
+
+        //Fill trigger branches
+        fillMuonTriggerBranches(p4,idx,false);
+
+        //Fill baby once per probe
+        BabyTree->Fill(); 
+
+      } //close muon loop
+
+      //Electron Loop
+      if (verbose) cout << "Electron Loop" << endl;
+      for(unsigned int i=0; i<tas::els_p4().size(); i++){
+
+        InitLeptonBranches(); 
+
+        //Check for a tag
+        bool foundTag = checkElectronTag(i, v25nsMVAreader);
+        if (foundTag) foundElTag = true; 
+
+        // Require pT > 10 GeV
+	float maxPt = 10.;
+	if (recoLeptonsDownTo5GeV) maxPt = 5.;
+	if (recoLeptonsDownTo20GeV) maxPt = 20.;
+        if (tas::els_p4().at(i).pt() <= maxPt) continue; 
+
+        //Save the electron if we have a tag OR if it passes loose ID 
+        if(electronID(i, SS_veto_noiso_v5)==0 && electronID(i, HAD_veto_v3)==0 && foundTag==false) continue;
+	if (onlySaveTagProbePairs && foundTag==false) continue;
+
+        //p4
+        p4 = tas::els_p4().at(i);    
+        savedElP4s.push_back(p4);
+
+	if (verbose) cout << "Saving this electron: pt/eta/phi "<<p4.pt()<<"/"<<p4.eta()<<"/"<<p4.phi() << endl;
+
+        //Dilepton stuff
+        if (foundTag){
+          dilep_p4 = p4 + tag_p4;
+          dilep_mass = dilep_p4.M();
+        }
+
+        //ID & idx stuff
+        id = -11.0*tas::els_charge().at(i); 
+        idx = i;
+  
+        //MC Stuff
+        if (!evt_isRealData){
+          mc_p4 = tas::els_mc_p4().at(i);  
+          mc_id = tas::els_mc_id().at(i);  
+        }
+
+        //Impact Parameter
+        dxyPV = abs(id) == 11 ? tas::els_dxyPV().at(i) : tas::mus_dxyPV().at(i); 
+        dxyPV_err = abs(id) == 11 ? tas::els_d0Err().at(i) : tas::mus_d0Err().at(i); 
+        dZ = abs(id) == 11 ? tas::els_dzPV().at(i) : tas::mus_dzPV().at(i);
+        ip3d = tas::els_ip3d().at(i);
+        ip3derr = tas::els_ip3derr().at(i);
+
+        //Isolation et al
+        RelIso03 = (tas::els_pfChargedHadronIso().at(i)+tas::els_pfNeutralHadronIso().at(i)+tas::els_pfPhotonIso().at(i))/tas::els_p4().at(i).pt();
+        RelIso03EA = eleRelIso03EA(i);
+        RelIso03DB = eleRelIso03DB(i);
+        pfChargedHadronIso = tas::els_pfChargedHadronIso().at(i);
+        pfPhotonIso = tas::els_pfPhotonIso().at(i);
+        pfNeutralHadronIso = tas::els_pfNeutralHadronIso().at(i);
+        tkIso = tas::els_tkIso().at(i);
+        ptrelv0 = getPtRel(id, idx, false, ssWhichCorr);
+        ptrelv1 = getPtRel(id, idx, true, ssWhichCorr);
+	if (verbose) cout << "About to correct jets for this electron" << endl;
+	int closeJetIdx = closestJetIdx(p4,0.4,3.0);
+	if (closeJetIdx>=0) {
+	  jet_close_lep_idx = closeJetIdx;
+	  jet_close_lep = tas::pfjets_p4().at(closeJetIdx);
+	  jet_close_lep_undoJEC = tas::pfjets_undoJEC().at(closeJetIdx);
+	  jet_close_lep_area = tas::pfjets_area().at(closeJetIdx);
+	  if (jetcorr_filenames_pfL1L2L3.size()>0) { 
+	    //L1
+	    jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
+	    jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+	    jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
+	    jet_corrector_pfL1->setRho(rho);
+	    jet_close_L1 = jet_corrector_pfL1->getCorrection();
+	    // //L1, redo it with a different rho
+	    // jet_corrector_pfL1->setJetEta(jet_close_lep.eta());
+	    // jet_corrector_pfL1->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+	    // jet_corrector_pfL1->setJetA(tas::pfjets_area().at(closeJetIdx));
+	    // jet_corrector_pfL1->setRho(rho_neut_centr);
+	    // jet_close_L1nc = jet_corrector_pfL1->getCorrection();
+	    // //L1, redo it with a different rho and MC correction file
+	    // jet_corrector_pfL1MC->setJetEta(jet_close_lep.eta());
+	    // jet_corrector_pfL1MC->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+	    // jet_corrector_pfL1MC->setJetA(tas::pfjets_area().at(closeJetIdx));
+	    // jet_corrector_pfL1MC->setRho(rho_neut_centr);
+	    // jet_close_L1ncmc = jet_corrector_pfL1MC->getCorrection();
+	    // //L1L2L3
+	    // jet_corrector_pfL1L2L3->setJetEta(jet_close_lep.eta());
+	    // jet_corrector_pfL1L2L3->setJetPt(jet_close_lep.pt()*jet_close_lep_undoJEC);
+	    // jet_corrector_pfL1L2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
+	    // jet_corrector_pfL1L2L3->setRho(rho);
+	    // jet_close_L1L2L3 = jet_corrector_pfL1L2L3->getCorrection();
+	    //L2L3
+	    LorentzVector raw_jet = jet_close_lep*tas::pfjets_undoJEC().at(closeJetIdx);
+	    jet_corrector_pfL2L3->setJetEta(raw_jet.eta());
+	    jet_corrector_pfL2L3->setJetPt(raw_jet.pt());
+	    jet_corrector_pfL2L3->setJetA(tas::pfjets_area().at(closeJetIdx));
+	    jet_corrector_pfL2L3->setRho(rho);
+	    jet_close_L2L3 = jet_corrector_pfL2L3->getCorrection();
+	  }
+	}
+	if (verbose) cout << "Finished jet corrections" << endl;
+        ptratio = ( jet_close_lep.pt()>0. ? p4.pt()/jet_close_lep.pt() : 1. ); 
+        miniiso = elMiniRelIsoCMS3_EA(idx,ssEAversion);
+        miniisoDB = elMiniRelIsoCMS3_DB(idx);
+
+        //MT
+        mt = MT(p4.pt(), p4.phi(), evt_pfmet, evt_pfmetPhi); 
+
+        //Other Electron ID stuff
+        sumPUPt = tas::els_pfPUIso().at(i);
+        sigmaIEtaIEta_full5x5 = tas::els_sigmaIEtaIEta_full5x5().at(i);
+        etaSC = tas::els_etaSC().at(i);
+        dEtaIn = tas::els_dEtaIn().at(i);
+        dPhiIn = tas::els_dPhiIn().at(i);
+        hOverE = tas::els_hOverE().at(i);
+        ecalEnergy = tas::els_ecalEnergy().at(i);
+        eOverPIn = tas::els_eOverPIn().at(i);
+        conv_vtx_flag = tas::els_conv_vtx_flag().at(i);
+        exp_innerlayers = tas::els_exp_innerlayers().at(i);
+        exp_outerlayers = tas::els_exp_outerlayers().at(i);
+        charge = tas::els_charge().at(i);    
+        sccharge = tas::els_sccharge().at(i);
+        ckf_charge = tas::els_ckf_charge().at(i);
+        trk_charge = tas::els_trk_charge().at(i);
+        threeChargeAgree_branch = threeChargeAgree(i);
+        mva = getMVAoutput(i); 
+	mva_25ns = v25nsMVAreader->MVA(i);
+        type = tas::els_type().at(i);
+        ecalIso = tas::els_ecalIso().at(i);
+        hcalIso = tas::els_hcalIso().at(i);
+        sigmaIEtaIEta = tas::els_sigmaIEtaIEta().at(i);
+        ecalPFClusterIso = tas::els_ecalPFClusterIso().at(i);
+        hcalPFClusterIso = tas::els_hcalPFClusterIso().at(i);
+        ckf_laywithmeas        = tas::els_ckf_laywithmeas().at(i);
+        sigmaIPhiIPhi_full5x5  = tas::els_sigmaIPhiIPhi_full5x5().at(i);
+        e1x5_full5x5           = tas::els_e1x5_full5x5().at(i);
+        e5x5_full5x5           = tas::els_e5x5_full5x5().at(i);
+        r9_full5x5             = tas::els_r9_full5x5().at(i);
+        etaSCwidth             = tas::els_etaSCwidth().at(i);
+        phiSCwidth             = tas::els_phiSCwidth().at(i);
+        eSeed                  = tas::els_eSeed().at(i);
+        scSeedEta              = tas::els_scSeedEta().at(i);
+        eSCRaw                 = tas::els_eSCRaw().at(i);
+        eSC                    = tas::els_eSC().at(i);
+        eSCPresh               = tas::els_eSCPresh().at(i);
+        ckf_chi2               = tas::els_ckf_chi2().at(i);
+        ckf_ndof               = tas::els_ckf_ndof().at(i);
+        chi2                   = tas::els_chi2().at(i);
+        ndof                   = tas::els_ndof().at(i);
+        fbrem                  = tas::els_fbrem().at(i);
+        eOverPOut              = tas::els_eOverPOut().at(i);
+        dEtaOut                = tas::els_dEtaOut().at(i);
+        dPhiOut                = tas::els_dPhiOut().at(i);
+	gsf_validHits          = tas::els_validHits().at(i);
+	conv_vtx_prob          = tas::els_conv_vtx_prob().at(i);
+
+        if (addAnnulus){
+          reliso04 = elRelIsoCustomCone(i, 0.4, true, 0.0, false, true);
+          annulus04 = reliso04 - miniiso;
+	}
+	if (addPFCandidates || checkIsPFTrueFalse) {
+	  int pfidx =  isPFelectron(pfelP4, pfelIsReco, i);
+	  if (pfidx != -1) {
+	    isPF = true;		  
+	    AbsTrkIso = pfelAbsTrkIso[pfidx]; // For this electron, save track iso produced earlier for PFmuon
+	    TrkAn04 = pfelTrkAn04[pfidx];
+	  }
+        }
+
+        elID::setCache(idx,mva,miniiso,ptratio,ptrelv1);
+	if (verbose) cout << "Starting electron IDs" << endl; 
+        //Save SS ID bools
+        if(electronID(i, SS_medium_v3))             passes_SS_tight_v3 = true;
+        if(electronID(i, SS_medium_noiso_v3))       passes_SS_tight_noiso_v3 = true;
+        if(electronID(i, SS_fo_v3))                 passes_SS_fo_v3 = true;
+        if(electronID(i, SS_fo_noiso_v3))           passes_SS_fo_noiso_v3 = true;
+        if(electronID(i, SS_fo_looseMVA_v3))        passes_SS_fo_looseMVA_v3 = true;
+        if(electronID(i, SS_fo_looseMVA_noiso_v3))  passes_SS_fo_looseMVA_noiso_v3 = true;
+        if(electronID(i, SS_veto_v3))               passes_SS_veto_v3 = true;
+        if(electronID(i, SS_veto_noiso_v3))         passes_SS_veto_noiso_v3 = true;
+
+	LorentzVector close_jet_v4 = closestJet(p4, 0.4, 3.0, 1);  
+	float ptrel_v4 = ptRel(p4, close_jet_v4, true);
+	float ptratio_v4 = close_jet_v4.pt() > 0 ? p4.pt()/close_jet_v4.pt() : 1;
+        elID::unsetCache();
+        elID::setCache(idx,mva_25ns,miniiso,ptratio_v4,ptrel_v4);
+        if(electronID(i, SS_medium_v4))             passes_SS_tight_v4 = true;
+        if(electronID(i, SS_medium_noiso_v4))       passes_SS_tight_noiso_v4 = true;
+        if(electronID(i, SS_fo_v4))                 passes_SS_fo_v4 = true;
+        if(electronID(i, SS_fo_noiso_v4))           passes_SS_fo_noiso_v4 = true;
+        if(electronID(i, SS_fo_looseMVA_v4))        passes_SS_fo_looseMVA_v4 = true;
+        if(electronID(i, SS_fo_looseMVA_noiso_v4))  passes_SS_fo_looseMVA_noiso_v4 = true;
+        if(electronID(i, SS_veto_v4))               passes_SS_veto_v4 = true;
+        if(electronID(i, SS_veto_noiso_v4))         passes_SS_veto_noiso_v4 = true;
+
+	LorentzVector close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);  
+	float ptrel_v5 = ptRel(p4, close_jet_v5, true);
+	float ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt()/close_jet_v5.pt() : 1;
+        elID::unsetCache();
+        elID::setCache(idx,mva_25ns,miniiso,ptratio_v5,ptrel_v5);
+
+        if(electronID(i, SS_medium_v5))             passes_SS_tight_v5 = true;
+        if(electronID(i, SS_medium_noiso_v5))       passes_SS_tight_noiso_v5 = true;
+        if(electronID(i, SS_fo_v5))                 passes_SS_fo_v5 = true;
+        if(electronID(i, SS_fo_noiso_v5))           passes_SS_fo_noiso_v5 = true;
+        if(electronID(i, SS_fo_looseMVA_v5))        passes_SS_fo_looseMVA_v5 = true;
+        if(electronID(i, SS_fo_looseMVA_noiso_v5))  passes_SS_fo_looseMVA_noiso_v5 = true;
+        if(electronID(i, SS_veto_v5))               passes_SS_veto_v5 = true;
+        if(electronID(i, SS_veto_noiso_v5))         passes_SS_veto_noiso_v5 = true;
+
+        if(electronID(i, SS_medium_v6))             passes_SS_tight_v6 = true;
+        if(electronID(i, SS_medium_noiso_v6))       passes_SS_tight_noiso_v6 = true;
+        if(electronID(i, SS_fo_v6))                 passes_SS_fo_v6 = true;
+        if(electronID(i, SS_fo_noiso_v6))           passes_SS_fo_noiso_v6 = true;
+        if(electronID(i, SS_fo_looseMVA_v6))        passes_SS_fo_looseMVA_v6 = true;
+        if(electronID(i, SS_fo_looseMVA_noiso_v6))  passes_SS_fo_looseMVA_noiso_v6 = true;
+        if(electronID(i, SS_veto_v6))               passes_SS_veto_v6 = true;
+        if(electronID(i, SS_veto_noiso_v6))         passes_SS_veto_noiso_v6 = true;
+
+	if (verbose) cout << "Done SS IDs" <<endl;
+
+        elID::unsetCache();
+        elID::setCache(idx,mva,miniiso,ptratio,ptrelv1);
+
+        //Save WW ID bools
+        if(electronID(i, WW_medium_v2))             passes_WW_medium_v2 = true;
+        if(electronID(i, WW_medium_noiso_v2))       passes_WW_medium_noiso_v2 = true;
+        if(electronID(i, WW_fo_v2))                 passes_WW_fo_v2 = true;
+        if(electronID(i, WW_fo_noiso_v2))           passes_WW_fo_noiso_v2 = true;
+        if(electronID(i, WW_veto_v2))               passes_WW_veto_v2 = true;
+        if(electronID(i, WW_veto_noiso_v2))         passes_WW_veto_noiso_v2 = true;
+
+        //Save HAD ID bools
+        if(electronID(i, HAD_veto_v3))              passes_HAD_veto_v3 = true;
+        if(electronID(i, HAD_veto_noiso_v3))        passes_HAD_veto_noiso_v3 = true;
+        if(electronID(i, HAD_loose_v3))             passes_HAD_loose_v3 = true;
+        if(electronID(i, HAD_loose_noiso_v3))       passes_HAD_loose_noiso_v3 = true;
+	if (verbose) cout << "Done WW and HAD IDs" <<endl;
+        //Save POG ID bools
+        // if( tas::els_passVetoId().at(i) )           passes_POG_vetoID = true;
+        // if( tas::els_passLooseId().at(i) )          passes_POG_looseID = true;
+        // if( tas::els_passMediumId().at(i) )         passes_POG_mediumID = true;
+        // if( tas::els_passTightId().at(i) )          passes_POG_tightID = true;
+	if (verbose) cout << "Done POG IDs"<<endl;
+        elID::unsetCache();
+	if (verbose) cout << "Some MC properties"<<endl;
+        if (!evt_isRealData ) {
+          motherID = lepMotherID(Lep(id, idx));
+          mc_motherp4 = tas::els_mc_motherp4().at(i); 
+          mc_motherid = tas::els_mc_motherid().at(i); 
+        }
+        //Triggers
+	if (verbose) cout << "Electron triggers" << endl;
+        fillElectronTriggerBranches(p4, idx, false);
+	if (verbose) cout << "Saving electron branches"<<endl;
+        //Fill tree once per tag
+        BabyTree->Fill(); 
+	if (verbose) cout << "Finished electron"<<endl;
+      }
+
+      ////////// Addition of PF LEPTONS that were not included before //////////////////
+      // check if anything needs to be done: 
+      //    - compare size of pfelp4 with probeelp4, and same for muons
+      //    - check whether there is a muon/electron tag
+      // if something to be done, then we need to save the pflepton as well as tag properties and triggers...
+      if (verbose) cout << "Addition of PF LEPTONS that were not included before" << endl;
+      bool addPFel = false;
+      bool addPFmu = false;
+      if ( foundElTag && savedElP4s.size() != pfelP4.size() ) addPFel = true;
+      if ( foundMuTag && savedMuP4s.size() != pfmuP4.size() ) addPFmu = true;
+
+      if ( addPFel && addPFCandidates ) {
+        for (unsigned int i=0; i<pfelP4.size(); i++) {
+          if (pfelIsReco[i]) continue;
+          InitLeptonBranches(); 
+          // set the tag branches (-1 means we are happy if any reco electron is a tag)
+	  //          checkElectronTag( -1 , 0);
+          checkElectronTag( -1 , v25nsMVAreader);
+          // now let's look at our electron
+          int pfidx = pfelidx[i];
+          p4 = pfelP4[i];
+          id = tas::pfcands_particleId().at(pfidx);
+          isPF = true; // that's why we're here!
+          if (id > 0) id = 1011; 
+          else id = -1011;
+          dZ = tas::pfcands_dz().at(pfidx); 
+          charge = tas::pfcands_charge().at(pfidx);
+	  AbsTrkIso = pfelAbsTrkIso[i]; // For this muon, save track iso produced earlier for PFmuon
+	  TrkAn04 = pfelTrkAn04[i];
+	  if (!evt_isRealData) motherID = pfLepMotherID(pfidx);
+	  
+          dilep_p4 = p4 + tag_p4;
+          dilep_mass = dilep_p4.M();
+
+          fillElectronTriggerBranches(p4,-1,false);
+
+          BabyTree->Fill(); 
+        }
+      } // addPFel
+
+      if (addPFmu && addPFCandidates){
+        for (unsigned int i=0; i<pfmuP4.size(); i++) {
+          if (pfmuIsReco[i]) continue;
+          InitLeptonBranches(); 
+          // set the tag branches (-1 means we are happy if any reco electron is a tag)
+          checkMuonTag( -1 );
+          // now let's look at our electron
+          int pfidx = pfmuidx[i];
+          p4 = pfmuP4[i];
+          id = tas::pfcands_particleId().at(pfidx);
+          isPF = true; // that's why we're here!
+          if (id > 0) id = 1013; 
+          else id = -1013;
+          dZ = tas::pfcands_dz().at(pfidx); 
+          charge = tas::pfcands_charge().at(pfidx);
+	  AbsTrkIso = pfmuAbsTrkIso[i]; // For this muon, save track iso produced earlier for PFmuon
+	  TrkAn04 = pfmuTrkAn04[i];
+	  if (!evt_isRealData) motherID = pfLepMotherID(pfidx);
+	  
+          dilep_p4 = p4 + tag_p4;
+          dilep_mass = dilep_p4.M();
+
+          fillMuonTriggerBranches(p4,-1,false);
+
+          BabyTree->Fill(); 		  
+        }	    
+      } // addPFmu
+
+    }//close event loop
+
+    file->Close();
+    delete file;
+
+    cout << "\nFile done" <<endl;
+  }//close file loop
+
+  cout<<"\nWriting file"<<endl;
+
+  BabyFile->cd();
+  BabyTree->Write();
+  BabyFile->Close();
+
+  return 0;  
+
 }
 
-//___________________________________________________________________________________________________________________________________________
-void babyMaker::SetOutputPath(std::string outputpath)
-{
-    path = outputpath;
+void babyMaker::SetOutputPath(std::string outputpath){
+  path = outputpath;
 }

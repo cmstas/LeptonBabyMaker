@@ -6,137 +6,59 @@
 #include <sstream>
 #include <vector>
 
-//usage: ./main.exe QCD_Test 1000 1 ./
+int main(int argc, char *argv[]){
 
-vector<TString> load(const char *type, char *input){
-
-  vector<TString> output;
-  char buffer[400];
-  char StringValue[1000];
-  ifstream IN(input);
-  while( IN.getline(buffer, 400, '\n') ){
-    // ok = false;
-    if (buffer[0] == '#') {
-      continue; // Skip lines commented with '#'
+    TString filenames;
+    char* outname = "output.root";
+    int nevents_max = 0;
+    // bool useXrootd = false;
+    char hostnamestupid[100];
+    gethostname(hostnamestupid, 100);
+    TString hostname(hostnamestupid);
+    std::cout << ">>> Hostname is " << hostname << std::endl;  
+    bool useXrootd = !(hostname.Contains("t2.ucsd.edu"));
+    if (hostname.Contains("uafino")) {
+        std::cout << ">>> We're on uafino, so using xrootd!" << std::endl;  
+        useXrootd = true;
     }
-    if( !strcmp(buffer, "SAMPLE")){
-      bool add = false;
-      IN.getline(buffer, 400, '\n');
-      sscanf(buffer, "Name\t%s", StringValue);
-      if((string)StringValue==(string)type) add=true;
-      IN.getline(buffer, 400, '\n');
-      sscanf(buffer, "Path\t%s", StringValue);
-      if(add){
-	std::ostringstream addStream;
-	addStream << StringValue;
-	TString addString = addStream.str().c_str();
-	output.push_back(addString);
-      }
+    useXrootd = true;
+
+    if (argc > 1) filenames = TString(argv[1]);
+    if (argc > 2) outname     = argv[2];
+    if (argc > 3) nevents_max = atoi(argv[3]);
+
+    std::cout << ">>> Args: " << std::endl;
+    std::cout << "     filenames:    " << filenames << std::endl;
+    std::cout << "     outname:     " << outname << std::endl;
+    std::cout << "     nevents_max: " << nevents_max << std::endl;
+
+    if (argc <= 1) { 
+        std::cout << ">>> [!] Not enough arguments!" << std::endl;  
+        return 0;
     }
-  }
-  return output;
-}
 
-bool doesFileExist(TString fname, bool useXrootd) {
-  if(useXrootd) {
-    return system(Form("lcg-ls -b -D srmv2 \"srm://bsrm-3.t2.ucsd.edu:8443/srm/v2/server?SFN=%s\" > /dev/null", fname.Data())) == 0;
-  } else {
-    std::ifstream infile(fname.Data());
-    return infile.good();
-  }
-}
+    if (useXrootd) {
+        filenames = filenames.ReplaceAll("/hadoop/cms", "root://cmsxrootd.fnal.gov/");
+    }
 
-int main(int argc, char **argv)
-  try{
-    TString sample = "";
     babyMaker *mylooper = new babyMaker();
-    TChain *result = new TChain("Events");
-    char *input = "philip_sample.dat";
-
-    if (argc < 2) {
-//      sample = "default";
-//      cout<<"Using default file. "<<endl;
-      cout<<"ERROR - Check your arguments:"<<endl;
-      cout<<"Usage: ./main.exe SAMPLE NEVENTS [FILENUMBER=default runs over all files in the sample]"<<endl;
-      return 0;
-    }
-    else {
-      sample = (TString) argv[1];
-      cout<<"Using files corresponding to sample "<<sample<<endl;
-    }
-
-    int nevents = -1;
-    if (sample == "default") nevents = 100;
-    if (argc < 3) {
-      cout<<"Number of events not specified. Running over "<<nevents<<" events"<<endl;
-    }
-    else {
-      TString n = (TString) argv[2];
-      nevents = n.Atoi();
-      cout<<"Running over "<<nevents<<" events"<<endl;
-    }
-
-    int file=0;
-    if (argc < 4) {
-      cout<<"File number not specified. Running over all files "<<endl;
-    }
-    else {
-      file = atoi(argv[3]);
-    }
-    // const char* filename = (file == 0 ? "merged_ntuple_*.root" : Form("merged_ntuple_%i.root", file));
-    TString filename = TString(file == 0 ? "merged_ntuple_*.root" : Form("merged_ntuple_%i.root", file));
-    cout<<"Running over files with names "<<filename<<endl;
-    TString suffix = TString(file == 0 ? "" : Form("_%i", file));
-
+    TChain *chain = new TChain("Events");
     string dirpath = "./";  
-    if (argc < 5) {
-      cout<<"No directory specified, default ./" <<endl;
-    } else {
-      dirpath = argv[4];
-      cout<<"Output directory is" << dirpath <<endl;
-    }
 
-    bool useXrootd = true;
-    if (system("hostname | grep ucsd") == 0) {
-        std::cout << "Based on your hostname, you are on UCSD, so turning xrootd accessing off!" << std::endl;
-        useXrootd = false;
+    TObjArray *files = filenames.Tokenize(",");
+    for (Int_t i = 0; i < files->GetEntries(); i++)  {
+        TString fname(((TObjString *)(files->At(i)))->String());
+        std::cout << ">>> Adding file: " << fname << std::endl;  
+        chain->Add(fname);
     }
-    
-    vector<TString> samplelist = load(sample.Data(), input);//new
-    if(samplelist.size()==0) cout<<"Could not find files corresponding to sample "<<sample<<endl;
-    for(unsigned int i = 0; i<samplelist.size(); ++i){
+    std::cout << ">>> Events in TChain: " << chain->GetEntries() << std::endl;  
 
-      if (doesFileExist(samplelist[i], useXrootd)) {
-        if(!(samplelist[i].Contains(".root"))) {
-          samplelist[i] = samplelist[i] + filename;
-          if (!doesFileExist(samplelist[i], useXrootd) && !(TString(filename).Contains("*"))) {
-            cout << "Warning! File: " << samplelist[i] << " does not exist. Not added to files to be processed." << endl;
-            continue;
-          }
-        }
-        cout << "Add sample " << samplelist[i] << " to files to be processed." << endl;
-        if(useXrootd) {
-          TString pfn = samplelist[i].ReplaceAll("/hadoop/cms", "root://cmsxrootd.fnal.gov/");
-          std::cout << pfn << std::endl;
-          result->Add(pfn);
-        } else {
-          result->Add(samplelist[i].Data());
-        }
-      } else {
-        cout << "Warning! File: " << samplelist[i] << " does not exist ab exist. Not added to files to be processed." << endl;
-      }
-    }
 
     mylooper->SetOutputPath(dirpath);
-    mylooper->looper(result, Form("%s%s", sample.Data(),suffix.Data()), nevents);
+    mylooper->looper(chain, outname, nevents_max);
+
     return 0;
-
-  }
-  catch (std::exception& e)
-    {
-      std::cerr << "[LeptonBabyMaker] Error: failed..." << std::endl;
-      std::cerr << e.what() << std::endl;
-      return 1;
-    }
+}
 
 
+/* vim: set ft=cpp: */
