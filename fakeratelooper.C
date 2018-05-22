@@ -742,7 +742,7 @@ bool babyMaker::checkMuonTag(unsigned int i, bool oldTag){
     if (fabs(tas::mus_dzPV().at(j)) > 0.05) continue;
     if (fabs(tas::mus_ip3d().at(j) / tas::mus_ip3derr().at(j)) > 4) continue;
     if (!isTightMuonPOG(j)) continue; 
-    if (muRelIso03EA(j) > 0.2) continue;
+    if (muRelIso03EA(j,ssEAversion) > 0.2) continue;
     tag_p4 = tas::mus_p4().at(j);
     tag_charge = tas::mus_charge().at(j);
     tag_HLTLeadingLeg = false;
@@ -1032,7 +1032,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
   v25nsMVAreader->InitMVA("CORE",true); 
   
   //Add good run list
-  set_goodrun_file("goodRunList/Cert_294927-306462_13TeV_PromptReco_Collisions17_snt.txt");
+  set_goodrun_file("goodRunList/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1_snt.txt");
 
   //Make Baby Ntuple  
   MakeBabyNtuple( Form("%s", output_name) );
@@ -1213,96 +1213,96 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
 
         // Hack
         puweight = 0.;
-        if (trueNumInt>=0 && trueNumInt<1) puweight =  0.02186;
-        if (trueNumInt>=1 && trueNumInt<2) puweight =  0.09931;
-        if (trueNumInt>=2 && trueNumInt<3) puweight =  0.12351;
-        if (trueNumInt>=3 && trueNumInt<4) puweight =  0.19727;
-        if (trueNumInt>=4 && trueNumInt<5) puweight =  0.39874;
-        if (trueNumInt>=5 && trueNumInt<6) puweight =  0.63179;
-        if (trueNumInt>=6 && trueNumInt<7) puweight =  0.43171;
-        if (trueNumInt>=7 && trueNumInt<8) puweight =  0.16322;
-        if (trueNumInt>=8 && trueNumInt<9) puweight =  0.15364;
-        if (trueNumInt>=9 && trueNumInt<10) puweight =  0.21103;
-        if (trueNumInt>=10 && trueNumInt<11) puweight =  0.20759;
-        if (trueNumInt>=11 && trueNumInt<12) puweight =  0.22070;
-        if (trueNumInt>=12 && trueNumInt<13) puweight =  0.22136;
-        if (trueNumInt>=13 && trueNumInt<14) puweight =  0.22992;
-        if (trueNumInt>=14 && trueNumInt<15) puweight =  0.24993;
-        if (trueNumInt>=15 && trueNumInt<16) puweight =  0.27776;
-        if (trueNumInt>=16 && trueNumInt<17) puweight =  0.32593;
-        if (trueNumInt>=17 && trueNumInt<18) puweight =  0.38540;
-        if (trueNumInt>=18 && trueNumInt<19) puweight =  0.43773;
-        if (trueNumInt>=19 && trueNumInt<20) puweight =  0.48359;
-        if (trueNumInt>=20 && trueNumInt<21) puweight =  0.52463;
-        if (trueNumInt>=21 && trueNumInt<22) puweight =  0.56180;
-        if (trueNumInt>=22 && trueNumInt<23) puweight =  0.60548;
-        if (trueNumInt>=23 && trueNumInt<24) puweight =  0.65500;
-        if (trueNumInt>=24 && trueNumInt<25) puweight =  0.71414;
-        if (trueNumInt>=25 && trueNumInt<26) puweight =  0.79602;
-        if (trueNumInt>=26 && trueNumInt<27) puweight =  0.89716;
-        if (trueNumInt>=27 && trueNumInt<28) puweight =  1.00805;
-        if (trueNumInt>=28 && trueNumInt<29) puweight =  1.13680;
-        if (trueNumInt>=29 && trueNumInt<30) puweight =  1.27281;
-        if (trueNumInt>=30 && trueNumInt<31) puweight =  1.39653;
-        if (trueNumInt>=31 && trueNumInt<32) puweight =  1.52798;
-        if (trueNumInt>=32 && trueNumInt<33) puweight =  1.64814;
-        if (trueNumInt>=33 && trueNumInt<34) puweight =  1.76011;
-        if (trueNumInt>=34 && trueNumInt<35) puweight =  1.85094;
-        if (trueNumInt>=35 && trueNumInt<36) puweight =  1.91511;
-        if (trueNumInt>=36 && trueNumInt<37) puweight =  1.94036;
-        if (trueNumInt>=37 && trueNumInt<38) puweight =  1.95375;
-        if (trueNumInt>=38 && trueNumInt<39) puweight =  1.95133;
-        if (trueNumInt>=39 && trueNumInt<40) puweight =  1.98818;
-        if (trueNumInt>=40 && trueNumInt<41) puweight =  2.00750;
-        if (trueNumInt>=41 && trueNumInt<42) puweight =  2.06901;
-        if (trueNumInt>=42 && trueNumInt<43) puweight =  2.21808;
-        if (trueNumInt>=43 && trueNumInt<44) puweight =  2.48225;
-        if (trueNumInt>=44 && trueNumInt<45) puweight =  2.90043;
-        if (trueNumInt>=45 && trueNumInt<46) puweight =  3.42508;
-        if (trueNumInt>=46 && trueNumInt<47) puweight =  4.00413;
-        if (trueNumInt>=47 && trueNumInt<48) puweight =  4.74829;
-        if (trueNumInt>=48 && trueNumInt<49) puweight =  5.64297;
-        if (trueNumInt>=49 && trueNumInt<50) puweight =  6.62023;
-        if (trueNumInt>=50 && trueNumInt<51) puweight =  7.47404;
-        if (trueNumInt>=51 && trueNumInt<52) puweight =  8.60453;
-        if (trueNumInt>=52 && trueNumInt<53) puweight =  9.28333;
-        if (trueNumInt>=53 && trueNumInt<54) puweight =  9.23537;
-        if (trueNumInt>=54 && trueNumInt<55) puweight =  10.45411;
-        if (trueNumInt>=55 && trueNumInt<56) puweight =  12.20381;
-        if (trueNumInt>=56 && trueNumInt<57) puweight =  13.07027;
-        if (trueNumInt>=57 && trueNumInt<58) puweight =  12.53393;
-        if (trueNumInt>=58 && trueNumInt<59) puweight =  10.49204;
-        if (trueNumInt>=59 && trueNumInt<60) puweight =  11.74119;
-        if (trueNumInt>=60 && trueNumInt<61) puweight =  9.95310;
-        if (trueNumInt>=61 && trueNumInt<62) puweight =  10.02085;
-        if (trueNumInt>=62 && trueNumInt<63) puweight =  7.37381;
-        if (trueNumInt>=63 && trueNumInt<64) puweight =  2.10582;
-        if (trueNumInt>=64 && trueNumInt<65) puweight =  1.94342;
-        if (trueNumInt>=65 && trueNumInt<66) puweight =  1.57364;
-        if (trueNumInt>=66 && trueNumInt<67) puweight =  2.36170;
-        if (trueNumInt>=67 && trueNumInt<68) puweight =  1.40250;
-        if (trueNumInt>=68 && trueNumInt<69) puweight =  0.99968;
-        if (trueNumInt>=69 && trueNumInt<70) puweight =  0.37170;
-        if (trueNumInt>=70 && trueNumInt<71) puweight =  0.41035;
-        if (trueNumInt>=71 && trueNumInt<72) puweight =  0.25508;
-        if (trueNumInt>=72 && trueNumInt<73) puweight =  0.18057;
-        if (trueNumInt>=73 && trueNumInt<74) puweight =  0.11856;
-        if (trueNumInt>=74 && trueNumInt<75) puweight =  0.07928;
-        if (trueNumInt>=75 && trueNumInt<76) puweight =  0.00000;
-        if (trueNumInt>=76 && trueNumInt<77) puweight =  0.00000;
-        if (trueNumInt>=77 && trueNumInt<78) puweight =  0.00000;
-        if (trueNumInt>=78 && trueNumInt<79) puweight =  0.00000;
-        if (trueNumInt>=79 && trueNumInt<80) puweight =  0.00000;
-        if (trueNumInt>=80 && trueNumInt<81) puweight =  0.00000;
-        if (trueNumInt>=81 && trueNumInt<82) puweight =  0.00000;
-        if (trueNumInt>=82 && trueNumInt<83) puweight =  0.00000;
-        if (trueNumInt>=83 && trueNumInt<84) puweight =  0.00000;
-        if (trueNumInt>=84 && trueNumInt<85) puweight =  0.00000;
-        if (trueNumInt>=85 && trueNumInt<86) puweight =  0.00000;
-        if (trueNumInt>=86 && trueNumInt<87) puweight =  0.00000;
-        if (trueNumInt>=87 && trueNumInt<88) puweight =  0.00000;
-        if (trueNumInt>=88 && trueNumInt<89) puweight =  0.00000;
-        if (trueNumInt>=89 && trueNumInt<90) puweight =  0.00000;
+        if (trueNumInt>=0.000000 && trueNumInt<1.000000) puweight = 0.000293;
+        if (trueNumInt>=1.000000 && trueNumInt<2.000000) puweight = 0.035358;
+        if (trueNumInt>=2.000000 && trueNumInt<3.000000) puweight = 0.053803;
+        if (trueNumInt>=3.000000 && trueNumInt<4.000000) puweight = 0.058834;
+        if (trueNumInt>=4.000000 && trueNumInt<5.000000) puweight = 0.068696;
+        if (trueNumInt>=5.000000 && trueNumInt<6.000000) puweight = 0.100911;
+        if (trueNumInt>=6.000000 && trueNumInt<7.000000) puweight = 0.101934;
+        if (trueNumInt>=7.000000 && trueNumInt<8.000000) puweight = 0.136107;
+        if (trueNumInt>=8.000000 && trueNumInt<9.000000) puweight = 0.104885;
+        if (trueNumInt>=9.000000 && trueNumInt<10.000000) puweight = 0.338963;
+        if (trueNumInt>=10.000000 && trueNumInt<11.000000) puweight = 0.451998;
+        if (trueNumInt>=11.000000 && trueNumInt<12.000000) puweight = 0.599711;
+        if (trueNumInt>=12.000000 && trueNumInt<13.000000) puweight = 0.638488;
+        if (trueNumInt>=13.000000 && trueNumInt<14.000000) puweight = 0.651156;
+        if (trueNumInt>=14.000000 && trueNumInt<15.000000) puweight = 0.687883;
+        if (trueNumInt>=15.000000 && trueNumInt<16.000000) puweight = 0.748832;
+        if (trueNumInt>=16.000000 && trueNumInt<17.000000) puweight = 0.857497;
+        if (trueNumInt>=17.000000 && trueNumInt<18.000000) puweight = 0.940519;
+        if (trueNumInt>=18.000000 && trueNumInt<19.000000) puweight = 1.008305;
+        if (trueNumInt>=19.000000 && trueNumInt<20.000000) puweight = 1.059684;
+        if (trueNumInt>=20.000000 && trueNumInt<21.000000) puweight = 1.114231;
+        if (trueNumInt>=21.000000 && trueNumInt<22.000000) puweight = 1.164988;
+        if (trueNumInt>=22.000000 && trueNumInt<23.000000) puweight = 1.216909;
+        if (trueNumInt>=23.000000 && trueNumInt<24.000000) puweight = 1.252166;
+        if (trueNumInt>=24.000000 && trueNumInt<25.000000) puweight = 1.260150;
+        if (trueNumInt>=25.000000 && trueNumInt<26.000000) puweight = 1.270385;
+        if (trueNumInt>=26.000000 && trueNumInt<27.000000) puweight = 1.268248;
+        if (trueNumInt>=27.000000 && trueNumInt<28.000000) puweight = 1.273916;
+        if (trueNumInt>=28.000000 && trueNumInt<29.000000) puweight = 1.296826;
+        if (trueNumInt>=29.000000 && trueNumInt<30.000000) puweight = 1.279264;
+        if (trueNumInt>=30.000000 && trueNumInt<31.000000) puweight = 1.249897;
+        if (trueNumInt>=31.000000 && trueNumInt<32.000000) puweight = 1.198786;
+        if (trueNumInt>=32.000000 && trueNumInt<33.000000) puweight = 1.137237;
+        if (trueNumInt>=33.000000 && trueNumInt<34.000000) puweight = 1.081892;
+        if (trueNumInt>=34.000000 && trueNumInt<35.000000) puweight = 1.013942;
+        if (trueNumInt>=35.000000 && trueNumInt<36.000000) puweight = 0.960577;
+        if (trueNumInt>=36.000000 && trueNumInt<37.000000) puweight = 0.919392;
+        if (trueNumInt>=37.000000 && trueNumInt<38.000000) puweight = 0.875529;
+        if (trueNumInt>=38.000000 && trueNumInt<39.000000) puweight = 0.843470;
+        if (trueNumInt>=39.000000 && trueNumInt<40.000000) puweight = 0.811962;
+        if (trueNumInt>=40.000000 && trueNumInt<41.000000) puweight = 0.821625;
+        if (trueNumInt>=41.000000 && trueNumInt<42.000000) puweight = 0.870506;
+        if (trueNumInt>=42.000000 && trueNumInt<43.000000) puweight = 0.952979;
+        if (trueNumInt>=43.000000 && trueNumInt<44.000000) puweight = 1.092960;
+        if (trueNumInt>=44.000000 && trueNumInt<45.000000) puweight = 1.271256;
+        if (trueNumInt>=45.000000 && trueNumInt<46.000000) puweight = 1.465358;
+        if (trueNumInt>=46.000000 && trueNumInt<47.000000) puweight = 1.643926;
+        if (trueNumInt>=47.000000 && trueNumInt<48.000000) puweight = 1.725305;
+        if (trueNumInt>=48.000000 && trueNumInt<49.000000) puweight = 1.766398;
+        if (trueNumInt>=49.000000 && trueNumInt<50.000000) puweight = 1.684848;
+        if (trueNumInt>=50.000000 && trueNumInt<51.000000) puweight = 1.518853;
+        if (trueNumInt>=51.000000 && trueNumInt<52.000000) puweight = 1.308158;
+        if (trueNumInt>=52.000000 && trueNumInt<53.000000) puweight = 1.082218;
+        if (trueNumInt>=53.000000 && trueNumInt<54.000000) puweight = 0.856289;
+        if (trueNumInt>=54.000000 && trueNumInt<55.000000) puweight = 0.651500;
+        if (trueNumInt>=55.000000 && trueNumInt<56.000000) puweight = 0.461425;
+        if (trueNumInt>=56.000000 && trueNumInt<57.000000) puweight = 0.328969;
+        if (trueNumInt>=57.000000 && trueNumInt<58.000000) puweight = 0.231978;
+        if (trueNumInt>=58.000000 && trueNumInt<59.000000) puweight = 0.162935;
+        if (trueNumInt>=59.000000 && trueNumInt<60.000000) puweight = 0.114853;
+        if (trueNumInt>=60.000000 && trueNumInt<61.000000) puweight = 0.083247;
+        if (trueNumInt>=61.000000 && trueNumInt<62.000000) puweight = 0.061367;
+        if (trueNumInt>=62.000000 && trueNumInt<63.000000) puweight = 0.047400;
+        if (trueNumInt>=63.000000 && trueNumInt<64.000000) puweight = 0.036227;
+        if (trueNumInt>=64.000000 && trueNumInt<65.000000) puweight = 0.029666;
+        if (trueNumInt>=65.000000 && trueNumInt<66.000000) puweight = 0.022018;
+        if (trueNumInt>=66.000000 && trueNumInt<67.000000) puweight = 0.015957;
+        if (trueNumInt>=67.000000 && trueNumInt<68.000000) puweight = 0.013953;
+        if (trueNumInt>=68.000000 && trueNumInt<69.000000) puweight = 0.012755;
+        if (trueNumInt>=69.000000 && trueNumInt<70.000000) puweight = 0.012248;
+        if (trueNumInt>=70.000000 && trueNumInt<71.000000) puweight = 0.011295;
+        if (trueNumInt>=71.000000 && trueNumInt<72.000000) puweight = 0.010220;
+        if (trueNumInt>=72.000000 && trueNumInt<73.000000) puweight = 0.008482;
+        if (trueNumInt>=73.000000 && trueNumInt<74.000000) puweight = 0.007912;
+        if (trueNumInt>=74.000000 && trueNumInt<75.000000) puweight = 0.005066;
+        if (trueNumInt>=75.000000 && trueNumInt<76.000000) puweight = 0.005671;
+        if (trueNumInt>=76.000000 && trueNumInt<77.000000) puweight = 0.003689;
+        if (trueNumInt>=77.000000 && trueNumInt<78.000000) puweight = 0.002997;
+        if (trueNumInt>=78.000000 && trueNumInt<79.000000) puweight = 0.001584;
+        if (trueNumInt>=79.000000 && trueNumInt<80.000000) puweight = 0.001158;
+        if (trueNumInt>=80.000000 && trueNumInt<81.000000) puweight = 0.000324;
+        if (trueNumInt>=81.000000 && trueNumInt<82.000000) puweight = 0.000500;
+        if (trueNumInt>=82.000000 && trueNumInt<83.000000) puweight = 0.000547;
+        if (trueNumInt>=83.000000 && trueNumInt<84.000000) puweight = 0.000158;
+        if (trueNumInt>=84.000000 && trueNumInt<85.000000) puweight = 0.000107;
+        if (trueNumInt>=85.000000 && trueNumInt<86.000000) puweight = 0.000071;
+        if (trueNumInt>=86.000000 && trueNumInt<87.000000) puweight = 0.000126;
+        if (trueNumInt>=87.000000 && trueNumInt<88.000000) puweight = 0.000018;
+        if (trueNumInt>=88.000000 && trueNumInt<89.000000) puweight = 0.000016;
+        if (trueNumInt>=89.000000 && trueNumInt<90.000000) puweight = 0.000013;
 
       }
 
@@ -1376,8 +1376,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
 	    }
 	  }
 	  for(size_t j = 0; j < tas::els_p4().size(); j++){
-	    if(electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt()>7. && (ROOT::Math::VectorUtil::DeltaR(jet,tas::els_p4().at(j)) < 0.4) ) {
-	    // if(electronID(j, SS_fo_looseMVA_v6) && tas::els_p4().at(j).pt()>7. && (ROOT::Math::VectorUtil::DeltaR(jet,tas::els_p4().at(j)) < 0.4) ) {
+	    // if(electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt()>7. && (ROOT::Math::VectorUtil::DeltaR(jet,tas::els_p4().at(j)) < 0.4) ) {
+	    if(electronID(j, SS_fo_looseMVA_v6) && tas::els_p4().at(j).pt()>7. && (ROOT::Math::VectorUtil::DeltaR(jet,tas::els_p4().at(j)) < 0.4) ) {
 	      jetClean = false;
 	      if (verbose) cout << "jet cleaned by electron p4: " << tas::els_p4().at(j) << " pt=" << tas::els_p4().at(j).pt() << endl;
 	    }
@@ -1409,8 +1409,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         // if(muonID(j, SS_fo_v6) && tas::mus_p4().at(j).pt() > 10) nFOs_SS++;
       }
       for(size_t j = 0; j < tas::els_p4().size(); j++){
-        if( electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt() > 10) nFOs_SS++;
-        // if( electronID(j, SS_fo_looseMVA_v6) && tas::els_p4().at(j).pt() > 10) nFOs_SS++;
+        // if( electronID(j, SS_fo_looseMVA_v5) && tas::els_p4().at(j).pt() > 10) nFOs_SS++;
+        if( electronID(j, SS_fo_looseMVA_v6) && tas::els_p4().at(j).pt() > 10) nFOs_SS++;
       }
 
     if (skipEventsMoreFO && nFOs_SS > 1) continue;

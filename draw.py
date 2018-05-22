@@ -55,7 +55,7 @@ for trigname in trigs:
         mult = "41.3*scale1fb*puweight"
     mll = r.TH1F(hname,hname,80,0,200)
     mll.Sumw2()
-    sel = "{}*{}*(abs(id)=={} && passes_SS_tight_v5 && {}>0 && tag_p4.pt()>30. && p4.pt()>25.)".format(mult,trigname,idlep,trigname)
+    sel = "{}*{}*(abs(id)=={} && passes_SS_tight_v6 && {}>0 && tag_p4.pt()>30. && p4.pt()>25.)".format(mult,trigname,idlep,trigname)
     ch.Draw("dilep_mass>>{}".format(hname),sel,"e")
     h1 = r.gDirectory.Get(hname)
     hists.append(h1)
