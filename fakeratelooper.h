@@ -99,7 +99,8 @@ private:
   float evt_kfactor;      
   float gen_met;      
   float gen_metPhi;  
-  float njets;  
+  int njets;  
+  int njets_recoil;  
   float ht;  
   float ht_SS;  
   vector <LorentzVector> jets;
@@ -200,6 +201,7 @@ private:
   float mt;
   float ptrelv0;
   float ptrelv1;
+  float coneCorrPt;
   float miniiso;
   float miniisoDB;
   float reliso04;
@@ -207,6 +209,7 @@ private:
   float AbsTrkIso;
   float TrkAn04;
   LorentzVector jet_close_lep;
+  LorentzVector close_jet_v5;
   int jet_close_lep_idx;
   float jet_close_lep_undoJEC;
   float jet_close_lep_area;
@@ -216,6 +219,7 @@ private:
   float jet_close_L1L2L3;
   float jet_close_L2L3;
   float ptratio;
+  float ptratio_v5;
   int tag_charge;
   int tag_mc_motherid;
   float tag_eSeed;
@@ -231,6 +235,8 @@ private:
   float iso03hadEt;
   int   exp_innerlayers;
   int   exp_outerlayers;
+  int   isTriggerSafe;
+  int   isTriggerSafenoIso;
 
   // -- tag HLT match -- // 
   int tag_HLT_Ele25WP60_Ele8_Mass55_LeadingLeg;

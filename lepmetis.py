@@ -14,27 +14,30 @@ if __name__ == "__main__":
     # tag = "v4" # v6 IDs
     # tag = "v6" # back to v5 IDs but with nmisshits<=1
     # tag = "v8" # new EG ids with new EA and with nmisshits<=1
-    tag = "v9" # new EG ids with new EA and with nmisshits<=1
+    # tag = "v9" # new EG ids with new EA and with nmisshits<=1
+    # tag = "v11" # new EG ids with new EA and with nmisshits<=1
+    # tag = "v13" # latest EG id,EA with correct rho and nmisshits <= 1, submitted Jun 9, 2017
+    tag = "v15" # same as v13 but more branches computed here rather than FR looper, submitted Jun 13, 2017
 
     total_summary = {}
 
     samples = []
     dirs = []
 
-    # dirs.extend(glob.glob("/hadoop/cms/store/group/snt/run2_data2017/SingleElectron_Run2017*-31Mar2018-v1_MINIAOD_CMS4_V09-04-12"))
-    # dirs.extend(glob.glob("/hadoop/cms/store/group/snt/run2_data2017/DoubleMuon_Run2017*-31Mar2018-v1_MINIAOD_CMS4_V09-04-12"))
-    # for thedir in dirs:
-    #     dsname = "/FakeRate/{0}/LEPTON".format(thedir.split("/")[7].rsplit("_",3)[0])
-    #     samples.append(
-    #             DirectorySample(dataset=dsname, location=thedir)
-    #             )
+    dirs.extend(glob.glob("/hadoop/cms/store/group/snt/run2_data2017/SingleElectron_Run2017*-31Mar2018-v1_MINIAOD_CMS4_V09-04-12"))
+    dirs.extend(glob.glob("/hadoop/cms/store/group/snt/run2_data2017/DoubleMuon_Run2017*-31Mar2018-v1_MINIAOD_CMS4_V09-04-12"))
+    for thedir in dirs:
+        dsname = "/FakeRate/{0}/LEPTON".format(thedir.split("/")[7].rsplit("_",3)[0])
+        samples.append(
+                DirectorySample(dataset=dsname, location=thedir)
+                )
     samples.extend([
             DirectorySample(dataset="/FakeRate/WJets-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017/WJets*RunIIFall17MiniAODv2*_CMS4_V09-04-13"),
-            # DirectorySample(dataset="/FakeRate/DYJets-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017//DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8_RunIIFall17MiniAODv2-PU2017RECOSIMstep_12Apr2018_94X_mc2017_realistic_v14_ext1-v1_MINIAODSIM_CMS4_V09-04-13/"),
-            # DirectorySample(dataset="/FakeRate/TTJets-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017//TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1_MINIAODSIM_CMS4_V09-04-13/"),
-            # DirectorySample(dataset="/FakeRate/QCD_EMEnriched-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017/QCD_*EMEnriched*CMS4_V09-04-13*/"),
-            # DirectorySample(dataset="/FakeRate/QCD_MuEnriched-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017/QCD_*MuEnriched*CMS4_V09-04-13*/"),
-            # DirectorySample(dataset="/FakeRate/QCD_bcToE-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017/QCD_*bcToE*CMS4_V09-04-13*/"),
+            DirectorySample(dataset="/FakeRate/DYJets-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017//DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8_RunIIFall17MiniAODv2-PU2017RECOSIMstep_12Apr2018_94X_mc2017_realistic_v14_ext1-v1_MINIAODSIM_CMS4_V09-04-13/"),
+            DirectorySample(dataset="/FakeRate/TTJets-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017//TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1_MINIAODSIM_CMS4_V09-04-13/"),
+            DirectorySample(dataset="/FakeRate/QCD_EMEnriched-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017/QCD_*EMEnriched*CMS4_V09-04-13*/"),
+            DirectorySample(dataset="/FakeRate/QCD_MuEnriched-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017/QCD_*MuEnriched*CMS4_V09-04-13*/"),
+            DirectorySample(dataset="/FakeRate/QCD_bcToE-2017v1/LEPTON", location="/hadoop/cms/store/group/snt/run2_mc2017/QCD_*bcToE*CMS4_V09-04-13*/"),
             ])
 
 

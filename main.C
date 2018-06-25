@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
         std::cout << ">>> We're on uafino, so using xrootd!" << std::endl;  
         useXrootd = true;
     }
-    useXrootd = true;
+    useXrootd = true; // sdsc doesn't read hadoop properly sometimes, :(
 
     if (argc > 1) filenames = TString(argv[1]);
     if (argc > 2) outname     = argv[2];

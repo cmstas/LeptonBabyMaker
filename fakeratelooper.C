@@ -54,6 +54,7 @@ void babyMaker::MakeBabyNtuple(const char* output_name){
   BabyTree->Branch("njets"             , &njets);
   BabyTree->Branch("ht"                , &ht);
   BabyTree->Branch("ht_SS"             , &ht_SS);
+  BabyTree->Branch("njets_recoil"             , &njets_recoil);
   BabyTree->Branch("jets"              , &jets);
   BabyTree->Branch("jets_disc"         , &jets_disc);
   BabyTree->Branch("jets_area"         , &jets_area);
@@ -147,6 +148,7 @@ void babyMaker::MakeBabyNtuple(const char* output_name){
   BabyTree->Branch("mt"                            , &mt);
   BabyTree->Branch("ptrelv0"                       , &ptrelv0);
   BabyTree->Branch("ptrelv1"                       , &ptrelv1);
+  BabyTree->Branch("coneCorrPt"                       , &coneCorrPt);
   BabyTree->Branch("miniiso"                       , &miniiso);
   BabyTree->Branch("miniisoDB"                     , &miniisoDB);
   BabyTree->Branch("reliso04"                      , &reliso04);
@@ -158,6 +160,7 @@ void babyMaker::MakeBabyNtuple(const char* output_name){
   BabyTree->Branch("iso03hadEt"                    , &iso03hadEt);
   BabyTree->Branch("jet_close_lep_idx"                 , &jet_close_lep_idx);
   BabyTree->Branch("jet_close_lep"                 , &jet_close_lep);
+  BabyTree->Branch("close_jet_v5"                 , &close_jet_v5);
   BabyTree->Branch("jet_close_lep_undoJEC"             , &jet_close_lep_undoJEC);
   BabyTree->Branch("jet_close_lep_area"             , &jet_close_lep_area);
   BabyTree->Branch("jet_close_L1"                  , &jet_close_L1);
@@ -166,6 +169,7 @@ void babyMaker::MakeBabyNtuple(const char* output_name){
   BabyTree->Branch("jet_close_L1L2L3"              , &jet_close_L1L2L3);
   BabyTree->Branch("jet_close_L2L3"                , &jet_close_L2L3);
   BabyTree->Branch("ptratio"                       , &ptratio);
+  BabyTree->Branch("ptratio_v5"                       , &ptratio_v5);
   BabyTree->Branch("tag_charge"                    , &tag_charge);
   BabyTree->Branch("tag_mc_motherid"               , &tag_mc_motherid);
   BabyTree->Branch("tag_eSeed"                     , &tag_eSeed);
@@ -175,6 +179,8 @@ void babyMaker::MakeBabyNtuple(const char* output_name){
   BabyTree->Branch("tag_HLTLeadingLeg"             , &tag_HLTLeadingLeg);
   BabyTree->Branch("exp_innerlayers"               , &exp_innerlayers);
   BabyTree->Branch("exp_outerlayers"               , &exp_outerlayers);
+  BabyTree->Branch("isTriggerSafe"               , &isTriggerSafe);
+  BabyTree->Branch("isTriggerSafenoIso"               , &isTriggerSafenoIso);
 
   //Tag triggers
   BabyTree->Branch("tag_HLT_Ele25WP60_Ele8_Mass55_LeadingLeg"                , &tag_HLT_Ele25WP60_Ele8_Mass55_LeadingLeg);
@@ -404,6 +410,7 @@ void babyMaker::InitBabyNtuple(){
   njets = -1;
   ht = -1;
   ht_SS = -1;
+  njets_recoil = -1;
   jets.clear();
   jets_disc.clear();
   jets_area.clear();
@@ -501,6 +508,7 @@ void babyMaker::InitLeptonBranches(){
   mt = -1;
   ptrelv0 = -1;
   ptrelv1 = -1;
+  coneCorrPt = -1;
   miniiso = -1;
   miniisoDB = -1;
   reliso04 = -1;
@@ -512,6 +520,7 @@ void babyMaker::InitLeptonBranches(){
   iso03hadEt = -1;
   jet_close_lep_idx = -1;
   jet_close_lep = LorentzVector(0,0,0,0);
+  close_jet_v5 = LorentzVector(0,0,0,0);
   jet_close_lep_undoJEC = -1;
   jet_close_lep_area = -1;
   jet_close_L1 = -1;
@@ -520,6 +529,7 @@ void babyMaker::InitLeptonBranches(){
   jet_close_L1L2L3 = -1;
   jet_close_L2L3 = -1;
   ptratio = -1;
+  ptratio_v5 = -1;
   dilep_mass = -1.;
   isRandom = false;
 
@@ -607,6 +617,8 @@ void babyMaker::InitLeptonBranches(){
   validHits = -99;
   lostHits = -99;
   exp_outerlayers = -99;
+  isTriggerSafe = 0;
+  isTriggerSafenoIso = 0;
   segmCompatibility = -99;
 
   //Electrons
@@ -801,7 +813,7 @@ bool babyMaker::checkElectronTag(unsigned int i, readMVA* v25nsMVAreader){
     tag_eSC = tas::els_eSC().at(j);      
     tag_ecalEnergy = tas::els_ecalEnergy().at(j);      
     tag_r9_full5x5 = tas::els_r9_full5x5().at(j);
-    if (v25nsMVAreader != 0) tag_mva_25ns = v25nsMVAreader->MVA(j);
+    // if (v25nsMVAreader != 0) tag_mva_25ns = v25nsMVAreader->MVA(j);
     tag_RelIso03EA = eleRelIso03EA(j);
     // tag_HLTLeadingLeg = (tas::els_HLT_Ele17_Ele8_Mass50_LeadingLeg().at(j) > 0 || tas::els_HLT_Ele20_SC4_Mass50_LeadingLeg().at(j) > 0);
     if (!evt_isRealData) tag_mc_motherid = tas::els_mc_motherid().at(j);
@@ -1161,6 +1173,11 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
       cms3.GetEntry(evt);
       nEventsDone++;
 
+      // if ( (tas::evt_event() != 149198610) &&
+      //         (tas::evt_event() != 116313468) &&
+      //         (tas::evt_event() != 124979245) &&
+      //         (tas::evt_event() != 164419822) ) continue;
+
       //if (verbose) cout << "Check prompt reco (Data)"<<endl;
       if (tas::evt_isRealData() && isPromptReco && tas::evt_run() <= 251562) continue;
 
@@ -1395,6 +1412,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
       }
       njets = jets.size();
 
+
       //Verbose for jets
       if (verbose){
         cout << "njets: " << njets << endl;
@@ -1500,6 +1518,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         p4 = tas::mus_p4().at(i); 
         savedMuP4s.push_back(p4);
 
+
         //Dilepton stuff
         if (foundTag) {
           dilep_p4 = p4 + tag_p4;
@@ -1509,6 +1528,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         //MC stuff
         if (!evt_isRealData){
           motherID = lepMotherID(Lep(id, idx));
+          // motherID = lepMotherID_v2(Lep(id, idx)).first;
           mc_motherp4 = tas::mus_mc_motherp4().at(i);
           mc_p4 = tas::mus_mc_p4().at(i);
           mc_motherid = tas::mus_mc_motherid().at(i);
@@ -1581,7 +1601,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         ptratio = jet_close_lep.pt() > 0 ? p4.pt()/jet_close_lep.pt() : 1; 
 	
         //MT
-        mt = MT(p4.pt(), p4.phi(), evt_pfmet, evt_pfmetPhi);
+        mt = MT(p4.pt(), p4.phi(), evt_corrMET, evt_corrMETPhi); 
 
         //Other muon Id
         pid_PFMuon = tas::mus_pid_PFMuon().at(i);
@@ -1631,9 +1651,9 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         if(muonID(i, SS_fo_noiso_v4))           passes_SS_fo_noiso_v4 = true;
         if(muonID(i, SS_veto_v4))               passes_SS_veto_v4 = true;
         if(muonID(i, SS_veto_noiso_v4))         passes_SS_veto_noiso_v4 = true;
-	LorentzVector close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);  
+	close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);  
 	float ptrel_v5 = ptRel(p4, close_jet_v5, true);
-	float ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt()/close_jet_v5.pt() : 1;
+	ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt()/close_jet_v5.pt() : 1;
         muID::unsetCache();
         muID::setCache(idx,miniiso,ptratio_v5,ptrel_v5);
         if(muonID(i, SS_tight_v5))              passes_SS_tight_v5 = true;
@@ -1656,6 +1676,19 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         if(muonID(i, SS_fo_noiso_v5))           passes_SS_fo_noiso_v6 = true;
         if(muonID(i, SS_veto_v5))               passes_SS_veto_v6 = true;
         if(muonID(i, SS_veto_noiso_v5))         passes_SS_veto_noiso_v6 = true;
+        
+        float testcc = 0.;
+        // if (ptrelv1>9.2) {
+        //     testcc = std::max(0.,miniiso-0.09);
+        // } else {
+        //     testcc = max(double(0.),(0.85/ptratio_v5-1.));
+        // }
+        if (ptrelv1>7.5) {
+            testcc = std::max(0.,miniiso-0.12);
+        } else {
+            testcc = max(double(0.),(0.80/ptratio_v5-1.));
+        }
+        coneCorrPt = p4.pt()*(1+testcc);
 
         muID::unsetCache();
         muID::setCache(idx,miniiso,ptratio,ptrelv1);
@@ -1682,6 +1715,14 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         //Fill trigger branches
         fillMuonTriggerBranches(p4,idx,false);
 
+      njets_recoil = 0;
+      for(unsigned int i=0; i<jets.size(); i++)  {
+          if(ROOT::Math::VectorUtil::DeltaR(jets[i], p4) < 1.) continue;
+          if(jets[i].pt() > 40. && fabs(jets[i].eta()) < 2.4) {
+              njets_recoil++;
+          }
+      }
+
         //Fill baby once per probe
         BabyTree->Fill(); 
 
@@ -1704,12 +1745,14 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         if (tas::els_p4().at(i).pt() <= maxPt) continue; 
 
         //Save the electron if we have a tag OR if it passes loose ID 
-        if(electronID(i, SS_veto_noiso_v5)==0 && electronID(i, HAD_veto_v3)==0 && foundTag==false) continue;
+        // if(electronID(i, SS_veto_noiso_v5)==0 && electronID(i, HAD_veto_v3)==0 && foundTag==false) continue;
+        if(electronID(i, SS_veto_noiso_v6)==0 && electronID(i, HAD_veto_v3)==0 && foundTag==false) continue;
 	if (onlySaveTagProbePairs && foundTag==false) continue;
 
         //p4
         p4 = tas::els_p4().at(i);    
         savedElP4s.push_back(p4);
+
 
 	if (verbose) cout << "Saving this electron: pt/eta/phi "<<p4.pt()<<"/"<<p4.eta()<<"/"<<p4.phi() << endl;
 
@@ -1793,7 +1836,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         miniisoDB = elMiniRelIsoCMS3_DB(idx);
 
         //MT
-        mt = MT(p4.pt(), p4.phi(), evt_pfmet, evt_pfmetPhi); 
+        mt = MT(p4.pt(), p4.phi(), evt_corrMET, evt_corrMETPhi); 
 
         //Other Electron ID stuff
         sumPUPt = tas::els_pfPUIso().at(i);
@@ -1807,13 +1850,15 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         conv_vtx_flag = tas::els_conv_vtx_flag().at(i);
         exp_innerlayers = tas::els_exp_innerlayers().at(i);
         exp_outerlayers = tas::els_exp_outerlayers().at(i);
+        isTriggerSafe = isTriggerSafe_v1(i);
+        isTriggerSafenoIso = isTriggerSafenoIso_v1(i);
         charge = tas::els_charge().at(i);    
         sccharge = tas::els_sccharge().at(i);
         ckf_charge = tas::els_ckf_charge().at(i);
         trk_charge = tas::els_trk_charge().at(i);
         threeChargeAgree_branch = threeChargeAgree(i);
-        mva = getMVAoutput(i); 
-	mva_25ns = v25nsMVAreader->MVA(i);
+        mva = getMVAoutput(i, true); 
+        mva_25ns = getMVAoutput(i, true); 
         type = tas::els_type().at(i);
         ecalIso = tas::els_ecalIso().at(i);
         hcalIso = tas::els_hcalIso().at(i);
@@ -1882,9 +1927,9 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         if(electronID(i, SS_veto_v4))               passes_SS_veto_v4 = true;
         if(electronID(i, SS_veto_noiso_v4))         passes_SS_veto_noiso_v4 = true;
 
-	LorentzVector close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);  
+	close_jet_v5 = closestJet(p4, 0.4, 3.0, 2);  
 	float ptrel_v5 = ptRel(p4, close_jet_v5, true);
-	float ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt()/close_jet_v5.pt() : 1;
+	ptratio_v5 = close_jet_v5.pt() > 0 ? p4.pt()/close_jet_v5.pt() : 1;
         elID::unsetCache();
         elID::setCache(idx,mva_25ns,miniiso,ptratio_v5,ptrel_v5);
 
@@ -1905,6 +1950,19 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         if(electronID(i, SS_fo_looseMVA_noiso_v6))  passes_SS_fo_looseMVA_noiso_v6 = true;
         if(electronID(i, SS_veto_v6))               passes_SS_veto_v6 = true;
         if(electronID(i, SS_veto_noiso_v6))         passes_SS_veto_noiso_v6 = true;
+
+        float testcc = 0.;
+        if (ptrelv1>9.2) {
+            testcc = std::max(0.,miniiso-0.09);
+        } else {
+            testcc = max(double(0.),(0.85/ptratio_v5-1.));
+        }
+        // if (ptrelv1>7.5) {
+        //     testcc = std::max(0.,miniiso-0.12);
+        // } else {
+        //     testcc = max(double(0.),(0.80/ptratio_v5-1.));
+        // }
+        coneCorrPt = p4.pt()*(1+testcc);
 
 	if (verbose) cout << "Done SS IDs" <<endl;
 
@@ -1942,6 +2000,15 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
 	if (verbose) cout << "Electron triggers" << endl;
         fillElectronTriggerBranches(p4, idx, false);
 	if (verbose) cout << "Saving electron branches"<<endl;
+
+      njets_recoil = 0;
+      for(unsigned int i=0; i<jets.size(); i++)  {
+          if(ROOT::Math::VectorUtil::DeltaR(jets[i], p4) < 1.) continue;
+          if(jets[i].pt() > 40. && fabs(jets[i].eta()) < 2.4) {
+              njets_recoil++;
+          }
+      }
+
         //Fill tree once per tag
         BabyTree->Fill(); 
 	if (verbose) cout << "Finished electron"<<endl;
