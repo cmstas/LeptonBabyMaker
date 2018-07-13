@@ -68,6 +68,10 @@ void babyMaker::MakeBabyNtuple(const char* output_name){
   BabyTree->Branch("rho_neut_centr"    , &rho_neut_centr);
   BabyTree->Branch("rho_calo"    , &rho_calo);
   BabyTree->Branch("rho_calo_centr"    , &rho_calo_centr);
+  BabyTree->Branch("nleptonicW"    , &nleptonicW);
+  BabyTree->Branch("nleptonicW_emu"    , &nleptonicW_emu);
+  BabyTree->Branch("nW"    , &nW);
+  BabyTree->Branch("nhadronicW"    , &nhadronicW);
 
   //All leptons
   BabyTree->Branch("p4"                            , &p4);
@@ -423,6 +427,10 @@ void babyMaker::InitBabyNtuple(){
   rho = -1;
   rho_calo = -1;
   rho_calo_centr = -1;
+  nleptonicW = 0;
+  nleptonicW_emu = 0;
+  nW = 0;
+  nhadronicW = 0;
 
   InitLeptonBranches();
 
@@ -1343,6 +1351,32 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
       filt_trkfail       = evt_isRealData ? tas::filt_trackingFailure() : 1;
       filt_eebadsc       = evt_isRealData ? tas::filt_eeBadSc()         : 1;
 
+      if (!evt_isRealData) {
+          nleptonicW = 0;
+          nleptonicW_emu = 0;
+          nW = 0;
+          nhadronicW = 0;
+          for (unsigned int igen = 0; igen < tas::genps_p4().size(); igen++){
+              int id = tas::genps_id()[igen];
+              if (abs(id) != 24) continue;
+              int smid = tas::genps_id_simplemother()[igen];
+              if (abs(smid) == 24) continue;
+              int stat = tas::genps_status()[igen];
+              if (stat != 22 && stat != 52) continue;
+              nW++;
+          }
+          for (unsigned int igen = 0; igen < tas::genps_p4().size(); igen++){
+              int id = tas::genps_id()[igen];
+              int mid = tas::genps_id_mother()[igen];
+              if (abs(id) != 12 && abs(id) != 14 && abs(id) != 16) continue;
+              if (abs(mid) != 24) continue;
+              if (!(tas::genps_isPromptFinalState()[igen])) continue;
+              nleptonicW++;
+              if (abs(id) != 16) nleptonicW_emu++;
+          }
+          nhadronicW = nW - nleptonicW;
+      }
+
       if (evt_isRealData) scale1fb = 1;
       else {
           float sgnMCweight = ((tas::genps_weight() > 0) - (tas::genps_weight() < 0));
@@ -1527,8 +1561,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
 
         //MC stuff
         if (!evt_isRealData){
-          motherID = lepMotherID(Lep(id, idx));
-          // motherID = lepMotherID_v2(Lep(id, idx)).first;
+          // motherID = lepMotherID(Lep(id, idx));
+          motherID = lepMotherID_v2(Lep(id, idx)).first;
           mc_motherp4 = tas::mus_mc_motherp4().at(i);
           mc_p4 = tas::mus_mc_p4().at(i);
           mc_motherid = tas::mus_mc_motherid().at(i);
@@ -1951,6 +1985,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         if(electronID(i, SS_veto_v6))               passes_SS_veto_v6 = true;
         if(electronID(i, SS_veto_noiso_v6))         passes_SS_veto_noiso_v6 = true;
 
+
+
         float testcc = 0.;
         if (ptrelv1>9.2) {
             testcc = std::max(0.,miniiso-0.09);
@@ -1963,6 +1999,7 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         //     testcc = max(double(0.),(0.80/ptratio_v5-1.));
         // }
         coneCorrPt = p4.pt()*(1+testcc);
+
 
 	if (verbose) cout << "Done SS IDs" <<endl;
 
@@ -1992,7 +2029,8 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
         elID::unsetCache();
 	if (verbose) cout << "Some MC properties"<<endl;
         if (!evt_isRealData ) {
-          motherID = lepMotherID(Lep(id, idx));
+          // motherID = lepMotherID(Lep(id, idx));
+          motherID = lepMotherID_v2(Lep(id, idx)).first;
           mc_motherp4 = tas::els_mc_motherp4().at(i); 
           mc_motherid = tas::els_mc_motherid().at(i); 
         }
@@ -2008,6 +2046,35 @@ int babyMaker::looper(TChain* chain, char* output_name, int nEvents){
               njets_recoil++;
           }
       }
+
+        // {
+        //     auto midv1 = lepMotherID(Lep(id, idx));
+        //     auto mcp4 = abs(id) == 11 ? tas::els_mc_motherp4().at(i) : tas::mus_mc_motherp4().at(i);
+        //     auto mcid = abs(id) == 11 ? tas::els_mc_motherid().at(i) : tas::mus_mc_motherid().at(i);
+        //     auto pair = lepMotherID_v2(Lep(id, idx));
+        //     auto midv2 = pair.first;
+        //     auto idx = pair.second;
+        //     // found a "truth" prompt electron in an event with supposedly no leptons
+        //     if (nhadronicW == 2 && passes_SS_fo_v6 && abs(id)==11 && coneCorrPt>=25 && midv2 > 0) {
+        //         // if (midv1 != midv2) {
+        //         std::cout <<  " midv1: " << midv1 <<  " midv2: " << midv2 <<  " idx: " << idx <<  " passes_SS_fo_v6: " << passes_SS_fo_v6 <<  " passes_SS_tight_v6: " << passes_SS_tight_v6 <<  " nhadronicW: " << nhadronicW <<  std::endl;
+        //         // }
+        //     }
+        // }
+
+        // {
+        //     auto midv1 = lepMotherID(Lep(id, idx));
+        //     auto mcp4 = abs(id) == 11 ? tas::els_mc_motherp4().at(i) : tas::mus_mc_motherp4().at(i);
+        //     auto mcid = abs(id) == 11 ? tas::els_mc_motherid().at(i) : tas::mus_mc_motherid().at(i);
+        //     auto pair = lepMotherID_v2(Lep(id, idx));
+        //     auto midv2 = pair.first;
+        //     auto idx = pair.second;
+        //     if (passes_SS_fo_v6 && abs(id)==11 && coneCorrPt>=25 && midv2 <= 0) {
+        //         // if (midv1 != midv2) {
+        //         std::cout <<  " midv1: " << midv1 <<  " midv2: " << midv2 <<  " idx: " << idx <<  " passes_SS_fo_v6: " << passes_SS_fo_v6 <<  " passes_SS_tight_v6: " << passes_SS_tight_v6 <<  " nhadronicW: " << nhadronicW <<  std::endl;
+        //         // }
+        //     }
+        // }
 
         //Fill tree once per tag
         BabyTree->Fill(); 

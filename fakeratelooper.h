@@ -116,6 +116,10 @@ private:
   float rho_neut_centr;
   float rho_calo;
   float rho_calo_centr;
+  int nleptonicW = 0;
+  int nleptonicW_emu = 0;
+  int nW = 0;
+  int nhadronicW = 0;
 
   //---both e and mu---//
   LorentzVector p4;
